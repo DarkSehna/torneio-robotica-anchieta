@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apuração Geral & Pódio — Torneio de Robótica Anchieta</title>
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <!-- CSS Compartilhado e Específico -->
+  <link rel="stylesheet" href="../shared/css/design-tokens.css">
+  <link rel="stylesheet" href="css/apuracao.css">
+</head>
+<body class="apuracao-body">
+
+  <!-- Barra Superior Anchieta de 6px -->
+  <div class="anchieta-topbar"></div>
+
+  <!-- Header Superior -->
+  <header class="apuracao-header">
+    <div class="apuracao-header-top">
+      <div class="apuracao-brand">
+        <div class="badge-pill-light" style="background: var(--color-accent); color: #fff; font-weight: 900; letter-spacing: 1px;">
+          ANCHIETA
+        </div>
+        <div class="apuracao-title">
+          <h1>APURAÇÃO GERAL & AUDITORIA</h1>
+          <p>Cruzamento Oficial de Pista & Bancadas &bull; Edital 08 &bull; 05/12/2026</p>
+        </div>
+      </div>
+
+      <div class="apuracao-actions">
+        <!-- Badge da Nuvem -->
+        <div id="cloudStatusBadge" class="badge-status cloud-offline" style="font-size: 0.78rem; padding: 6px 12px;">
+          <span class="status-dot"></span>
+          <span id="cloudStatusText">Verificando Nuvem...</span>
+        </div>
+
+        <button type="button" id="btnRefreshData" class="btn-refresh">
+          🔄 Atualizar Dados
+        </button>
+
+        <button type="button" id="btnOpenCeremony" class="btn-ceremony">
+          <span>🏆 CERIMÔNIA DE PÓDIO (MODO TELÃO)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="apuracao-container">
+
+    <!-- Barra de Filtros de Categoria (Padrão: LEGO) -->
+    <div class="filter-bar">
+      <div>
+        <span style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">
+          Categoria em Exibição:
+        </span>
+        <div class="category-tabs" style="margin-top: 4px;">
+          <button type="button" class="category-tab-btn active" data-category="LEGO / Educacional">
+            🔵 Categoria LEGO (Oficial do Torneio)
+          </button>
+          <button type="button" class="category-tab-btn maker" data-category="Aberta / Maker">
+            🟠 Categoria Aberta / Maker
+          </button>
+          <button type="button" class="category-tab-btn" data-category="TODAS">
+            🌐 Todas as Categorias
+          </button>
+        </div>
+      </div>
+
+      <div style="font-size: 0.85rem; color: var(--text-muted); text-align: right;">
+        Critérios aplicados: <strong>Edital Geral nº 08/2026</strong>
+      </div>
+    </div>
+
+    <!-- Seção de Alertas de Empate Técnico (Voto de Minerva) -->
+    <div id="tieAlertSection"></div>
+
+    <!-- 1. Classificação Geral da Pista (Velocidade) -->
+    <section>
+      <div class="section-title-bar">
+        <h2 class="section-title">
+          <span>🏎️</span>
+          <span>Classificação Oficial de Pista (Velocidade)</span>
+        </h2>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">
+          Ordenação: Menor Tempo Líquido ➔ Menor Faltas ➔ Volta Secundária
+        </span>
+      </div>
+
+      <div class="table-card">
+        <table class="apuracao-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">Posição</th>
+              <th>Equipe / Escola</th>
+              <th style="width: 100px;">Categoria</th>
+              <th style="width: 130px;">Round 1</th>
+              <th style="width: 130px;">Round 2</th>
+              <th style="width: 140px;">Melhor Volta</th>
+              <th style="width: 120px;">Faltas Volta</th>
+              <th style="width: 100px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="trackRankingBody">
+            <tr>
+              <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                Carregando apuração da pista...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2. Os 5 Prêmios Oficiais de Bancada (Edital 08) -->
+    <section>
+      <div class="section-title-bar">
+        <h2 class="section-title">
+          <span>🎖️</span>
+          <span>Premiações Oficiais de Bancada & Boxes</span>
+        </h2>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">
+          Rubricas de 3 Níveis consolidadas & Matriz de Desempate
+        </span>
+      </div>
+
+      <div id="awardsGrid" class="awards-grid">
+        <!-- Renderizado dinamicamente via apuracao.js -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       MODAL DE CERIMÔNIA DE PREMIAÇÃO (MODO TELÃO FULLSCREEN)
+       ========================================================================== -->
+  <div id="ceremonyModal" class="ceremony-overlay">
+    
+    <div class="ceremony-topbar">
+      <div class="ceremony-title-box">
+        <span style="background: var(--color-accent); color: #fff; font-size: 0.75rem; font-weight: 900; padding: 4px 10px; border-radius: var(--radius-full); text-transform: uppercase;">
+          🏆 Cerimônia de Premiação
+        </span>
+        <h2>PÓDIO OFICIAL DO TORNEIO</h2>
+        <p>Colégio Anchieta &bull; 05/12/2026</p>
+      </div>
+
+      <div class="ceremony-controls">
+        <select id="ceremonySelectAward" class="ceremony-select">
+          <option value="VELOCIDADE_LEGO">🏎️ Pódio de Velocidade: LEGO / Educacional</option>
+          <option value="VELOCIDADE_MAKER">🏎️ Pódio de Velocidade: Aberta / Maker</option>
+        </select>
+        <button type="button" id="btnCloseCeremony" class="btn-close-ceremony">✕ Fechar</button>
+      </div>
+    </div>
+
+    <!-- Palco do Pódio 3D Virtual -->
+    <div class="podium-stage">
+      
+      <!-- 2º Lugar (Prata) -->
+      <div id="podiumPillar2" class="podium-pillar">
+        <div class="podium-team-card">
+          <span style="font-size: 1.8rem;">🥈</span>
+          <div id="podiumTeamName2" class="podium-team-name">--</div>
+          <div id="podiumTeamSchool2" class="podium-team-school">--</div>
+          <div id="podiumTeamTime2" class="podium-team-time">--:--.--</div>
+        </div>
+        <div class="podium-block podium-block-2">
+          <div class="podium-block-number">2</div>
+          <div class="podium-block-label">Vice-Campeão</div>
+        </div>
+      </div>
+
+      <!-- 1º Lugar (Ouro - Grande Campeão) -->
+      <div id="podiumPillar1" class="podium-pillar">
+        <div class="podium-team-card" style="border-color: #FDE047; box-shadow: 0 10px 40px rgba(234, 179, 8, 0.4);">
+          <span style="font-size: 2.2rem;">🥇</span>
+          <div id="podiumTeamName1" class="podium-team-name" style="font-size: 1.6rem; color: #FDE047;">--</div>
+          <div id="podiumTeamSchool1" class="podium-team-school">--</div>
+          <div id="podiumTeamTime1" class="podium-team-time" style="color: #FDE047; font-size: 1.6rem;">--:--.--</div>
+        </div>
+        <div class="podium-block podium-block-1">
+          <div class="podium-block-number">1</div>
+          <div class="podium-block-label">Grande Campeão</div>
+        </div>
+      </div>
+
+      <!-- 3º Lugar (Bronze) -->
+      <div id="podiumPillar3" class="podium-pillar">
+        <div class="podium-team-card">
+          <span style="font-size: 1.8rem;">🥉</span>
+          <div id="podiumTeamName3" class="podium-team-name">--</div>
+          <div id="podiumTeamSchool3" class="podium-team-school">--</div>
+          <div id="podiumTeamTime3" class="podium-team-time">--:--.--</div>
+        </div>
+        <div class="podium-block podium-block-3">
+          <div class="podium-block-number">3</div>
+          <div class="podium-block-label">3º Lugar</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Barra de Ações para Revelação com Suspense -->
+    <div class="ceremony-action-bar">
+      <button type="button" id="btnReveal3" class="btn-reveal">🥉 Revelar 3º Lugar</button>
+      <button type="button" id="btnReveal2" class="btn-reveal" disabled>🥈 Revelar 2º Lugar</button>
+      <button type="button" id="btnReveal1" class="btn-reveal" style="background: var(--color-accent); font-weight: 900;" disabled>
+        🥇 Revelar Grande Campeão!
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="../shared/js/cloud-api.js"></script>
+  <script src="../shared/js/teams-data.js"></script>
+  <script src="js/apuracao.js"></script>
+</body>
+</html>
