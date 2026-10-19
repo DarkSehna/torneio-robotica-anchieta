@@ -520,41 +520,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // 6. Cerimônia de Premiação no Telão
-  function setupCeremony() {
-    btnOpenCeremony.addEventListener('click', () => {
+  window.openCeremonyModal = function() {
+    if (ceremonyModal) {
       ceremonyModal.classList.add('active');
       resetPodium();
       updateCeremonyView();
-    });
+    }
+  };
 
-    btnCloseCeremony.addEventListener('click', () => {
+  window.closeCeremonyModal = function() {
+    if (ceremonyModal) {
       ceremonyModal.classList.remove('active');
-    });
+    }
+  };
 
-    ceremonySelectAward.addEventListener('change', () => {
-      resetPodium();
-      updateCeremonyView();
-    });
-
-    btnReveal3.addEventListener('click', () => {
-      document.getElementById('podiumPillar3').classList.add('revealed');
-      btnReveal3.disabled = true;
-      btnReveal2.disabled = false;
+  window.revealPillar = function(pos) {
+    if (pos === 3) {
+      const p3 = document.getElementById('podiumPillar3');
+      if (p3) p3.classList.add('revealed');
+      if (btnReveal3) btnReveal3.disabled = true;
+      if (btnReveal2) btnReveal2.disabled = false;
       playBeep();
-    });
-
-    btnReveal2.addEventListener('click', () => {
-      document.getElementById('podiumPillar2').classList.add('revealed');
-      btnReveal2.disabled = true;
-      btnReveal1.disabled = false;
+    } else if (pos === 2) {
+      const p2 = document.getElementById('podiumPillar2');
+      if (p2) p2.classList.add('revealed');
+      if (btnReveal2) btnReveal2.disabled = true;
+      if (btnReveal1) btnReveal1.disabled = false;
       playBeep();
-    });
-
-    btnReveal1.addEventListener('click', () => {
-      document.getElementById('podiumPillar1').classList.add('revealed');
-      btnReveal1.disabled = true;
+    } else if (pos === 1) {
+      const p1 = document.getElementById('podiumPillar1');
+      if (p1) p1.classList.add('revealed');
+      if (btnReveal1) btnReveal1.disabled = true;
       triggerFanfare();
-    });
+    }
+  };
+
+  function setupCeremony() {
+    if (btnOpenCeremony) btnOpenCeremony.addEventListener('click', window.openCeremonyModal);
+    if (btnCloseCeremony) btnCloseCeremony.addEventListener('click', window.closeCeremonyModal);
+
+    if (ceremonySelectAward) {
+      ceremonySelectAward.addEventListener('change', () => {
+        resetPodium();
+        updateCeremonyView();
+      });
+    }
+
+    if (btnReveal3) btnReveal3.addEventListener('click', () => window.revealPillar(3));
+    if (btnReveal2) btnReveal2.addEventListener('click', () => window.revealPillar(2));
+    if (btnReveal1) btnReveal1.addEventListener('click', () => window.revealPillar(1));
   }
 
   function resetPodium() {
