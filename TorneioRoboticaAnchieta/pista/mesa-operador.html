@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mesa do Operador — Torneio de Robótica Anchieta</title>
+  
+  <!-- CSS Compartilhado e Específico -->
+  <link rel="stylesheet" href="../shared/css/design-tokens.css">
+  <link rel="stylesheet" href="css/mesa-operador.css">
+</head>
+<body class="operator-layout">
+
+  <!-- Barra de Destaque Superior de 6px (Laranja Anchieta #F26522) -->
+  <div class="anchieta-topbar"></div>
+
+  <!-- Header Superior da Mesa -->
+  <header class="op-header">
+    <div class="op-brand">
+      <div class="op-logo-badge">ANCHIETA</div>
+      <div class="op-title-text">
+        <h1>MESA DA PISTA — PAINEL DO OPERADOR</h1>
+        <p>Sistema Oficial de Cronometragem e Apuração &bull; 05/12/2026</p>
+      </div>
+    </div>
+
+    <div class="op-header-actions">
+      <!-- Badge de Status do Telão via BroadcastChannel -->
+      <div id="telaoStatusBadge" class="badge-status">
+        <span class="status-dot"></span>
+        <span>Aguardando Telão</span>
+      </div>
+
+      <!-- Badge de Conexão com Cloudflare D1 -->
+      <div id="cloudStatusBadge" class="badge-status cloud-offline" title="Status da API Cloudflare Workers">
+        <span class="status-dot"></span>
+        <span id="cloudStatusText">Nuvem Conectando...</span>
+      </div>
+
+      <!-- Badge de Status da Nuvem / Storage Local -->
+      <div id="syncBadge" class="badge-status sync-pending">
+        <span class="status-dot"></span>
+        <span>Fila Local: <strong id="pendingCount">0</strong></span>
+      </div>
+
+      <!-- Painel Admin / Gestão de Equipes -->
+      <a href="../admin/index.html" class="btn-header-admin" title="Adicionar ou remover equipes e gerenciar dados">
+        ⚙️ Admin / Equipes
+      </a>
+
+      <!-- Painel Mobile Paddock -->
+      <a href="../paddock/index.html" target="_blank" class="btn-header-admin" title="Abrir interface mobile dos Juízes de Paddock">
+        📱 Paddock
+      </a>
+
+      <!-- Botão para Projetar no HDMI -->
+      <a href="telao-ginasio.html" target="_blank" class="btn-open-telao" title="Abre o telão em uma nova janela para arrastar ao projetor HDMI">
+        🖥️ Abrir Telão do Ginásio ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- Faixa de Atalhos Rápidos de Teclado -->
+  <div class="shortcuts-bar">
+    <span style="font-weight: 800; color: var(--color-primary);">⌨️ ATALHOS:</span>
+    <span class="shortcut-chip"><kbd>ESPAÇO</kbd> Iniciar / Pausar</span>
+    <span class="shortcut-chip"><kbd>F</kbd> ou <kbd>+</kbd> +1 Infração</span>
+    <span class="shortcut-chip"><kbd>U</kbd> ou <kbd>-</kbd> Desfazer Falta</span>
+    <span class="shortcut-chip"><kbd>Shift + R</kbd> Zerar Cronômetro</span>
+    <span style="margin-left: auto; font-weight: 600;">Regulamento: Art. 7º (180s máx.) &bull; Art. 8º (5 infrações = DNF)</span>
+  </div>
+
+  <!-- Grid Principal -->
+  <main class="op-main">
+    
+    <!-- Coluna 1: Configuração e Seleção de Equipe -->
+    <div class="op-col-config">
+      
+      <div id="partidaConfigSection" class="card-section">
+        <div class="card-title">
+          <h2>1. Seleção de Partida</h2>
+        </div>
+
+        <!-- Banner de Proteção Operacional contra Cliques Acidentais -->
+        <div id="lockedIndicatorBanner" class="locked-indicator-banner">
+          <span>🔒</span>
+          <span>BATERIA EM ANDAMENTO — Controles de equipe bloqueados para evitar acidentes.</span>
+        </div>
+
+        <!-- Seletor de Categoria -->
+        <div class="form-group">
+          <label class="form-label">Categoria de Disputa</label>
+          <div class="pill-selector">
+            <button type="button" id="catBtnLego" class="pill-btn active">LEGO / Educacional</button>
+            <button type="button" id="catBtnMaker" class="pill-btn">Aberta / Maker</button>
+          </div>
+        </div>
+
+        <!-- Seletor de Rodada -->
+        <div class="form-group">
+          <label class="form-label">Rodada da Pista</label>
+          <div class="pill-selector">
+            <button type="button" id="roundBtn1" class="pill-btn active">Round 1</button>
+            <button type="button" id="roundBtn2" class="pill-btn">Round 2</button>
+          </div>
+        </div>
+
+        <!-- Busca e Seleção de Equipes -->
+        <div class="form-group">
+          <label class="form-label">Equipe e Escola</label>
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="teamSearchInput" class="search-input" placeholder="Buscar por equipe ou escola...">
+          </div>
+          <div id="teamSelectList" class="team-select-list">
+            <!-- Gerado via JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview da Equipe em Pista -->
+      <div class="active-team-preview">
+        <div class="preview-badge-row">
+          <span id="activeCatBadge" class="badge-pill-light">LEGO / Educacional</span>
+          <span id="activeRoundBadge" class="badge-pill-orange">Round 1</span>
+        </div>
+        <div id="activeTeamName" class="preview-team-name">RoboStorm</div>
+        <div id="activeSchoolName" class="preview-school-name">Colégio Anchieta</div>
+      </div>
+
+    </div>
+
+    <!-- Coluna 2: Cronômetro e Controle da Bateria -->
+    <div class="op-col-controls">
+      
+      <!-- Card Central do Cronômetro -->
+      <div class="timer-hero-box">
+        <div id="opStatusBanner" class="status-banner">
+          <span class="status-dot"></span>
+          <span id="opStatusText">🟢 PRONTO PARA LARGADA</span>
+        </div>
+
+        <!-- Display Numérico Gigante com Tabular Nums Anti-Drift -->
+        <div id="opTimerDigits" class="timer-digits-display tabular-nums">00:00.00</div>
+
+        <div class="timer-limit-indicator">
+          ⏱️ Limite Oficial: 180 segundos (3 minutos) &bull; Trava Automática (Art. 7º)
+        </div>
+
+        <!-- Botões de Ação do Cronômetro -->
+        <div class="timer-btn-grid">
+          <button type="button" id="btnStartPause" class="btn-action btn-start">
+            <span id="btnStartPauseText">▶ INICIAR VOLTA [ESPAÇO]</span>
+          </button>
+          <button type="button" id="btnFinish" class="btn-action btn-finish" title="Finaliza e congela o tempo oficial">
+            🏁 CONCLUIR
+          </button>
+          <button type="button" id="btnReset" class="btn-action btn-reset" title="Reinicia o cronômetro para 00:00">
+            ↺ ZERAR
+          </button>
+        </div>
+      </div>
+
+      <!-- Gestão de Infrações (Art. 8º) -->
+      <div class="fouls-panel">
+        <div class="fouls-header">
+          <h3>Infrações na Pista (Art. 8º — Reposicionamentos)</h3>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-danger);">5 Faltas = Desclassificação (DNF)</span>
+        </div>
+
+        <!-- Indicadores Visuais de Faltas -->
+        <div class="fouls-indicators">
+          <div class="foul-slot" data-index="1">1</div>
+          <div class="foul-slot" data-index="2">2</div>
+          <div class="foul-slot" data-index="3">3</div>
+          <div class="foul-slot" data-index="4">4</div>
+          <div class="foul-slot" data-index="5">5</div>
+        </div>
+
+        <div class="foul-btn-row">
+          <button type="button" id="btnAddFoul" class="btn-add-foul">
+            🚨 +1 INFRAÇÃO (REPOSICIONAR) [F]
+          </button>
+          <button type="button" id="btnUndoFoul" class="btn-undo-foul" title="Desfazer falta marcada por engano">
+            ↩ Desfazer (-1) [U]
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de Gravação Oficial -->
+      <div class="save-round-bar">
+        <button type="button" id="btnSaveRound" class="btn-save-round">
+          💾 REGISTRAR VOLTA OFICIAL (SALVAR RESULTADO)
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Seção de Histórico da Sessão -->
+    <section class="card-section history-section">
+      <div class="card-title">
+        <h2>📋 Histórico de Voltas Registradas (Sessão Atual)</h2>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="btnSyncCloud" class="btn-action" style="padding: 6px 14px; font-size: 0.8rem; background: var(--color-primary); color: #fff; border: none;">
+            🔄 Sincronizar Nuvem
+          </button>
+          <button type="button" id="btnExportCSV" class="btn-action" style="padding: 6px 14px; font-size: 0.8rem; background: var(--bg-muted); color: var(--color-primary); border: 1px solid var(--border-strong);">
+            📥 Exportar CSV
+          </button>
+          <button type="button" id="btnExportJSON" class="btn-action" style="padding: 6px 14px; font-size: 0.8rem; background: var(--bg-muted); color: var(--color-primary); border: 1px solid var(--border-strong);">
+            📦 Backup JSON
+          </button>
+          <button type="button" id="btnClearHistory" class="btn-action" style="padding: 6px 14px; font-size: 0.8rem; background: transparent; color: var(--color-danger); border: 1px solid var(--color-danger);">
+            🗑️ Limpar
+          </button>
+        </div>
+      </div>
+
+      <div class="history-table-wrapper">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Horário</th>
+              <th>Equipe</th>
+              <th>Escola</th>
+              <th>Categoria</th>
+              <th>Rodada</th>
+              <th>Tempo Oficial</th>
+              <th>Faltas</th>
+              <th>Status</th>
+              <th>Nuvem</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <!-- Preenchido via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/audio-cues.js"></script>
+  <script src="js/broadcast-bus.js"></script>
+  <script src="../shared/js/cloud-api.js"></script>
+  <script src="js/timer-engine.js"></script>
+  <script src="../shared/js/teams-data.js"></script>
+  <script src="js/mesa-operador.js"></script>
+</body>
+</html>

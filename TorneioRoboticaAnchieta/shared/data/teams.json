@@ -1,0 +1,50 @@
+[
+  {
+    "id": "EQ-01",
+    "name": "RoboStorm",
+    "school": "Colégio Anchieta",
+    "category": "LEGO / Educacional"
+  },
+  {
+    "id": "EQ-02",
+    "name": "CyberKnights",
+    "school": "Colégio Anchieta",
+    "category": "Aberta / Maker"
+  },
+  {
+    "id": "EQ-03",
+    "name": "Titanium Bot",
+    "school": "Escola SESI Integrada",
+    "category": "LEGO / Educacional"
+  },
+  {
+    "id": "EQ-04",
+    "name": "Vortex Alpha",
+    "school": "Instituto Federal Tecnológico",
+    "category": "Aberta / Maker"
+  },
+  {
+    "id": "EQ-05",
+    "name": "Minerva Tech",
+    "school": "Colégio São Francisco",
+    "category": "LEGO / Educacional"
+  },
+  {
+    "id": "EQ-06",
+    "name": "Omega Circuit",
+    "school": "Colégio Marista",
+    "category": "Aberta / Maker"
+  },
+  {
+    "id": "EQ-07",
+    "name": "Pioneiros da Robótica",
+    "school": "Colégio Anchieta",
+    "category": "LEGO / Educacional"
+  },
+  {
+    "id": "EQ-08",
+    "name": "ByteCrafters",
+    "school": "Escola Estadual Tiradentes",
+    "category": "Aberta / Maker"
+  }
+]

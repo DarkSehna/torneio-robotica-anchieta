@@ -1,0 +1,290 @@
+/* ==========================================================================
+   ESTILOS - TELÃO DO GINÁSIO (TELA 2 - PROJETOR HDMI)
+   100vh Sem Rolagem - Legibilidade Máxima a 20 Metros de Distância
+   ========================================================================== */
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-app);
+}
+
+.telao-viewport {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0 0 24px 0;
+  position: relative;
+  user-select: none;
+}
+
+/* Faixa Superior Institucional */
+.telao-header-band {
+  background: #FFFFFF;
+  border-bottom: 2px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.telao-brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.telao-logo-pill {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-left: 6px solid var(--color-accent);
+}
+
+.telao-tournament-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 0.02em;
+}
+
+.telao-badges-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.badge-telao-cat {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
+  padding: 8px 20px;
+  border-radius: var(--radius-full);
+  font-weight: 900;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-telao-round {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  padding: 8px 24px;
+  border-radius: var(--radius-full);
+  font-weight: 900;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Área Central - Identificação da Equipe & Cronômetro */
+.telao-content-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 48px;
+  text-align: center;
+}
+
+.telao-team-card {
+  margin-bottom: 12px;
+}
+
+.telao-team-name {
+  font-size: clamp(3.2rem, 5.5vw, 6rem);
+  font-weight: 900;
+  color: var(--color-primary);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+  text-shadow: 0 4px 12px rgba(0, 43, 73, 0.08);
+}
+
+.telao-school-name {
+  font-size: clamp(1.4rem, 2.2vw, 2.4rem);
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: -0.01em;
+}
+
+/* Status Banner Gigante no Telão */
+.telao-status-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 28px;
+  border-radius: var(--radius-full);
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 10px 0;
+  background-color: var(--bg-muted);
+  color: var(--color-primary);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.telao-status-banner.running {
+  background-color: var(--color-success-subtle);
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.telao-status-banner.paused {
+  background-color: var(--color-warning-subtle);
+  color: #92400E;
+  border-color: var(--color-warning);
+}
+
+.telao-status-banner.timeup {
+  background-color: var(--color-danger-subtle);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  animation: pulseStatus 1s infinite alternate;
+}
+
+.telao-status-banner.dnf {
+  background-color: #450A0A;
+  color: #F87171;
+  border-color: #EF4444;
+  animation: pulseStatus 1s infinite alternate;
+}
+
+@keyframes pulseStatus {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+
+/* Cronômetro Gigante */
+.telao-timer-display {
+  font-size: clamp(7rem, 15vw, 16.5rem);
+  font-weight: 900;
+  color: var(--color-primary);
+  line-height: 0.95;
+  margin: 10px 0;
+  text-shadow: 0 8px 24px rgba(0, 43, 73, 0.12);
+  transition: color 0.3s ease;
+}
+
+.telao-timer-display.running {
+  color: var(--color-primary);
+}
+
+.telao-timer-display.paused {
+  color: var(--color-warning);
+  opacity: 0.9;
+}
+
+.telao-timer-display.timeup {
+  color: var(--color-danger);
+}
+
+.telao-timer-display.dnf {
+  color: var(--color-danger);
+  text-decoration: line-through;
+}
+
+/* Base - Painel de Infrações (Art. 8º) */
+.telao-fouls-container {
+  background: #FFFFFF;
+  margin: 0 48px;
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--border-light);
+  box-shadow: var(--shadow-md);
+  padding: 16px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.telao-fouls-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.telao-fouls-title {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.telao-fouls-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.telao-fouls-slots {
+  display: flex;
+  gap: 20px;
+}
+
+.telao-foul-circle {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 4px solid var(--border-strong);
+  background: var(--bg-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--text-muted);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.telao-foul-circle.active {
+  background: var(--color-danger);
+  border-color: #991B1B;
+  color: #FFFFFF;
+  box-shadow: 0 0 24px rgba(217, 4, 41, 0.6);
+  transform: scale(1.12);
+}
+
+.telao-foul-circle.final-dnf {
+  background: #7F1D1D;
+  border-color: #450A0A;
+  animation: pulseTelaoFoul 1s infinite alternate;
+}
+
+@keyframes pulseTelaoFoul {
+  from { transform: scale(1.12); box-shadow: 0 0 20px rgba(217, 4, 41, 0.5); }
+  to { transform: scale(1.22); box-shadow: 0 0 35px rgba(217, 4, 41, 0.9); }
+}
+
+/* Botão Discreto de Tela Cheia (auto-hide para o operador HDMI) */
+.btn-fullscreen-toggle {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  opacity: 0.25;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  z-index: 50;
+}
+
+.btn-fullscreen-toggle:hover {
+  opacity: 1;
+}

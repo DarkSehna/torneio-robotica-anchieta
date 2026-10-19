@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin & Gestão de Equipes — Torneio de Robótica Anchieta</title>
+  
+  <!-- CSS Compartilhado e Específico -->
+  <link rel="stylesheet" href="../shared/css/design-tokens.css">
+  <link rel="stylesheet" href="../pista/css/mesa-operador.css">
+  <style>
+    .admin-container {
+      max-width: 1200px;
+      margin: 24px auto 48px;
+      padding: 0 24px;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .admin-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    .admin-card-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--bg-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    .form-control:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(0, 43, 73, 0.1);
+    }
+
+    .btn-submit-team {
+      width: 100%;
+      background: var(--color-primary);
+      color: #FFFFFF;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-submit-team:hover {
+      background: var(--color-primary-light);
+    }
+
+    .btn-danger-zone {
+      background: #FFF1F2;
+      border: 1.5px solid #F43F5E;
+      color: #BE123C;
+      font-weight: 800;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-danger-zone:hover {
+      background: #FFE4E6;
+    }
+
+    .stats-card-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-box {
+      background: #FFFFFF;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-number {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--color-primary);
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .btn-del-team {
+      background: #FEE2E2;
+      color: #DC2626;
+      border: 1px solid #FCA5A5;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-del-team:hover {
+      background: #FECACA;
+    }
+  </style>
+</head>
+<body class="operator-layout">
+
+  <!-- Faixa de Destaque Superior de 6px (Laranja Anchieta #F26522) -->
+  <div class="anchieta-topbar"></div>
+
+  <!-- Header Superior -->
+  <header class="op-header">
+    <div class="op-brand">
+      <div class="op-logo-badge">ANCHIETA</div>
+      <div class="op-title-text">
+        <h1>GESTÃO DE EQUIPES & BANCO DE DADOS</h1>
+        <p>Configuração e Manutenção de Torneios &bull; Colégio Anchieta</p>
+      </div>
+    </div>
+
+    <div class="op-header-actions">
+      <!-- Status da Nuvem -->
+      <div id="cloudStatusBadge" class="badge-status cloud-offline">
+        <span class="status-dot"></span>
+        <span id="cloudStatusText">Nuvem Conectando...</span>
+      </div>
+
+      <!-- Voltar para a Mesa da Pista -->
+      <a href="../pista/mesa-operador.html" class="btn-open-telao" style="background-color: var(--color-primary); border: 1px solid rgba(255,255,255,0.25);">
+        ⏱️ Mesa da Pista
+      </a>
+
+      <!-- Paddock Mobile -->
+      <a href="../paddock/index.html" target="_blank" class="btn-header-admin">
+        📱 Paddock
+      </a>
+
+      <!-- Abrir Telão -->
+      <a href="../pista/telao-ginasio.html" target="_blank" class="btn-open-telao">
+        🖥️ Abrir Telão ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- Container Principal -->
+  <main class="admin-container">
+
+    <!-- Indicadores de Resumo -->
+    <div class="stats-card-row">
+      <div class="stat-box">
+        <div id="statTotalTeams" class="stat-number tabular-nums">0</div>
+        <div class="stat-label">Equipes Cadastradas</div>
+      </div>
+      <div class="stat-box">
+        <div id="statTotalRounds" class="stat-number tabular-nums">0</div>
+        <div class="stat-label">Voltas Realizadas</div>
+      </div>
+      <div class="stat-box">
+        <div id="statSyncedRounds" class="stat-number tabular-nums">0</div>
+        <div class="stat-label">Sincronizadas na Nuvem</div>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+
+      <!-- Coluna 1: Formulário de Nova Equipe & Limpeza de Torneio -->
+      <div>
+        
+        <!-- Formulário de Cadastro -->
+        <div class="admin-card">
+          <div class="admin-card-title">
+            <span>➕ Nova Equipe</span>
+          </div>
+
+          <form id="formAddTeam">
+            <div class="form-group">
+              <label class="form-label">ID da Equipe (Opcional)</label>
+              <input type="text" id="inputTeamId" class="form-control" placeholder="Ex: EQ-09 (automático se vazio)">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Nome da Equipe *</label>
+              <input type="text" id="inputTeamName" class="form-control" placeholder="Ex: CyberKnights" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Escola / Instituição *</label>
+              <input type="text" id="inputTeamSchool" class="form-control" placeholder="Ex: Colégio Anchieta" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Categoria de Disputa</label>
+              <select id="selectTeamCategory" class="form-control">
+                <option value="LEGO / Educacional">LEGO / Educacional</option>
+                <option value="Aberta / Maker">Aberta / Maker</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn-submit-team">
+              Cadastrar Equipe
+            </button>
+          </form>
+        </div>
+
+        <!-- Zona de Limpeza e Novo Torneio -->
+        <div class="admin-card" style="border-color: #FECDD3;">
+          <div class="admin-card-title" style="color: var(--color-danger);">
+            <span>⚠️ Limpeza & Novo Torneio</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+            Utilize estas opções para limpar dados de testes ou preparar o sistema para um novo torneio.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button type="button" id="btnResetRoundsOnly" class="btn-danger-zone">
+              🗑️ Limpar Apenas Histórico de Voltas
+            </button>
+            <button type="button" id="btnResetAllDefaults" class="btn-danger-zone" style="background: #E11D48; color: #FFF; border: none;">
+              ⚡ Reset Geral de Fábrica (Restaura Padrão)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Coluna 2: Tabela de Equipes & Gestão de Dados -->
+      <div class="admin-card">
+        
+        <div class="admin-card-title">
+          <span>📋 Equipes Participantes (<span id="teamCountBadge">0</span>)</span>
+          
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" id="btnFetchCloudTeams" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; background: var(--color-primary); color: #fff; border: none;" title="Buscar equipes salvas no Cloudflare D1">
+              🔄 Puxar da Nuvem
+            </button>
+            <button type="button" id="btnPushCloudTeams" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; background: #0A436D; color: #fff; border: none;" title="Subir lista de equipes local para o Cloudflare D1">
+              ☁️ Subir para Nuvem
+            </button>
+            <button type="button" id="btnExportTeamsJSON" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; background: var(--bg-muted); color: var(--color-primary); border: 1px solid var(--border-strong);">
+              📥 Baixar JSON
+            </button>
+            <label class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; background: var(--color-accent); color: #fff; border: none; cursor: pointer; margin: 0;">
+              📤 Importar JSON
+              <input type="file" id="inputFileImportTeams" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <!-- Filtro Rápido -->
+        <div style="margin-bottom: 16px;">
+          <input type="text" id="adminTeamSearch" class="form-control" placeholder="Filtrar equipes pelo nome ou escola...">
+        </div>
+
+        <!-- Tabela de Equipes -->
+        <div class="history-table-wrapper">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome da Equipe</th>
+                <th>Escola</th>
+                <th>Categoria</th>
+                <th style="text-align: right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="adminTeamsTableBody">
+              <!-- Preenchido via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="../shared/js/cloud-api.js"></script>
+  <script src="../shared/js/teams-data.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

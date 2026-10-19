@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telão do Ginásio — Torneio de Robótica Anchieta</title>
+  
+  <!-- CSS Compartilhado e Específico -->
+  <link rel="stylesheet" href="../shared/css/design-tokens.css">
+  <link rel="stylesheet" href="css/telao-ginasio.css">
+</head>
+<body>
+
+  <div class="telao-viewport">
+    
+    <!-- Barra Superior de 6px (Laranja Anchieta #F26522) -->
+    <div class="anchieta-topbar"></div>
+
+    <!-- Faixa Superior com Identidade Institucional e Badges -->
+    <header class="telao-header-band">
+      <div class="telao-brand">
+        <div class="telao-logo-pill">ANCHIETA</div>
+        <div class="telao-tournament-title">TORNEIO OFICIAL DE ROBÓTICA &bull; PISTA PRINCIPAL</div>
+      </div>
+
+      <div class="telao-badges-group">
+        <div id="telaoCategoryBadge" class="badge-telao-cat">LEGO / Educacional</div>
+        <div id="telaoRoundBadge" class="badge-telao-round">Round 1</div>
+      </div>
+    </header>
+
+    <!-- Centro do Telão: Equipe em Pista & Cronômetro Gigante -->
+    <main class="telao-content-stage">
+      
+      <!-- Identificação da Equipe Atual -->
+      <div class="telao-team-card">
+        <h1 id="telaoTeamName" class="telao-team-name">RoboStorm</h1>
+        <p id="telaoSchoolName" class="telao-school-name">Colégio Anchieta</p>
+      </div>
+
+      <!-- Banner de Status da Pista -->
+      <div id="telaoStatusBanner" class="telao-status-banner ready">
+        <span class="status-dot"></span>
+        <span id="telaoStatusText">🟢 PISTA LIBERADA — AGUARDANDO LARGADA</span>
+      </div>
+
+      <!-- Cronômetro Digital Gigante (Legível a 20 metros) -->
+      <div id="telaoTimerDisplay" class="telao-timer-display tabular-nums ready">
+        00:00.00
+      </div>
+
+    </main>
+
+    <!-- Base do Telão: 5 Indicadores Visuais de Infrações (Art. 8º) -->
+    <footer class="telao-fouls-container">
+      <div class="telao-fouls-label">
+        <span class="telao-fouls-title">Infrações na Pista (Art. 8º)</span>
+        <span class="telao-fouls-sub">Tolerância Máxima: 4 Reposicionamentos &bull; 5ª Falta = Desclassificado (DNF)</span>
+      </div>
+
+      <div class="telao-fouls-slots">
+        <div class="telao-foul-circle" data-index="1">1</div>
+        <div class="telao-foul-circle" data-index="2">2</div>
+        <div class="telao-foul-circle" data-index="3">3</div>
+        <div class="telao-foul-circle" data-index="4">4</div>
+        <div class="telao-foul-circle" data-index="5">5</div>
+      </div>
+    </footer>
+
+    <!-- Botão Discreto de Tela Cheia -->
+    <button type="button" id="btnFullscreen" class="btn-fullscreen-toggle" title="Alternar Tela Cheia (F11)">
+      ⛶ Tela Cheia
+    </button>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/audio-cues.js"></script>
+  <script src="js/broadcast-bus.js"></script>
+  <script src="js/telao-ginasio.js"></script>
+</body>
+</html>

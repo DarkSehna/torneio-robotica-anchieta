@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Torneio de Robótica Anchieta 2026 — Central do Sistema</title>
+  
+  <!-- CSS Compartilhado -->
+  <link rel="stylesheet" href="shared/css/design-tokens.css">
+  <style>
+    .hub-container {
+      max-width: 1100px;
+      margin: 40px auto 60px;
+      padding: 0 24px;
+    }
+
+    .hub-hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .hub-badge {
+      display: inline-block;
+      background: var(--color-accent);
+      color: #FFFFFF;
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .hub-hero h1 {
+      font-size: clamp(2.2rem, 4vw, 3.2rem);
+      font-weight: 900;
+      color: var(--color-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .hub-hero p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    .hub-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .module-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 28px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .module-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--color-primary);
+    }
+
+    .module-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 6px;
+      width: 100%;
+      background: var(--color-primary);
+    }
+
+    .module-card.accent-card::before {
+      background: var(--color-accent);
+    }
+
+    .module-card.green-card::before {
+      background: var(--color-success);
+    }
+
+    .module-icon {
+      font-size: 2.5rem;
+      margin-bottom: 14px;
+    }
+
+    .module-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .module-title {
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: var(--color-primary);
+      margin-bottom: 8px;
+    }
+
+    .module-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+
+    .module-btn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--color-primary);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      background: var(--bg-muted);
+      width: fit-content;
+      transition: background 0.2s;
+    }
+
+    .module-card:hover .module-btn-link {
+      background: var(--color-primary);
+      color: #FFFFFF;
+    }
+
+    .module-card.accent-card:hover .module-btn-link {
+      background: var(--color-accent);
+      color: #FFFFFF;
+    }
+
+    /* Rodapé do Hub */
+    .hub-footer {
+      text-align: center;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .cloud-pill-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-strong);
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      font-weight: 700;
+      font-size: 0.8rem;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de Destaque Superior de 6px (Laranja Anchieta #F26522) -->
+  <div class="anchieta-topbar"></div>
+
+  <main class="hub-container">
+    
+    <!-- Hero Header -->
+    <header class="hub-hero">
+      <div class="hub-badge">Colégio Anchieta &bull; Torneio Oficial</div>
+      <h1>TORNEIO DE ROBÓTICA 2026</h1>
+      <p>Sistema Integrado de Cronometragem, Avaliação de Boxes e Apuração Oficial</p>
+      
+      <!-- Status da Conexão com Cloudflare D1 -->
+      <div id="cloudStatusBadge" class="cloud-pill-status">
+        <span class="status-dot"></span>
+        <span id="cloudStatusText">Verificando Cloudflare D1...</span>
+      </div>
+    </header>
+
+    <!-- Grid de Módulos do Sistema -->
+    <div class="hub-grid">
+      
+      <!-- 1. Mesa da Pista -->
+      <a href="pista/mesa-operador.html" class="module-card">
+        <div>
+          <div class="module-icon">⏱️</div>
+          <div class="module-tag">Módulo 1 &bull; Pista Física</div>
+          <h2 class="module-title">Mesa do Operador</h2>
+          <p class="module-desc">
+            Painel de controle para o notebook do juiz de mesa. Controle do cronômetro (trava aos 180s), gestão de infrações (DNF na 5ª falta) e registro oficial de voltas.
+          </p>
+        </div>
+        <div class="module-btn-link">Abrir Mesa da Pista ➔</div>
+      </a>
+
+      <!-- 2. Telão do Ginásio -->
+      <a href="pista/telao-ginasio.html" target="_blank" class="module-card accent-card">
+        <div>
+          <div class="module-icon">🖥️</div>
+          <div class="module-tag">Módulo 1 &bull; Projeção HDMI</div>
+          <h2 class="module-title">Telão do Ginásio</h2>
+          <p class="module-desc">
+            Tela cheia 100vh com tipografia gigante para projetor de 20 metros. Sincronização instantânea via BroadcastChannel com latência zero (100% offline).
+          </p>
+        </div>
+        <div class="module-btn-link">Projetar Telão ↗</div>
+      </a>
+
+      <!-- 3. Juízes de Paddock (Mobile) -->
+      <a href="paddock/index.html" target="_blank" class="module-card green-card">
+        <div>
+          <div class="module-icon">📱</div>
+          <div class="module-tag">Módulo 2 &bull; Mobile / 4G</div>
+          <h2 class="module-title">Juízes de Paddock</h2>
+          <p class="module-desc">
+            Interface touchscreen para smartphones e tablets. Avaliação de bancadas nos boxes: Engenharia (0-10), Caracterização (0-10), Torcida (0-10), Fair Play e Superação.
+          </p>
+        </div>
+        <div class="module-btn-link">Abrir Formulário Mobile ➔</div>
+      </a>
+
+      <!-- 4. Gestão e Admin -->
+      <a href="admin/index.html" class="module-card">
+        <div>
+          <div class="module-icon">⚙️</div>
+          <div class="module-tag">Módulo 4 &bull; Gestão & Credenciamento</div>
+          <h2 class="module-title">Administração & Equipes</h2>
+          <p class="module-desc">
+            Cadastro e exclusão de equipes, importação/exportação de inscrições em JSON e sincronização bidirecional com o banco de dados Cloudflare D1.
+          </p>
+        </div>
+        <div class="module-btn-link">Acessar Admin ➔</div>
+      </a>
+
+    </div>
+
+    <!-- Guia Rápido: Como Abrir no Celular dos Juízes -->
+    <section style="background: #FFFFFF; border: 1.5px solid var(--border-light); border-radius: var(--radius-xl); padding: 28px; margin-top: 32px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+        <div style="max-width: 600px;">
+          <span style="background: var(--color-accent-subtle); color: var(--color-accent); font-weight: 800; font-size: 0.75rem; padding: 4px 10px; border-radius: var(--radius-full); text-transform: uppercase;">
+            📱 Conexão Mobile &bull; Juízes de Boxes
+          </span>
+          <h2 style="font-size: 1.4rem; font-weight: 900; color: var(--color-primary); margin: 8px 0 6px;">
+            Como os Juízes acessam pelo Celular (4G ou Wi-Fi)
+          </h2>
+          <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;">
+            A interface de Paddock é 100% responsiva para smartphones. Para que os juízes abram no celular no dia do evento:
+          </p>
+          <ul style="font-size: 0.85rem; color: var(--text-main); margin-left: 18px; line-height: 1.6;">
+            <li><strong>Opção 1 (Oficial / Recomendada):</strong> Suba esta pasta no <strong>Cloudflare Pages</strong> (ou GitHub Pages) e imprima o QR Code gerado para colar nas pranchetas dos juízes.</li>
+            <li><strong>Opção 2 (Rede Wi-Fi Local):</strong> Se o notebook e os celulares estiverem no mesmo Wi-Fi do ginásio, rode <code>npx serve</code> ou <code>python -m http.server 8080</code> no notebook e abra pelo IP (ex: <code>http://192.168.1.X:8080/paddock/</code>).</li>
+          </ul>
+        </div>
+
+        <div style="text-align: center; background: var(--bg-muted); padding: 16px; border-radius: var(--radius-lg); border: 1px solid var(--border-strong);">
+          <div style="font-size: 0.75rem; font-weight: 800; color: var(--color-primary); text-transform: uppercase; margin-bottom: 8px;">
+            QR Code de Acesso Rápido
+          </div>
+          <!-- QR Code apontando para o módulo paddock -->
+          <img id="qrCodePaddock" src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=http://localhost/paddock/" alt="QR Code Paddock" style="border-radius: 6px; box-shadow: var(--shadow-sm); width: 140px; height: 140px; background: #fff; padding: 6px;" />
+          <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 6px;">Aponte a câmera do celular</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="hub-footer">
+      <p>Desenvolvido para o Torneio Oficial de Robótica &bull; Colégio Anchieta &bull; 05/12/2026</p>
+    </footer>
+
+  </main>
+
+  <script src="shared/js/cloud-api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const badge = document.getElementById('cloudStatusBadge');
+      const text = document.getElementById('cloudStatusText');
+      if (window.cloudAPI) {
+        const res = await window.cloudAPI.checkHealth();
+        if (res.online) {
+          badge.style.borderColor = 'rgba(74, 222, 128, 0.4)';
+          badge.style.background = 'rgba(22, 163, 74, 0.1)';
+          text.innerHTML = '🟢 Cloudflare D1 Online: <strong>torneio-api.gabrielsehna.workers.dev</strong>';
+          text.style.color = '#15803D';
+        } else {
+          text.textContent = '🟡 Cloudflare D1 Offline / Localhost';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
