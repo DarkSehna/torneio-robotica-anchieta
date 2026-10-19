@@ -67,94 +67,150 @@
       </div>
     </section>
 
-    <!-- Formulário de Avaliação -->
+    <!-- Formulário de Avaliação (Ficha Oficial de Rubricas - Edital 08) -->
     <form id="formPaddockEval">
 
-      <!-- Critério 1: Mecânica & Engenharia -->
-      <section class="mobile-card">
+      <!-- 1. Melhor Caracterização -->
+      <section class="mobile-card" id="card-caracterizacao">
         <div class="rubric-header">
           <div class="rubric-title">
-            <span>⚙️ 1. Mecânica & Engenharia</span>
+            <span>🎨 1. Melhor Caracterização</span>
           </div>
-          <div id="displayScoreMecanica" class="rubric-score-display tabular-nums">8</div>
+          <span id="badgeStatus-caracterizacao" class="rubric-badge-status">⏳ Pendente</span>
         </div>
         <p class="rubric-desc">
-          Robustez estrutural, chassi, centro de gravidade, sistema de tração e acabamento do robô.
+          A equipe está caracterizada com uma temática criativa (fantasia, mascote, uniforme) que combina com o robô e demonstra animação?
         </p>
-        <div class="score-pill-grid" data-criterion="mecanica">
-          <!-- Botões 0 a 10 gerados via JavaScript -->
+        <div class="rubric-segmented-grid" data-criterion="caracterizacao">
+          <button type="button" class="rubric-chip-btn" data-value="1">
+            <span class="rubric-chip-title">Em Desenvolvimento</span>
+            <span class="rubric-chip-sub">Básico (1)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="2">
+            <span class="rubric-chip-title">Desenvolvido</span>
+            <span class="rubric-chip-sub">Atende (2)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="3">
+            <span class="rubric-chip-title">Superado ★</span>
+            <span class="rubric-chip-sub">Destaque! (3)</span>
+          </button>
         </div>
       </section>
 
-      <!-- Critério 2: Caracterização & Identidade -->
-      <section class="mobile-card">
+      <!-- 2. Melhor Mecânica -->
+      <section class="mobile-card" id="card-mecanica">
         <div class="rubric-header">
           <div class="rubric-title">
-            <span>🎨 2. Caracterização & Tema</span>
+            <span>⚙️ 2. Melhor Mecânica</span>
           </div>
-          <div id="displayScoreCaracterizacao" class="rubric-score-display tabular-nums">8</div>
+          <span id="badgeStatus-mecanica" class="rubric-badge-status">⏳ Pendente</span>
         </div>
         <p class="rubric-desc">
-          Identidade visual do robô, uniforme/camisa da equipe, decoração do box e espírito de equipe.
+          O robô é robusto, firme, não solta peças na pista, possui bom acabamento estético e montagem eficiente?
         </p>
-        <div class="score-pill-grid" data-criterion="caracterizacao">
-          <!-- Botões 0 a 10 gerados via JavaScript -->
+        <div class="rubric-segmented-grid" data-criterion="mecanica">
+          <button type="button" class="rubric-chip-btn" data-value="1">
+            <span class="rubric-chip-title">Em Desenvolvimento</span>
+            <span class="rubric-chip-sub">Básico (1)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="2">
+            <span class="rubric-chip-title">Desenvolvido</span>
+            <span class="rubric-chip-sub">Atende (2)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="3">
+            <span class="rubric-chip-title">Superado ★</span>
+            <span class="rubric-chip-sub">Destaque! (3)</span>
+          </button>
         </div>
       </section>
 
-      <!-- Critério 3: Torcida & Animação -->
-      <section class="mobile-card">
+      <!-- 3. Prêmio Superação -->
+      <section class="mobile-card" id="card-superacao">
         <div class="rubric-header">
           <div class="rubric-title">
-            <span>📣 3. Torcida & Entusiasmo</span>
+            <span>🚀 3. Prêmio Superação</span>
           </div>
-          <div id="displayScoreTorcida" class="rubric-score-display tabular-nums">7</div>
+          <span id="badgeStatus-superacao" class="rubric-badge-status">⏳ Pendente</span>
         </div>
         <p class="rubric-desc">
-          Presença, gritos de guerra, animação respeitosa e apoio dos colegas na arquibancada.
+          A equipe demonstrou resiliência, contornando problemas técnicos (mecânica ou código) com transparência e clara evolução?
         </p>
-        <div class="score-pill-grid" data-criterion="torcida">
-          <!-- Botões 0 a 10 gerados via JavaScript -->
+        <div class="rubric-segmented-grid" data-criterion="superacao">
+          <button type="button" class="rubric-chip-btn" data-value="1">
+            <span class="rubric-chip-title">Em Desenvolvimento</span>
+            <span class="rubric-chip-sub">Básico (1)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="2">
+            <span class="rubric-chip-title">Desenvolvido</span>
+            <span class="rubric-chip-sub">Atende (2)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="3">
+            <span class="rubric-chip-title">Superado ★</span>
+            <span class="rubric-chip-sub">Destaque! (3)</span>
+          </button>
         </div>
       </section>
 
-      <!-- Prêmios Especiais: Superação & Fair Play -->
+      <!-- 4. Melhor Torcida -->
+      <section class="mobile-card" id="card-torcida">
+        <div class="rubric-header">
+          <div class="rubric-title">
+            <span>📣 4. Melhor Torcida</span>
+          </div>
+          <span id="badgeStatus-torcida" class="rubric-badge-status">⏳ Pendente</span>
+        </div>
+        <p class="rubric-desc">
+          A escola levou uma torcida vibrante, barulhenta, com identidade visual própria e que respeitou as demais equipes?
+        </p>
+        <div class="rubric-segmented-grid" data-criterion="torcida">
+          <button type="button" class="rubric-chip-btn" data-value="1">
+            <span class="rubric-chip-title">Em Desenvolvimento</span>
+            <span class="rubric-chip-sub">Básico (1)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="2">
+            <span class="rubric-chip-title">Desenvolvido</span>
+            <span class="rubric-chip-sub">Atende (2)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="3">
+            <span class="rubric-chip-title">Superado ★</span>
+            <span class="rubric-chip-sub">Destaque! (3)</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 5. Prêmio Fair Play (Jogo Limpo) -->
+      <section class="mobile-card" id="card-fair_play">
+        <div class="rubric-header">
+          <div class="rubric-title">
+            <span>🤝 5. Prêmio Fair Play (Jogo Limpo)</span>
+          </div>
+          <span id="badgeStatus-fair_play" class="rubric-badge-status">⏳ Pendente</span>
+        </div>
+        <p class="rubric-desc">
+          A equipe colaborou e ajudou outras equipes (com peças ou dicas), manteve atitude positiva e respeitou rigorosamente as regras?
+        </p>
+        <div class="rubric-segmented-grid" data-criterion="fair_play">
+          <button type="button" class="rubric-chip-btn" data-value="1">
+            <span class="rubric-chip-title">Em Desenvolvimento</span>
+            <span class="rubric-chip-sub">Básico (1)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="2">
+            <span class="rubric-chip-title">Desenvolvido</span>
+            <span class="rubric-chip-sub">Atende (2)</span>
+          </button>
+          <button type="button" class="rubric-chip-btn" data-value="3">
+            <span class="rubric-chip-title">Superado ★</span>
+            <span class="rubric-chip-sub">Destaque! (3)</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 6. Observações Gerais -->
       <section class="mobile-card">
         <div class="mobile-card-title">
-          <span>🏆 Votos em Prêmios Especiais</span>
+          <span>📝 6. Observações Gerais</span>
         </div>
-
-        <!-- Superação -->
-        <div class="special-vote-box">
-          <div class="special-vote-label">
-            <h3>🚀 Prêmio Superação</h3>
-            <p>A equipe superou falhas técnicas graves com resiliência e atitude positiva?</p>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggleSuperacao">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <!-- Fair Play -->
-        <div class="special-vote-box">
-          <div class="special-vote-label">
-            <h3>🤝 Prêmio Fair Play</h3>
-            <p>Ajudou outras equipes com ferramentas/peças e teve conduta ética exemplar?</p>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggleFairPlay">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </section>
-
-      <!-- Observações do Juiz -->
-      <section class="mobile-card">
-        <div class="mobile-card-title">
-          <span>📝 Observações do Juiz</span>
-        </div>
-        <textarea id="inputObservacoes" class="textarea-notes" placeholder="Descreva pontos fortes ou justificativas para a comissão julgadora..."></textarea>
+        <textarea id="inputObservacoes" class="textarea-notes" placeholder="Observações, pontos fortes ou justificativas para a comissão julgadora..."></textarea>
       </section>
 
       <!-- Botão de Envio Oficial -->

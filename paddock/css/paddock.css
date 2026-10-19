@@ -182,160 +182,139 @@ body.paddock-body {
   color: #92400E;
 }
 
-/* Bloco de Critério com Escala 0 a 10 Tátil */
-.rubric-block {
-  margin-bottom: 22px;
-}
-
+/* ==========================================================================
+   RUBRICA OFICIAL DE 3 NÍVEIS (EDITAL 08)
+   ========================================================================== */
 .rubric-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   margin-bottom: 6px;
+  gap: 12px;
 }
 
 .rubric-title {
-  font-size: 0.92rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--color-primary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.rubric-badge-status {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.rubric-badge-status.status-1 {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+  color: #92400E;
+}
+
+.rubric-badge-status.status-2 {
+  background: #002B49;
+  border-color: #002B49;
+  color: #FFFFFF;
+}
+
+.rubric-badge-status.status-3 {
+  background: #F26522;
+  border-color: #F26522;
+  color: #FFFFFF;
 }
 
 .rubric-desc {
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   color: var(--text-muted);
-  margin-bottom: 10px;
-  line-height: 1.35;
+  margin-bottom: 14px;
+  line-height: 1.45;
 }
 
-.rubric-score-display {
-  font-size: 1.25rem;
-  font-weight: 900;
-  color: var(--color-accent);
-  background: var(--color-accent-subtle);
-  padding: 2px 10px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-timer);
-}
-
-/* Grade de Botões Numéricos de 0 a 10 para Toque Fácil */
-.score-pill-grid {
+/* Grid de Botões Segmentados (3 Estados) */
+.rubric-segmented-grid {
   display: grid;
-  grid-template-columns: repeat(11, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
 
 @media (max-width: 480px) {
-  .score-pill-grid {
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
+  .rubric-segmented-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 }
 
-.score-btn {
-  aspect-ratio: 1;
+.rubric-chip-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid var(--border-strong);
-  border-radius: var(--radius-md);
+  min-height: 56px;
+  padding: 10px 8px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid #E2E8F0;
   background: #FFFFFF;
-  font-weight: 800;
-  font-size: 0.95rem;
-  color: var(--text-main);
+  color: #4A5568;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-.score-btn:active {
-  transform: scale(0.92);
+.rubric-chip-btn:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
 }
 
-.score-btn.active {
-  background: var(--color-primary);
-  color: #FFFFFF;
-  border-color: var(--color-primary);
-  box-shadow: 0 2px 6px rgba(0, 43, 73, 0.3);
-  transform: scale(1.05);
+.rubric-chip-btn:active {
+  transform: scale(0.98);
 }
 
-.score-btn.active.high-score {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  box-shadow: 0 2px 8px rgba(242, 101, 34, 0.4);
-}
-
-/* Switches para Votos Especiais (Superação / Fair Play) */
-.special-vote-box {
-  background: #FFFFFF;
-  border: 1.5px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 14px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.special-vote-label h3 {
-  font-size: 0.92rem;
+.rubric-chip-title {
+  font-size: 0.88rem;
   font-weight: 800;
-  color: var(--color-primary);
+  margin-bottom: 2px;
+  line-height: 1.2;
 }
 
-.special-vote-label p {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  line-height: 1.3;
+.rubric-chip-sub {
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.85;
 }
 
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 54px;
-  height: 30px;
-  flex-shrink: 0;
+/* Estado Ativo: 1. Em Desenvolvimento (Âmbar Suave) */
+.rubric-chip-btn[data-value="1"].active {
+  background: #FEF3C7 !important;
+  border-color: #F59E0B !important;
+  color: #92400E !important;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25);
 }
 
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+/* Estado Ativo: 2. Desenvolvido (Azul Marinho Anchieta) */
+.rubric-chip-btn[data-value="2"].active {
+  background: #002B49 !important;
+  border-color: #002B49 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 10px rgba(0, 43, 73, 0.3);
 }
 
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #CBD5E1;
-  transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
-  border-radius: 30px;
-}
-
-.toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 22px;
-  width: 22px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-input:checked + .toggle-slider {
-  background-color: var(--color-success);
-}
-
-input:checked + .toggle-slider:before {
-  transform: translateX(24px);
+/* Estado Ativo: 3. Superado ★ (Laranja Vibrante Anchieta) */
+.rubric-chip-btn[data-value="3"].active {
+  background: #F26522 !important;
+  border-color: #F26522 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(242, 101, 34, 0.35);
 }
 
 /* Campo de Observações */

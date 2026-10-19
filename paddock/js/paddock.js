@@ -1,5 +1,6 @@
 /**
  * Torneio de Robótica Anchieta - Controlador dos Juízes de Paddock (Tela 3)
+ * Ficha Oficial de Rubricas de 3 Níveis (Edital 08)
  * Mobile First - Touchscreen, 4G/Wi-Fi e Sincronização Cloudflare Workers
  */
 
@@ -16,12 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const paddockTeamCat = document.getElementById('paddockTeamCat');
   const evaluatedStatusBadge = document.getElementById('evaluatedStatusBadge');
 
-  const displayScoreMecanica = document.getElementById('displayScoreMecanica');
-  const displayScoreCaracterizacao = document.getElementById('displayScoreCaracterizacao');
-  const displayScoreTorcida = document.getElementById('displayScoreTorcida');
-
-  const toggleSuperacao = document.getElementById('toggleSuperacao');
-  const toggleFairPlay = document.getElementById('toggleFairPlay');
   const inputObservacoes = document.getElementById('inputObservacoes');
   const formPaddockEval = document.getElementById('formPaddockEval');
   const btnSubmitEval = document.getElementById('btnSubmitEval');
@@ -31,18 +26,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   const myEvalsCount = document.getElementById('myEvalsCount');
   const accordionArrow = document.getElementById('accordionArrow');
 
-  // Estado das Notas Atuais (Iniciam vazias / null para forçar o juiz a avaliar ativamente)
+  // Os 5 Prêmios Oficiais (Edital 08)
+  const CRITERIA_KEYS = ['caracterizacao', 'mecanica', 'superacao', 'torcida', 'fair_play'];
+
+  // Estado das Notas Atuais (Iniciam como null para exigir seleção ativa)
   const currentScores = {
-    mecanica: null,
     caracterizacao: null,
-    torcida: null
+    mecanica: null,
+    superacao: null,
+    torcida: null,
+    fair_play: null
   };
 
   // 1. Gestão do Nome do Juiz
   function initJudgeName() {
     let name = localStorage.getItem('paddock_judge_name');
     if (!name || name.trim() === '') {
-      name = prompt('Bem-vindo, Juiz! Digite seu nome completo para assinar as avaliações:', 'Juiz Convidado');
+      name = prompt('Bem-vindo, Juiz! Digite seu nome oficial para assinar as avaliações:', 'Juiz Convidado');
       if (!name || name.trim() === '') name = 'Juiz Oficial ' + Math.floor(Math.random() * 90 + 10);
       localStorage.setItem('paddock_judge_name', name.trim());
     }
@@ -61,9 +61,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  const judgeName = initJudgeName();
+  initJudgeName();
 
-  // 2. Histórico Local de Avaliações
+  // 2. Histórico Local de Avaliações (Fila Local Resiliente)
   function getMyEvals() {
     const raw = localStorage.getItem('paddock_evaluations_cache');
     try {
@@ -75,47 +75,74 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function saveMyEval(evalData) {
     const evals = getMyEvals();
-    // Substitui se já avaliou a mesma equipe
-    const index = evals.findIndex(e => e.equipe === evalData.equipe && e.juiz === evalData.juiz);
+    const judge = evalData.juiz_nome || evalData.juiz;
+    const teamId = evalData.equipe_id || evalData.equipe;
+
+    const index = evals.findIndex(e => 
+      (e.equipe_id === teamId || e.equipe === evalData.equipe) && 
+      (e.juiz_nome === judge || e.juiz === judge)
+    );
+
     if (index >= 0) {
       evals[index] = evalData;
     } else {
       evals.unshift(evalData);
     }
+
     localStorage.setItem('paddock_evaluations_cache', JSON.stringify(evals));
     renderMyEvals();
   }
 
-  // 3. Renderizar Botões Numéricos Táteis (0 a 10)
-  function setupScorePills(criterion, displayEl, initialValue) {
-    const container = document.querySelector(`.score-pill-grid[data-criterion="${criterion}"]`);
-    if (!container) return;
-    container.innerHTML = '';
+  // 3. Atualizar Estado Visual de cada Critério de Rubrica
+  function updateCriterionUI(criterion, val) {
+    const container = document.querySelector(`.rubric-segmented-grid[data-criterion="${criterion}"]`);
+    const badge = document.getElementById(`badgeStatus-${criterion}`);
+    const card = document.getElementById(`card-${criterion}`);
 
-    for (let i = 0; i <= 10; i++) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'score-btn' + (initialValue !== null && i === initialValue ? ' active' : '') + (i >= 9 ? ' high-score' : '');
-      btn.textContent = i;
-      btn.dataset.val = i;
-
-      btn.addEventListener('click', () => {
-        currentScores[criterion] = i;
-        displayEl.textContent = i;
-        container.querySelectorAll('.score-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if (navigator.vibrate) navigator.vibrate(15);
-      });
-
-      container.appendChild(btn);
+    if (card) {
+      card.style.borderColor = '';
     }
 
-    displayEl.textContent = initialValue !== null ? initialValue : '--';
+    if (container) {
+      container.querySelectorAll('.rubric-chip-btn').forEach(btn => {
+        const btnVal = Number(btn.dataset.value);
+        btn.classList.toggle('active', val !== null && btnVal === Number(val));
+      });
+    }
+
+    if (badge) {
+      badge.className = 'rubric-badge-status';
+      if (val === 1) {
+        badge.classList.add('status-1');
+        badge.textContent = 'Em Desenv. (1)';
+      } else if (val === 2) {
+        badge.classList.add('status-2');
+        badge.textContent = 'Desenvolvido (2)';
+      } else if (val === 3) {
+        badge.classList.add('status-3');
+        badge.textContent = 'Superado ★ (3)';
+      } else {
+        badge.textContent = '⏳ Pendente';
+      }
+    }
   }
 
-  setupScorePills('mecanica', displayScoreMecanica, null);
-  setupScorePills('caracterizacao', displayScoreCaracterizacao, null);
-  setupScorePills('torcida', displayScoreTorcida, null);
+  // Configura os cliques dos botões segmentados
+  CRITERIA_KEYS.forEach(criterion => {
+    const container = document.querySelector(`.rubric-segmented-grid[data-criterion="${criterion}"]`);
+    if (!container) return;
+
+    container.querySelectorAll('.rubric-chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = Number(btn.dataset.value);
+        currentScores[criterion] = val;
+        updateCriterionUI(criterion, val);
+        if (navigator.vibrate) navigator.vibrate(18);
+      });
+    });
+
+    updateCriterionUI(criterion, null);
+  });
 
   // 4. Carregamento de Equipes
   await window.teamsManager.load();
@@ -123,26 +150,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function populateTeamsDropdown() {
     selectTeamPaddock.innerHTML = '<option value="">-- Escolha a Equipe do Box --</option>';
-    const myEvals = getMyEvals().filter(e => e.juiz === localStorage.getItem('paddock_judge_name'));
-    const evaluatedNames = new Set(myEvals.map(e => e.equipe.toLowerCase()));
+    const currentJudge = localStorage.getItem('paddock_judge_name');
+    const myEvals = getMyEvals().filter(e => (e.juiz_nome || e.juiz) === currentJudge);
+    const evaluatedIds = new Set(myEvals.map(e => (e.equipe_id || e.equipe).toLowerCase()));
 
     teams.forEach(t => {
-      const isEval = evaluatedNames.has(t.name.toLowerCase());
+      const isEval = evaluatedIds.has((t.id || '').toLowerCase()) || evaluatedIds.has((t.name || '').toLowerCase());
       const opt = document.createElement('option');
-      opt.value = t.name;
-      opt.textContent = `${isEval ? '✅ ' : '⏳ '}${t.name} (${t.category.includes('LEGO') ? 'LEGO' : 'MAKER'})`;
+      opt.value = t.id || t.name;
+      opt.textContent = `${isEval ? '✅ ' : '⏳ '}[${t.id || 'EQ'}] ${t.name} (${t.category.includes('LEGO') ? 'LEGO' : 'MAKER'})`;
       selectTeamPaddock.appendChild(opt);
     });
 
     if (teams.length > 0) {
-      selectTeamPaddock.value = teams[0].name;
+      selectTeamPaddock.value = teams[0].id || teams[0].name;
       updateSelectedTeamUI();
     }
   }
 
   function updateSelectedTeamUI() {
-    const selectedName = selectTeamPaddock.value;
-    const team = teams.find(t => t.name === selectedName);
+    const selectedVal = selectTeamPaddock.value;
+    const team = teams.find(t => (t.id === selectedVal) || (t.name === selectedVal));
     if (!team) {
       paddockTeamName.textContent = '--';
       paddockTeamSchool.textContent = '--';
@@ -155,57 +183,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Verifica se já foi avaliada por este juiz
     const currentJudge = localStorage.getItem('paddock_judge_name');
-    const existing = getMyEvals().find(e => e.equipe.toLowerCase() === team.name.toLowerCase() && e.juiz === currentJudge);
+    const existing = getMyEvals().find(e => 
+      ((e.equipe_id && e.equipe_id.toLowerCase() === (team.id || '').toLowerCase()) ||
+       (e.equipe && e.equipe.toLowerCase() === team.name.toLowerCase())) &&
+      ((e.juiz_nome || e.juiz) === currentJudge)
+    );
 
     if (existing) {
       evaluatedStatusBadge.className = 'evaluated-badge done';
       evaluatedStatusBadge.textContent = '✅ Já Avaliada por Você';
 
-      // Preenche com as notas salvas
-      currentScores.mecanica = existing.nota_mecanica;
-      displayScoreMecanica.textContent = existing.nota_mecanica;
-      updateActivePill('mecanica', existing.nota_mecanica);
+      CRITERIA_KEYS.forEach(key => {
+        const val = existing[key] ?? existing[`nota_${key}`] ?? (existing[`voto_${key}`] ? 3 : 2);
+        currentScores[key] = val !== undefined ? Number(val) : null;
+        updateCriterionUI(key, currentScores[key]);
+      });
 
-      currentScores.caracterizacao = existing.nota_caracterizacao;
-      displayScoreCaracterizacao.textContent = existing.nota_caracterizacao;
-      updateActivePill('caracterizacao', existing.nota_caracterizacao);
-
-      currentScores.torcida = existing.nota_torcida;
-      displayScoreTorcida.textContent = existing.nota_torcida;
-      updateActivePill('torcida', existing.nota_torcida);
-
-      toggleSuperacao.checked = !!existing.voto_superacao;
-      toggleFairPlay.checked = !!existing.voto_fair_play;
       inputObservacoes.value = existing.observacoes || '';
     } else {
       evaluatedStatusBadge.className = 'evaluated-badge pending';
       evaluatedStatusBadge.textContent = '⏳ Aguardando Avaliação';
 
-      // Reseta para vazio (obriga o juiz a tocar na nota desejada)
-      currentScores.mecanica = null;
-      displayScoreMecanica.textContent = '--';
-      updateActivePill('mecanica', null);
+      // Reseta para null (força toque ativo)
+      CRITERIA_KEYS.forEach(key => {
+        currentScores[key] = null;
+        updateCriterionUI(key, null);
+      });
 
-      currentScores.caracterizacao = null;
-      displayScoreCaracterizacao.textContent = '--';
-      updateActivePill('caracterizacao', null);
-
-      currentScores.torcida = null;
-      displayScoreTorcida.textContent = '--';
-      updateActivePill('torcida', null);
-
-      toggleSuperacao.checked = false;
-      toggleFairPlay.checked = false;
       inputObservacoes.value = '';
     }
-  }
-
-  function updateActivePill(criterion, val) {
-    const container = document.querySelector(`.score-pill-grid[data-criterion="${criterion}"]`);
-    if (!container) return;
-    container.querySelectorAll('.score-btn').forEach(btn => {
-      btn.classList.toggle('active', val !== null && Number(btn.dataset.val) === Number(val));
-    });
   }
 
   selectTeamPaddock.addEventListener('change', updateSelectedTeamUI);
@@ -214,33 +220,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   formPaddockEval.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const selectedName = selectTeamPaddock.value;
-    const team = teams.find(t => t.name === selectedName);
+    const selectedVal = selectTeamPaddock.value;
+    const team = teams.find(t => (t.id === selectedVal) || (t.name === selectedVal));
     if (!team) {
       alert('Selecione uma equipe válida para avaliar!');
       return;
     }
 
-    // Validação Obrigatória das 3 Notas
-    if (currentScores.mecanica === null || currentScores.caracterizacao === null || currentScores.torcida === null) {
-      alert('⚠️ Atenção: Por favor, selecione as 3 notas (Mecânica, Caracterização e Torcida de 0 a 10) antes de enviar a avaliação!');
+    // Validação Obrigatória dos 5 Critérios de Rubrica
+    const missing = CRITERIA_KEYS.filter(k => currentScores[k] === null);
+    if (missing.length > 0) {
+      missing.forEach(k => {
+        const card = document.getElementById(`card-${k}`);
+        if (card) {
+          card.style.borderColor = 'var(--color-danger)';
+        }
+      });
+      alert('⚠️ Atenção: Por favor, selecione os 5 critérios oficiais (Em Desenvolvimento, Desenvolvido ou Superado ★) antes de enviar!');
+      const firstMissing = document.getElementById(`card-${missing[0]}`);
+      if (firstMissing) firstMissing.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
     const currentJudge = localStorage.getItem('paddock_judge_name') || 'Juiz Oficial';
 
+    // Formato Canônico Exato do Edital 08
     const payload = {
-      juiz: currentJudge,
+      equipe_id: team.id || 'EQ-01',
+      juiz_nome: currentJudge,
+      caracterizacao: currentScores.caracterizacao,
+      mecanica: currentScores.mecanica,
+      superacao: currentScores.superacao,
+      torcida: currentScores.torcida,
+      fair_play: currentScores.fair_play,
+      observacoes: inputObservacoes.value.trim(),
+      timestamp: new Date().toISOString(),
+      // Metadados auxiliares para cache local
       equipe: team.name,
       escola: team.school,
       categoria: team.category,
-      nota_mecanica: currentScores.mecanica,
-      nota_caracterizacao: currentScores.caracterizacao,
-      voto_superacao: toggleSuperacao.checked ? 1 : 0,
-      voto_fair_play: toggleFairPlay.checked ? 1 : 0,
-      nota_torcida: currentScores.torcida,
-      observacoes: inputObservacoes.value.trim(),
-      timestamp: new Date().toISOString(),
       synced: false
     };
 
@@ -249,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Animação de envio no botão
     const originalText = btnSubmitEval.innerHTML;
-    btnSubmitEval.innerHTML = '<span>⏳ ENVIANDO PARA A NUVEM...</span>';
+    btnSubmitEval.innerHTML = '<span>⏳ ENVIANDO AVALIAÇÃO...</span>';
     btnSubmitEval.disabled = true;
 
     try {
@@ -260,7 +278,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     } catch (err) {
-      console.warn('Envio em background offline:', err);
+      console.warn('Envio em background / contingência offline:', err);
     }
 
     // Salva cópia local resiliente
@@ -275,15 +293,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       btnSubmitEval.style.background = '';
       btnSubmitEval.disabled = false;
       populateTeamsDropdown();
-      selectTeamPaddock.value = team.name;
+      selectTeamPaddock.value = team.id || team.name;
       updateSelectedTeamUI();
-    }, 1800);
+    }, 1600);
   });
 
   // 6. Accordion e Lista de Minhas Avaliações
+  function formatRubricChip(score) {
+    if (score === 3) return '<span style="color: #F26522; font-weight: 800;">3★</span>';
+    if (score === 2) return '<span style="color: #002B49; font-weight: 800;">2</span>';
+    if (score === 1) return '<span style="color: #92400E; font-weight: 800;">1</span>';
+    return '-';
+  }
+
   function renderMyEvals() {
     const currentJudge = localStorage.getItem('paddock_judge_name');
-    const myEvals = getMyEvals().filter(e => e.juiz === currentJudge);
+    const myEvals = getMyEvals().filter(e => (e.juiz_nome || e.juiz) === currentJudge);
     myEvalsCount.textContent = myEvals.length;
     myEvalsContainer.innerHTML = '';
 
@@ -299,15 +324,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? '<span style="color: #16A34A; font-weight: 800; font-size: 0.75rem;">🟢 Nuvem</span>' 
         : '<span style="color: #F26522; font-weight: 800; font-size: 0.75rem;">🟡 Celular</span>';
 
+      const teamLabel = ev.equipe || ev.equipe_id;
+
       div.innerHTML = `
         <div>
-          <div class="eval-history-team">${ev.equipe}</div>
-          <div class="eval-history-scores">
-            Mec: <strong>${ev.nota_mecanica}</strong> &bull; 
-            Caract: <strong>${ev.nota_caracterizacao}</strong> &bull; 
-            Torc: <strong>${ev.nota_torcida}</strong>
-            ${ev.voto_superacao ? ' &bull; 🚀 Superação' : ''}
-            ${ev.voto_fair_play ? ' &bull; 🤝 Fair Play' : ''}
+          <div class="eval-history-team">${teamLabel}</div>
+          <div class="eval-history-scores" style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.4;">
+            Caract: ${formatRubricChip(ev.caracterizacao)} &bull; 
+            Mec: ${formatRubricChip(ev.mecanica)} &bull; 
+            Super: ${formatRubricChip(ev.superacao)} &bull; 
+            Torc: ${formatRubricChip(ev.torcida)} &bull; 
+            Fair: ${formatRubricChip(ev.fair_play)}
           </div>
         </div>
         <div>${syncBadge}</div>

@@ -155,17 +155,27 @@ class CloudflareTorneioAPI {
   async salvarAvaliacao(avaliacao) {
     try {
       const payload = {
-        juiz: avaliacao.juiz || "Juiz Oficial",
-        equipe: avaliacao.equipe,
+        // Contrato Canônico Edital 08
+        equipe_id: avaliacao.equipe_id || avaliacao.id || "EQ-01",
+        juiz_nome: avaliacao.juiz_nome || avaliacao.juiz || "Juiz Oficial",
+        caracterizacao: Number(avaliacao.caracterizacao ?? avaliacao.nota_caracterizacao ?? 0),
+        mecanica: Number(avaliacao.mecanica ?? avaliacao.nota_mecanica ?? 0),
+        superacao: Number(avaliacao.superacao ?? avaliacao.voto_superacao ?? 0),
+        torcida: Number(avaliacao.torcida ?? avaliacao.nota_torcida ?? 0),
+        fair_play: Number(avaliacao.fair_play ?? avaliacao.voto_fair_play ?? 0),
+        observacoes: avaliacao.observacoes || "",
+        timestamp: avaliacao.timestamp || new Date().toISOString(),
+
+        // Compatibilidade com Worker / SQLite D1 existente
+        juiz: avaliacao.juiz_nome || avaliacao.juiz || "Juiz Oficial",
+        equipe: avaliacao.equipe || avaliacao.equipe_nome || avaliacao.equipe_id || "Equipe",
         escola: avaliacao.escola || "",
         categoria: avaliacao.categoria || "LEGO / Educacional",
-        nota_mecanica: Number(avaliacao.nota_mecanica) || 0,
-        nota_caracterizacao: Number(avaliacao.nota_caracterizacao) || 0,
-        voto_superacao: avaliacao.voto_superacao ? 1 : 0,
-        voto_fair_play: avaliacao.voto_fair_play ? 1 : 0,
-        nota_torcida: Number(avaliacao.nota_torcida) || 0,
-        observacoes: avaliacao.observacoes || "",
-        timestamp: avaliacao.timestamp || new Date().toISOString()
+        nota_mecanica: Number(avaliacao.mecanica ?? avaliacao.nota_mecanica ?? 0),
+        nota_caracterizacao: Number(avaliacao.caracterizacao ?? avaliacao.nota_caracterizacao ?? 0),
+        voto_superacao: Number(avaliacao.superacao ?? avaliacao.voto_superacao ?? 0),
+        voto_fair_play: Number(avaliacao.fair_play ?? avaliacao.voto_fair_play ?? 0),
+        nota_torcida: Number(avaliacao.torcida ?? avaliacao.nota_torcida ?? 0)
       };
 
       const resp = await fetch(`${this.baseUrl}/api/avaliacoes`, {
