@@ -53,8 +53,16 @@
           🔄 Atualizar Dados
         </button>
 
-        <button type="button" id="btnOpenCeremony" onclick="window.openCeremonyModal && window.openCeremonyModal()" class="btn-ceremony">
-          <span>🏆 CERIMÔNIA DE PÓDIO (MODO TELÃO)</span>
+        <!-- Botão 1: Pódio Total Automático (Todos os 5 Troféus de Box + Pódio de Pista) -->
+        <button type="button" id="btnOpenCeremonyFull" class="btn-ceremony btn-ceremony-gold">
+          <span>🏆 PÓDIO TOTAL AUTOMÁTICO</span>
+          <small class="btn-ceremony-sub">5 Troféus do Paddock em Sequência ➔ Pódio Top 3</small>
+        </button>
+
+        <!-- Botão 2: Apenas Pódio de Velocidade da Pista (Top 3) -->
+        <button type="button" id="btnOpenCeremonyTrack" class="btn-ceremony btn-ceremony-blue">
+          <span>🏎️ SÓ PÓDIO DE PISTA (TOP 3)</span>
+          <small class="btn-ceremony-sub">Velocidade (3º ➔ 2º ➔ 1º Lugar)</small>
         </button>
       </div>
     </div>
@@ -178,6 +186,22 @@
       </div>
     </div>
 
+    <!-- Banner de Status do Show / Autoplay -->
+    <div id="ceremonyStatusBanner" class="ceremony-status-banner">
+      <span id="ceremonyStatusPulse" class="status-pulse-dot"></span>
+      <span id="ceremonyStatusText">Pódio Oficial do Torneio • Pronto para apresentação</span>
+    </div>
+
+    <!-- Stepper Sequencial de Passos da Cerimônia Oficial -->
+    <div id="ceremonyStepper" class="ceremony-stepper-container">
+      <div class="step-chip active" data-step-key="PREMIO_mecanica">1. ⚙️ Mecânica</div>
+      <div class="step-chip" data-step-key="PREMIO_superacao">2. 🚀 Superação</div>
+      <div class="step-chip" data-step-key="PREMIO_caracterizacao">3. 🎭 Caracterização</div>
+      <div class="step-chip" data-step-key="PREMIO_torcida">4. 📣 Torcida</div>
+      <div class="step-chip" data-step-key="PREMIO_fair_play">5. 🤝 Fair Play</div>
+      <div class="step-chip highlight" data-step-key="VELOCIDADE_LEGO">🏁 6. Pódio Pista (Top 3)</div>
+    </div>
+
     <!-- Palco do Pódio 3D Virtual -->
     <div id="podiumStage" class="podium-stage">
       
@@ -227,6 +251,9 @@
 
     <!-- Barra de Ações para Revelação com Suspense -->
     <div class="ceremony-action-bar">
+      <button type="button" id="btnRevealTrackAuto" class="btn-reveal" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); font-weight: 900;">
+        ▶ Revelar Top 3 Automático
+      </button>
       <button type="button" id="btnReveal3" class="btn-reveal">🥉 Revelar 3º Lugar</button>
       <button type="button" id="btnReveal2" class="btn-reveal" disabled>🥈 Revelar 2º Lugar</button>
       <button type="button" id="btnReveal1" class="btn-reveal" style="background: var(--color-accent); font-weight: 900;" disabled>
@@ -234,11 +261,31 @@
       </button>
     </div>
 
+    <!-- Barra de Navegação Sequencial e Autoplay -->
+    <div class="ceremony-nav-bar">
+      <button type="button" id="btnCeremonyPrev" class="btn-ceremony-nav" title="Voltar ao prêmio anterior">
+        ⏮️ Anterior
+      </button>
+
+      <button type="button" id="btnCeremonyAutoPlay" class="btn-autoplay" title="Apresenta os 5 troféus e o pódio de velocidade em sequência contínua com suspense automático">
+        <span>▶ Reprodução Automática (Show)</span>
+      </button>
+
+      <button type="button" id="btnCeremonyNext" class="btn-ceremony-nav" title="Avançar para o próximo prêmio">
+        Próximo Prêmio ⏭️
+      </button>
+
+      <!-- Barra de Progresso do Timer de Transição Automática -->
+      <div id="autoplayProgress" class="autoplay-progress-bar">
+        <div id="autoplayProgressFill" class="autoplay-progress-fill"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Scripts com Versionamento Anti-Cache -->
-  <script src="../shared/js/cloud-api.js?v=20261026_oficial_v3"></script>
-  <script src="../shared/js/teams-data.js?v=20261026_oficial_v3"></script>
-  <script src="js/apuracao.js?v=20261026_oficial_v3"></script>
+  <script src="../shared/js/cloud-api.js?v=20261026_oficial_v4"></script>
+  <script src="../shared/js/teams-data.js?v=20261026_oficial_v4"></script>
+  <script src="js/apuracao.js?v=20261026_oficial_v4"></script>
 </body>
 </html>

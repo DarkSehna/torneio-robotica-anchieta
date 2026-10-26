@@ -519,20 +519,225 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  // 6. Cerimônia de Premiação no Telão
-  window.openCeremonyModal = function() {
+  // 6. Cerimônia de Premiação no Telão (Pódios e Troféus Oficiais)
+  const CEREMONY_STEPS = [
+    'PREMIO_mecanica',
+    'PREMIO_superacao',
+    'PREMIO_caracterizacao',
+    'PREMIO_torcida',
+    'PREMIO_fair_play',
+    'VELOCIDADE_LEGO'
+  ];
+
+  let currentStepIndex = 0;
+  let autoplayTimer = null;
+  let autoplayProgressTimer = null;
+  let isAutoplay = false;
+
+  const btnOpenCeremonyFull = document.getElementById('btnOpenCeremonyFull');
+  const btnOpenCeremonyTrack = document.getElementById('btnOpenCeremonyTrack');
+  const btnCeremonyPrev = document.getElementById('btnCeremonyPrev');
+  const btnCeremonyNext = document.getElementById('btnCeremonyNext');
+  const btnCeremonyAutoPlay = document.getElementById('btnCeremonyAutoPlay');
+  const btnRevealTrackAuto = document.getElementById('btnRevealTrackAuto');
+  const ceremonyStatusBanner = document.getElementById('ceremonyStatusBanner');
+  const ceremonyStatusText = document.getElementById('ceremonyStatusText');
+  const autoplayProgress = document.getElementById('autoplayProgress');
+  const autoplayProgressFill = document.getElementById('autoplayProgressFill');
+  const ceremonyStepper = document.getElementById('ceremonyStepper');
+
+  function setStatusBanner(msg, isRunning = false) {
+    if (ceremonyStatusText) ceremonyStatusText.textContent = msg;
+    if (ceremonyStatusBanner) {
+      if (isRunning) ceremonyStatusBanner.classList.add('running');
+      else ceremonyStatusBanner.classList.remove('running');
+    }
+  }
+
+  function resetPodium() {
+    ['podiumPillar1', 'podiumPillar2', 'podiumPillar3'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('revealed');
+    });
+    if (btnReveal3) btnReveal3.disabled = false;
+    if (btnReveal2) btnReveal2.disabled = true;
+    if (btnReveal1) btnReveal1.disabled = true;
+  }
+
+  window.openCeremonyModal = function(mode = 'AUTO_FULL') {
     if (ceremonyModal) {
       ceremonyModal.classList.add('active');
-      resetPodium();
-      updateCeremonyView();
+      stopAutoplay();
+      
+      if (mode === 'TRACK') {
+        goToStep(CEREMONY_STEPS.length - 1); // Vai direto para o Pódio de Pista
+        setStatusBanner('🏎️ Pódio de Pista pronto. Clique nos botões para revelar com suspense.');
+      } else {
+        // Pódio Total Automático (Show Completo dos 5 Troféus + Pódio de Pista)
+        goToStep(0); // Inicia do primeiro prêmio (1. ⚙️ Mecânica)
+        setStatusBanner('🚀 Pódio Total Selecionado! Iniciando show automático em instantes...', true);
+        setTimeout(() => {
+          startAutoplay();
+        }, 600);
+      }
     }
   };
 
   window.closeCeremonyModal = function() {
     if (ceremonyModal) {
       ceremonyModal.classList.remove('active');
+      stopAutoplay();
     }
   };
+
+  function goToStep(index) {
+    if (index < 0 || index >= CEREMONY_STEPS.length) return;
+    currentStepIndex = index;
+    const targetAward = CEREMONY_STEPS[currentStepIndex];
+
+    if (ceremonySelectAward) {
+      ceremonySelectAward.value = targetAward;
+    }
+
+    // Atualiza Stepper Chips
+    if (ceremonyStepper) {
+      const chips = ceremonyStepper.querySelectorAll('.step-chip');
+      chips.forEach((chip, idx) => {
+        if (idx === currentStepIndex) {
+          chip.classList.add('active');
+        } else {
+          chip.classList.remove('active');
+        }
+      });
+    }
+
+    // Atualiza Botões Anterior / Próximo
+    if (btnCeremonyPrev) btnCeremonyPrev.disabled = (currentStepIndex === 0);
+    if (btnCeremonyNext) btnCeremonyNext.disabled = (currentStepIndex === CEREMONY_STEPS.length - 1);
+
+    resetPodium();
+    updateCeremonyView();
+  }
+
+  function stopAutoplay() {
+    isAutoplay = false;
+    clearTimeout(autoplayTimer);
+    clearInterval(autoplayProgressTimer);
+    if (btnCeremonyAutoPlay) {
+      btnCeremonyAutoPlay.classList.remove('running');
+      btnCeremonyAutoPlay.innerHTML = '<span>▶ Iniciar Show Automático</span>';
+    }
+    if (autoplayProgress) {
+      autoplayProgress.classList.remove('active');
+    }
+    if (autoplayProgressFill) {
+      autoplayProgressFill.style.width = '0%';
+    }
+    setStatusBanner('Apresentação pausada. Você pode avançar manualmente ou retomar o show.', false);
+  }
+
+  function startAutoplay() {
+    isAutoplay = true;
+    if (btnCeremonyAutoPlay) {
+      btnCeremonyAutoPlay.classList.add('running');
+      btnCeremonyAutoPlay.innerHTML = '<span>⏸️ Pausar Apresentação</span>';
+    }
+    if (autoplayProgress) {
+      autoplayProgress.classList.add('active');
+    }
+    runAutoplayStep();
+  }
+
+  function runAutoplayStep() {
+    if (!isAutoplay) return;
+
+    const currentKey = CEREMONY_STEPS[currentStepIndex];
+    const isBoxAward = currentKey.startsWith('PREMIO_');
+
+    if (isBoxAward) {
+      const awardKey = currentKey.replace('PREMIO_', '');
+      const meta = AWARDS_METADATA.find(m => m.id === awardKey);
+      const awardName = meta ? meta.name : 'Troféu Oficial';
+
+      // 1. Prêmio de Box: Suspense de 2.5s
+      resetPodium();
+      setStatusBanner(`🥁 Atenção Ginásio! Apurando vencedor de: ${awardName.toUpperCase()}...`, true);
+
+      animateProgressBar(2500, () => {
+        if (!isAutoplay) return;
+        window.revealPillar(1);
+        
+        const winnerEl = document.getElementById('podiumTeamName1');
+        const winnerName = winnerEl ? winnerEl.textContent : '';
+        setStatusBanner(`🎉 PARABÉNS: ${winnerName}! Vencedor do Troféu ${awardName}!`, true);
+
+        // 2. Tempo de Comemoração de 6.5s antes de passar ao próximo
+        animateProgressBar(6500, () => {
+          if (!isAutoplay) return;
+          if (currentStepIndex < CEREMONY_STEPS.length - 1) {
+            goToStep(currentStepIndex + 1);
+            runAutoplayStep();
+          } else {
+            stopAutoplay();
+            setStatusBanner('🏆 Cerimônia Concluída com Sucesso!', false);
+          }
+        });
+      });
+    } else {
+      // 2. Grand Finale: Pódio de Pista (3º -> 2º -> 1º)
+      runTrackAutoplay();
+    }
+  }
+
+  function runTrackAutoplay() {
+    resetPodium();
+    if (autoplayProgress) autoplayProgress.classList.add('active');
+    
+    // Revelação 3º Lugar (Bronze)
+    setStatusBanner('🥉 Ginásio em suspense... Revelando o 3º Lugar da Pista!', true);
+    animateProgressBar(2200, () => {
+      window.revealPillar(3);
+      const name3 = document.getElementById('podiumTeamName3')?.textContent || '';
+      setStatusBanner(`🥉 3º Lugar: ${name3}! Preparando revelação do Vice-Campeão...`, true);
+
+      // Revelação 2º Lugar (Prata)
+      animateProgressBar(3500, () => {
+        window.revealPillar(2);
+        const name2 = document.getElementById('podiumTeamName2')?.textContent || '';
+        setStatusBanner(`🥈 Vice-Campeão: ${name2}! E agora... O Grande Campeão da Pista!`, true);
+
+        // Revelação 1º Lugar (Ouro / Grande Campeão)
+        setStatusBanner('🥁 E O GRANDE CAMPEÃO DO TORNEIO DE ROBÓTICA ANCHIETA É...', true);
+        animateProgressBar(3500, () => {
+          window.revealPillar(1);
+          const name1 = document.getElementById('podiumTeamName1')?.textContent || '';
+          setStatusBanner(`🏆 🥇 GRANDE CAMPEÃO: ${name1}! PARABÉNS A TODAS AS EQUIPES!`, true);
+
+          animateProgressBar(8000, () => {
+            if (isAutoplay) stopAutoplay();
+            setStatusBanner('🏆 Cerimônia Oficial Concluída com Sucesso! Parabéns a Todos!', false);
+          });
+        });
+      });
+    });
+  }
+
+  function animateProgressBar(durationMs, onComplete) {
+    if (autoplayProgressFill) autoplayProgressFill.style.width = '0%';
+    const startTime = Date.now();
+
+    clearInterval(autoplayProgressTimer);
+    autoplayProgressTimer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(100, (elapsed / durationMs) * 100);
+      if (autoplayProgressFill) autoplayProgressFill.style.width = `${pct}%`;
+
+      if (elapsed >= durationMs) {
+        clearInterval(autoplayProgressTimer);
+        if (onComplete) onComplete();
+      }
+    }, 40);
+  }
 
   window.revealPillar = function(pos) {
     if (pos === 3) {
@@ -552,39 +757,131 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (p1) p1.classList.add('revealed');
       if (btnReveal1) btnReveal1.disabled = true;
       triggerFanfare();
+      triggerConfetti();
     }
   };
 
+  function triggerConfetti() {
+    try {
+      const stage = document.getElementById('podiumStage');
+      if (!stage) return;
+      const colors = ['#F59E0B', '#EF4444', '#10B981', '#3B82F6', '#EC4899', '#FDE047'];
+      for (let i = 0; i < 35; i++) {
+        const flake = document.createElement('div');
+        flake.style.position = 'absolute';
+        flake.style.width = `${Math.floor(Math.random() * 8 + 6)}px`;
+        flake.style.height = `${Math.floor(Math.random() * 12 + 6)}px`;
+        flake.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        flake.style.left = `${Math.random() * 100}%`;
+        flake.style.top = '-20px';
+        flake.style.opacity = '1';
+        flake.style.borderRadius = '2px';
+        flake.style.zIndex = '999';
+        flake.style.pointerEvents = 'none';
+        flake.style.transition = `all ${Math.random() * 2 + 2}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+        stage.appendChild(flake);
+
+        setTimeout(() => {
+          flake.style.top = `${Math.random() * 80 + 20}%`;
+          flake.style.transform = `rotate(${Math.random() * 720 - 360}deg) translateX(${Math.random() * 100 - 50}px)`;
+          flake.style.opacity = '0';
+        }, 50);
+
+        setTimeout(() => flake.remove(), 4500);
+      }
+    } catch(e) {}
+  }
+
   function setupCeremony() {
-    if (btnOpenCeremony) btnOpenCeremony.addEventListener('click', window.openCeremonyModal);
-    if (btnCloseCeremony) btnCloseCeremony.addEventListener('click', window.closeCeremonyModal);
+    if (btnOpenCeremonyFull) {
+      btnOpenCeremonyFull.addEventListener('click', () => window.openCeremonyModal('AUTO_FULL'));
+    }
+    if (btnOpenCeremonyTrack) {
+      btnOpenCeremonyTrack.addEventListener('click', () => window.openCeremonyModal('TRACK'));
+    }
+    if (btnCloseCeremony) {
+      btnCloseCeremony.addEventListener('click', window.closeCeremonyModal);
+    }
+    if (btnRevealTrackAuto) {
+      btnRevealTrackAuto.addEventListener('click', () => runTrackAutoplay());
+    }
+
+    if (btnCeremonyPrev) {
+      btnCeremonyPrev.addEventListener('click', () => {
+        stopAutoplay();
+        goToStep(currentStepIndex - 1);
+      });
+    }
+
+    if (btnCeremonyNext) {
+      btnCeremonyNext.addEventListener('click', () => {
+        stopAutoplay();
+        goToStep(currentStepIndex + 1);
+      });
+    }
+
+    if (btnCeremonyAutoPlay) {
+      btnCeremonyAutoPlay.addEventListener('click', () => {
+        if (isAutoplay) {
+          stopAutoplay();
+        } else {
+          startAutoplay();
+        }
+      });
+    }
+
+    if (ceremonyStepper) {
+      const chips = ceremonyStepper.querySelectorAll('.step-chip');
+      chips.forEach((chip, idx) => {
+        chip.addEventListener('click', () => {
+          stopAutoplay();
+          goToStep(idx);
+        });
+      });
+    }
 
     if (ceremonySelectAward) {
       ceremonySelectAward.addEventListener('change', () => {
-        resetPodium();
-        updateCeremonyView();
+        stopAutoplay();
+        const val = ceremonySelectAward.value;
+        const foundIdx = CEREMONY_STEPS.indexOf(val);
+        if (foundIdx >= 0) {
+          goToStep(foundIdx);
+        } else {
+          resetPodium();
+          updateCeremonyView();
+        }
       });
     }
 
     if (btnReveal3) btnReveal3.addEventListener('click', () => window.revealPillar(3));
     if (btnReveal2) btnReveal2.addEventListener('click', () => window.revealPillar(2));
     if (btnReveal1) btnReveal1.addEventListener('click', () => window.revealPillar(1));
-  }
 
-  function resetPodium() {
-    ['podiumPillar1', 'podiumPillar2', 'podiumPillar3'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('revealed');
+    // Suporte a Atalhos de Teclado no Modo Telão Fullscreen
+    document.addEventListener('keydown', (e) => {
+      if (!ceremonyModal || !ceremonyModal.classList.contains('active')) return;
+
+      if (e.key === 'Escape') {
+        window.closeCeremonyModal();
+      } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        stopAutoplay();
+        goToStep(currentStepIndex + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        stopAutoplay();
+        goToStep(currentStepIndex - 1);
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        const currentKey = CEREMONY_STEPS[currentStepIndex];
+        if (currentKey.startsWith('PREMIO_')) {
+          window.revealPillar(1);
+        } else {
+          if (!btnReveal3.disabled) window.revealPillar(3);
+          else if (!btnReveal2.disabled) window.revealPillar(2);
+          else if (!btnReveal1.disabled) window.revealPillar(1);
+        }
+      }
     });
-
-    const isBoxAward = ceremonySelectAward && ceremonySelectAward.value.startsWith('PREMIO_');
-    if (isBoxAward) {
-      if (btnReveal1) btnReveal1.disabled = false;
-    } else {
-      if (btnReveal3) btnReveal3.disabled = false;
-      if (btnReveal2) btnReveal2.disabled = true;
-      if (btnReveal1) btnReveal1.disabled = true;
-    }
   }
 
   function updateCeremonyView() {
@@ -624,6 +921,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (trophy1El) trophy1El.textContent = '🏆';
 
       // Botões de Ação: Apenas botão único de revelação do campeão
+      if (btnRevealTrackAuto) btnRevealTrackAuto.style.display = 'none';
       if (btnReveal3) btnReveal3.style.display = 'none';
       if (btnReveal2) btnReveal2.style.display = 'none';
       if (btnReveal1) {
@@ -684,6 +982,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (label1El) label1El.textContent = 'Grande Campeão';
     if (trophy1El) trophy1El.textContent = '🥇';
 
+    if (btnRevealTrackAuto) btnRevealTrackAuto.style.display = 'inline-flex';
     if (btnReveal3) btnReveal3.style.display = 'inline-flex';
     if (btnReveal2) btnReveal2.style.display = 'inline-flex';
     if (btnReveal1) {
@@ -721,8 +1020,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!nameEl) return;
     if (candidate) {
       nameEl.textContent = candidate.team.name;
-      schoolEl.textContent = candidate.team.school;
-      timeEl.textContent = candidate.track.hasValidRun ? formatMs(candidate.track.bestTimeMs) : 'SEM TEMPO';
+      schoolEl.textContent = `${candidate.team.school} • ${candidate.team.category}`;
+      if (candidate.track.hasValidRun) {
+        const timeFormatted = formatMs(candidate.track.bestTimeMs);
+        const fouls = candidate.track.bestTimeFouls;
+        timeEl.innerHTML = `
+          <div style="font-size: 1.4rem; font-weight: 900;">${timeFormatted}</div>
+          <div style="font-size: 0.80rem; opacity: 0.88; font-weight: 600; margin-top: 2px;">
+            ${fouls === 0 ? '✓ Volta Limpa (0 Faltas)' : `⚠ ${fouls} ${fouls === 1 ? 'falta' : 'faltas'}`}
+          </div>
+        `;
+      } else {
+        timeEl.innerHTML = `<span style="color: var(--color-danger); font-weight: 800; font-size: 1rem;">SEM TEMPO</span>`;
+      }
     } else {
       nameEl.textContent = 'Aguardando...';
       schoolEl.textContent = '--';
