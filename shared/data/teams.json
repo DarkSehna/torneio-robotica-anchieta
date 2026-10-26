@@ -25,30 +25,42 @@
   },
   {
     "id": "EQ-05",
+    "name": "Anchieta5",
+    "school": "Colégio Anchieta",
+    "category": "LEGO / Educacional"
+  },
+  {
+    "id": "EQ-06",
+    "name": "Anchieta6",
+    "school": "Colégio Anchieta",
+    "category": "LEGO / Educacional"
+  },
+  {
+    "id": "EQ-07",
     "name": "Farroupilha 1",
     "school": "Colégio Farroupilha",
     "category": "LEGO / Educacional"
   },
   {
-    "id": "EQ-06",
+    "id": "EQ-08",
     "name": "Farroupilha 2",
     "school": "Colégio Farroupilha",
     "category": "LEGO / Educacional"
   },
   {
-    "id": "EQ-07",
+    "id": "EQ-09",
     "name": "Província 1",
     "school": "Colégio Província",
     "category": "LEGO / Educacional"
   },
   {
-    "id": "EQ-08",
+    "id": "EQ-10",
     "name": "Província 2",
     "school": "Colégio Província",
     "category": "LEGO / Educacional"
   },
   {
-    "id": "EQ-09",
+    "id": "EQ-11",
     "name": "Província 3",
     "school": "Colégio Província",
     "category": "LEGO / Educacional"

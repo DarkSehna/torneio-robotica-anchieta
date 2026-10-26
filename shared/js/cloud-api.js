@@ -10,26 +10,17 @@ class CloudflareTorneioAPI {
     this.isOnline = false;
   }
 
-  // Gera URL com timestamp anti-cache para garantir que celulares nunca usem cache HTTP de disco
+  // Gera URL com timestamp anti-cache para garantir que navegadores (móveis e desktop)
+  // nunca usem cache HTTP de disco, mantendo a requisição como CORS Simple Request (sem Preflight OPTIONS)
   _getNoCacheUrl(endpoint) {
     const sep = endpoint.includes('?') ? '&' : '?';
     return `${this.baseUrl}${endpoint}${sep}_t=${Date.now()}`;
   }
 
-  _getNoCacheHeaders() {
-    return {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    };
-  }
-
   async checkHealth() {
     try {
       const resp = await fetch(this._getNoCacheUrl('/'), {
-        method: 'GET',
-        cache: 'no-store',
-        headers: this._getNoCacheHeaders()
+        method: 'GET'
       });
       if (resp.ok) {
         const data = await resp.json();
@@ -46,9 +37,7 @@ class CloudflareTorneioAPI {
   async getEquipes() {
     try {
       const resp = await fetch(this._getNoCacheUrl('/api/equipes'), {
-        method: 'GET',
-        cache: 'no-store',
-        headers: this._getNoCacheHeaders()
+        method: 'GET'
       });
       if (resp.ok) {
         return await resp.json();
@@ -109,9 +98,7 @@ class CloudflareTorneioAPI {
   async getCorridas() {
     try {
       const resp = await fetch(this._getNoCacheUrl('/api/corridas'), {
-        method: 'GET',
-        cache: 'no-store',
-        headers: this._getNoCacheHeaders()
+        method: 'GET'
       });
       if (resp.ok) {
         return await resp.json();
@@ -178,9 +165,7 @@ class CloudflareTorneioAPI {
   async getAvaliacoes() {
     try {
       const resp = await fetch(this._getNoCacheUrl('/api/avaliacoes'), {
-        method: 'GET',
-        cache: 'no-store',
-        headers: this._getNoCacheHeaders()
+        method: 'GET'
       });
       if (resp.ok) {
         return await resp.json();
@@ -242,9 +227,7 @@ class CloudflareTorneioAPI {
   async getApuracao() {
     try {
       const resp = await fetch(this._getNoCacheUrl('/api/apuracao'), {
-        method: 'GET',
-        cache: 'no-store',
-        headers: this._getNoCacheHeaders()
+        method: 'GET'
       });
       if (resp.ok) {
         return await resp.json();

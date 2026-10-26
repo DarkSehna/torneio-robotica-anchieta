@@ -3,19 +3,21 @@
  * Deduplicação Inteligente, Auto-Purga de Versão e Prioridade Nuvem (Cloudflare D1)
  */
 
-const TEAMS_CACHE_VERSION = 'v2026_anchieta_oficial_v5';
+const TEAMS_CACHE_VERSION = 'v2026_anchieta_oficial_v6';
 
-// As 9 equipes oficiais do torneio
+// As equipes oficiais do torneio
 const DEFAULT_TEAMS = [
   { id: "EQ-01", name: "Anchieta1", school: "Colégio Anchieta", category: "LEGO / Educacional" },
   { id: "EQ-02", name: "Anchieta 2", school: "Colégio Anchieta", category: "LEGO / Educacional" },
   { id: "EQ-03", name: "Anchieta 3", school: "Colégio Anchieta", category: "LEGO / Educacional" },
   { id: "EQ-04", name: "Anchieta 4", school: "Colégio Anchieta", category: "LEGO / Educacional" },
-  { id: "EQ-05", name: "Farroupilha 1", school: "Colégio Farroupilha", category: "LEGO / Educacional" },
-  { id: "EQ-06", name: "Farroupilha 2", school: "Colégio Farroupilha", category: "LEGO / Educacional" },
-  { id: "EQ-07", name: "Província 1", school: "Colégio Província", category: "LEGO / Educacional" },
-  { id: "EQ-08", name: "Província 2", school: "Colégio Província", category: "LEGO / Educacional" },
-  { id: "EQ-09", name: "Província 3", school: "Colégio Província", category: "LEGO / Educacional" }
+  { id: "EQ-05", name: "Anchieta5", school: "Colégio Anchieta", category: "LEGO / Educacional" },
+  { id: "EQ-06", name: "Anchieta6", school: "Colégio Anchieta", category: "LEGO / Educacional" },
+  { id: "EQ-07", name: "Farroupilha 1", school: "Colégio Farroupilha", category: "LEGO / Educacional" },
+  { id: "EQ-08", name: "Farroupilha 2", school: "Colégio Farroupilha", category: "LEGO / Educacional" },
+  { id: "EQ-09", name: "Província 1", school: "Colégio Província", category: "LEGO / Educacional" },
+  { id: "EQ-10", name: "Província 2", school: "Colégio Província", category: "LEGO / Educacional" },
+  { id: "EQ-11", name: "Província 3", school: "Colégio Província", category: "LEGO / Educacional" }
 ];
 
 // AUTO-PURGA TRANSPARENTE DE CACHE ANTIGO:

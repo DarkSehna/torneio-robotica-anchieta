@@ -11,8 +11,8 @@
   <meta http-equiv="Expires" content="0">
   
   <!-- CSS Compartilhado e Específico -->
-  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial">
-  <link rel="stylesheet" href="css/paddock.css?v=20261026_oficial">
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial_v2">
+  <link rel="stylesheet" href="css/paddock.css?v=20261026_oficial_v2">
 </head>
 <body class="paddock-body">
 
@@ -31,6 +31,11 @@
       </div>
 
       <div style="display: flex; align-items: center; gap: 8px;">
+        <!-- Botão Voltar ao Hub Central -->
+        <a href="../index.html" class="btn-hub-nav" title="Voltar à Central do Torneio" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+          <span>🏠 Início</span>
+        </a>
+
         <!-- Botão de Sincronização / Atualização Rápida -->
         <button type="button" id="btnRefreshTeams" class="btn-refresh-teams" title="Atualizar dados da nuvem" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
           <span>🔄</span>
@@ -249,8 +254,8 @@
   </main>
 
   <!-- Scripts com Versionamento Anti-Cache -->
-  <script src="../shared/js/cloud-api.js?v=20261026_oficial"></script>
-  <script src="../shared/js/teams-data.js?v=20261026_oficial"></script>
-  <script src="js/paddock.js?v=20261026_oficial"></script>
+  <script src="../shared/js/cloud-api.js?v=20261026_oficial_v2"></script>
+  <script src="../shared/js/teams-data.js?v=20261026_oficial_v2"></script>
+  <script src="js/paddock.js?v=20261026_oficial_v2"></script>
 </body>
 </html>
