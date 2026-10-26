@@ -5,9 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Telão do Ginásio — Torneio de Robótica Anchieta</title>
   
+  <!-- Anti-cache estrito -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <!-- CSS Compartilhado e Específico -->
-  <link rel="stylesheet" href="../shared/css/design-tokens.css">
-  <link rel="stylesheet" href="css/telao-ginasio.css">
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial">
+  <link rel="stylesheet" href="css/telao-ginasio.css?v=20261026_oficial">
 </head>
 <body>
 
@@ -34,7 +39,7 @@
       
       <!-- Identificação da Equipe Atual -->
       <div class="telao-team-card">
-        <h1 id="telaoTeamName" class="telao-team-name">RoboStorm</h1>
+        <h1 id="telaoTeamName" class="telao-team-name">Anchieta1</h1>
         <p id="telaoSchoolName" class="telao-school-name">Colégio Anchieta</p>
       </div>
 
@@ -74,9 +79,9 @@
 
   </div>
 
-  <!-- Scripts -->
-  <script src="js/audio-cues.js"></script>
-  <script src="js/broadcast-bus.js"></script>
-  <script src="js/telao-ginasio.js"></script>
+  <!-- Scripts com Versionamento Anti-Cache -->
+  <script src="js/audio-cues.js?v=20261026_oficial"></script>
+  <script src="js/broadcast-bus.js?v=20261026_oficial"></script>
+  <script src="js/telao-ginasio.js?v=20261026_oficial"></script>
 </body>
 </html>

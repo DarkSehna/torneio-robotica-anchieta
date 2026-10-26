@@ -144,11 +144,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateCriterionUI(criterion, null);
   });
 
+  const btnRefreshTeams = document.getElementById('btnRefreshTeams');
+
   // 4. Carregamento de Equipes
+  let teams = [];
+
+  async function reloadTeamsFromCloud(animateBtn = false) {
+    if (animateBtn && btnRefreshTeams) {
+      btnRefreshTeams.style.transform = 'rotate(360deg)';
+      btnRefreshTeams.style.transition = 'transform 0.5s ease';
+      setTimeout(() => {
+        btnRefreshTeams.style.transform = 'none';
+        btnRefreshTeams.style.transition = 'none';
+      }, 500);
+    }
+
+    try {
+      await window.teamsManager.load(true);
+      teams = window.teamsManager.getAll();
+      populateTeamsDropdown();
+    } catch (e) {
+      console.warn('Erro ao atualizar equipes:', e);
+    }
+  }
+
+  if (btnRefreshTeams) {
+    btnRefreshTeams.addEventListener('click', () => {
+      reloadTeamsFromCloud(true);
+    });
+  }
+
+  // Recarrega automaticamente ao focar na janela ou destravar o celular
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      reloadTeamsFromCloud(false);
+    }
+  });
+  window.addEventListener('focus', () => {
+    reloadTeamsFromCloud(false);
+  });
+
   await window.teamsManager.load();
-  const teams = window.teamsManager.getAll();
+  teams = window.teamsManager.getAll();
 
   function populateTeamsDropdown() {
+    const prevSelected = selectTeamPaddock.value;
     selectTeamPaddock.innerHTML = '<option value="">-- Escolha a Equipe do Box --</option>';
     const currentJudge = localStorage.getItem('paddock_judge_name');
     const myEvals = getMyEvals().filter(e => (e.juiz_nome || e.juiz) === currentJudge);
@@ -163,7 +203,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     if (teams.length > 0) {
-      selectTeamPaddock.value = teams[0].id || teams[0].name;
+      if (prevSelected && teams.some(t => (t.id === prevSelected) || (t.name === prevSelected))) {
+        selectTeamPaddock.value = prevSelected;
+      } else {
+        selectTeamPaddock.value = teams[0].id || teams[0].name;
+      }
       updateSelectedTeamUI();
     }
   }

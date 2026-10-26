@@ -1,50 +1,56 @@
 [
   {
     "id": "EQ-01",
-    "name": "RoboStorm",
+    "name": "Anchieta1",
     "school": "Colégio Anchieta",
     "category": "LEGO / Educacional"
   },
   {
     "id": "EQ-02",
-    "name": "CyberKnights",
+    "name": "Anchieta 2",
     "school": "Colégio Anchieta",
-    "category": "Aberta / Maker"
+    "category": "LEGO / Educacional"
   },
   {
     "id": "EQ-03",
-    "name": "Titanium Bot",
-    "school": "Escola SESI Integrada",
+    "name": "Anchieta 3",
+    "school": "Colégio Anchieta",
     "category": "LEGO / Educacional"
   },
   {
     "id": "EQ-04",
-    "name": "Vortex Alpha",
-    "school": "Instituto Federal Tecnológico",
-    "category": "Aberta / Maker"
-  },
-  {
-    "id": "EQ-05",
-    "name": "Minerva Tech",
-    "school": "Colégio São Francisco",
-    "category": "LEGO / Educacional"
-  },
-  {
-    "id": "EQ-06",
-    "name": "Omega Circuit",
-    "school": "Colégio Marista",
-    "category": "Aberta / Maker"
-  },
-  {
-    "id": "EQ-07",
-    "name": "Pioneiros da Robótica",
+    "name": "Anchieta 4",
     "school": "Colégio Anchieta",
     "category": "LEGO / Educacional"
   },
   {
+    "id": "EQ-05",
+    "name": "Farroupilha 1",
+    "school": "Colégio Farroupilha",
+    "category": "LEGO / Educacional"
+  },
+  {
+    "id": "EQ-06",
+    "name": "Farroupilha 2",
+    "school": "Colégio Farroupilha",
+    "category": "LEGO / Educacional"
+  },
+  {
+    "id": "EQ-07",
+    "name": "Província 1",
+    "school": "Colégio Província",
+    "category": "LEGO / Educacional"
+  },
+  {
     "id": "EQ-08",
-    "name": "ByteCrafters",
-    "school": "Escola Estadual Tiradentes",
-    "category": "Aberta / Maker"
+    "name": "Província 2",
+    "school": "Colégio Província",
+    "category": "LEGO / Educacional"
+  },
+  {
+    "id": "EQ-09",
+    "name": "Província 3",
+    "school": "Colégio Província",
+    "category": "LEGO / Educacional"
   }
 ]

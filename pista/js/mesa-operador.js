@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Estado Geral da Bateria Atual
   const sessionState = {
     teamId: 'EQ-01',
-    teamName: 'RoboStorm',
+    teamName: 'Anchieta1',
     schoolName: 'Colégio Anchieta',
     category: 'LEGO / Educacional',
     round: 'Round 1',
@@ -607,12 +607,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Inicialização
-  renderTeamList();
-  renderHistoryTable();
-  updateUI();
-  broadcastFullSync();
-  checkCloudStatus();
+  // Inicialização Assíncrona Resiliente
+  async function initOperator() {
+    await window.teamsManager.load();
+    const allTeams = window.teamsManager.getAll();
+    if (allTeams.length > 0) {
+      selectTeam(allTeams[0]);
+    }
+    renderTeamList();
+    renderHistoryTable();
+    updateUI();
+    broadcastFullSync();
+    checkCloudStatus();
+  }
+
+  initOperator();
 
   // Heartbeat do telão: a cada 4 segundos envia ping leve
   setInterval(() => {

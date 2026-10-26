@@ -5,9 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Juízes de Paddock — Torneio de Robótica Anchieta</title>
   
+  <!-- Anti-cache estrito para navegadores móveis (Safari iOS e Chrome Android) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
   <!-- CSS Compartilhado e Específico -->
-  <link rel="stylesheet" href="../shared/css/design-tokens.css">
-  <link rel="stylesheet" href="css/paddock.css">
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial">
+  <link rel="stylesheet" href="css/paddock.css?v=20261026_oficial">
 </head>
 <body class="paddock-body">
 
@@ -25,10 +30,17 @@
         </div>
       </div>
 
-      <!-- Badge de Status de Conectividade -->
-      <div id="cloudStatusBadge" class="badge-status cloud-offline" style="padding: 4px 10px; font-size: 0.75rem;">
-        <span class="status-dot"></span>
-        <span id="cloudStatusText">Nuvem...</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <!-- Botão de Sincronização / Atualização Rápida -->
+        <button type="button" id="btnRefreshTeams" class="btn-refresh-teams" title="Atualizar dados da nuvem" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+          <span>🔄</span>
+        </button>
+
+        <!-- Badge de Status de Conectividade -->
+        <div id="cloudStatusBadge" class="badge-status cloud-offline" style="padding: 4px 10px; font-size: 0.75rem;">
+          <span class="status-dot"></span>
+          <span id="cloudStatusText">Nuvem...</span>
+        </div>
       </div>
     </div>
 
@@ -236,9 +248,9 @@
 
   </main>
 
-  <!-- Scripts -->
-  <script src="../shared/js/cloud-api.js"></script>
-  <script src="../shared/js/teams-data.js"></script>
-  <script src="js/paddock.js"></script>
+  <!-- Scripts com Versionamento Anti-Cache -->
+  <script src="../shared/js/cloud-api.js?v=20261026_oficial"></script>
+  <script src="../shared/js/teams-data.js?v=20261026_oficial"></script>
+  <script src="js/paddock.js?v=20261026_oficial"></script>
 </body>
 </html>

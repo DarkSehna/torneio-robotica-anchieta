@@ -1,7 +1,7 @@
 /**
  * Torneio de Robótica Anchieta - Cliente Oficial Cloudflare Workers API
  * Endpoint: https://torneio-api.gabrielsehna.workers.dev
- * Compatibilidade estrita com o schema D1 SQLite
+ * Compatibilidade estrita com o schema D1 SQLite e Política Anti-Cache (Zero Cache Móvel)
  */
 
 class CloudflareTorneioAPI {
@@ -10,9 +10,27 @@ class CloudflareTorneioAPI {
     this.isOnline = false;
   }
 
+  // Gera URL com timestamp anti-cache para garantir que celulares nunca usem cache HTTP de disco
+  _getNoCacheUrl(endpoint) {
+    const sep = endpoint.includes('?') ? '&' : '?';
+    return `${this.baseUrl}${endpoint}${sep}_t=${Date.now()}`;
+  }
+
+  _getNoCacheHeaders() {
+    return {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    };
+  }
+
   async checkHealth() {
     try {
-      const resp = await fetch(`${this.baseUrl}/`, { method: 'GET' });
+      const resp = await fetch(this._getNoCacheUrl('/'), {
+        method: 'GET',
+        cache: 'no-store',
+        headers: this._getNoCacheHeaders()
+      });
       if (resp.ok) {
         const data = await resp.json();
         this.isOnline = data.status === 'online';
@@ -27,7 +45,11 @@ class CloudflareTorneioAPI {
   // Obter Equipes do Cloudflare D1 (GET /api/equipes)
   async getEquipes() {
     try {
-      const resp = await fetch(`${this.baseUrl}/api/equipes`, { method: 'GET' });
+      const resp = await fetch(this._getNoCacheUrl('/api/equipes'), {
+        method: 'GET',
+        cache: 'no-store',
+        headers: this._getNoCacheHeaders()
+      });
       if (resp.ok) {
         return await resp.json();
       }
@@ -38,7 +60,6 @@ class CloudflareTorneioAPI {
   }
 
   // Cadastrar Equipes no Cloudflare D1 (POST /api/equipes)
-  // Aceita objeto único { equipe, escola, categoria } ou Array de equipes
   async salvarEquipes(equipes) {
     try {
       const lista = Array.isArray(equipes) ? equipes : [equipes];
@@ -87,7 +108,11 @@ class CloudflareTorneioAPI {
   // Obter Corridas da Pista (GET /api/corridas)
   async getCorridas() {
     try {
-      const resp = await fetch(`${this.baseUrl}/api/corridas`, { method: 'GET' });
+      const resp = await fetch(this._getNoCacheUrl('/api/corridas'), {
+        method: 'GET',
+        cache: 'no-store',
+        headers: this._getNoCacheHeaders()
+      });
       if (resp.ok) {
         return await resp.json();
       }
@@ -98,12 +123,10 @@ class CloudflareTorneioAPI {
   }
 
   // Sincronizar Corridas Oficiais (POST /api/corridas)
-  // Suporta envio individual ou em lote (batch da Sync Queue)
   async salvarCorridas(corridas) {
     try {
       const lista = Array.isArray(corridas) ? corridas : [corridas];
       const payload = lista.map(c => {
-        // Extrai número da rodada se vier 'Round 1' ou 'Round 2'
         let rodadaNum = 1;
         if (typeof c.rodada === 'number') {
           rodadaNum = c.rodada;
@@ -137,12 +160,28 @@ class CloudflareTorneioAPI {
     }
   }
 
+  // Excluir Corrida Individual por UUID (DELETE /api/corridas/:uuid)
+  async excluirCorrida(uuid) {
+    try {
+      const resp = await fetch(`${this.baseUrl}/api/corridas/${encodeURIComponent(uuid)}`, {
+        method: 'DELETE'
+      });
+      return { ok: resp.ok, status: resp.status, data: await resp.json().catch(() => ({})) };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
   // ==========================================
   // ROTAS DOS JUÍZES DE PADDOCK (/api/avaliacoes)
   // ==========================================
   async getAvaliacoes() {
     try {
-      const resp = await fetch(`${this.baseUrl}/api/avaliacoes`, { method: 'GET' });
+      const resp = await fetch(this._getNoCacheUrl('/api/avaliacoes'), {
+        method: 'GET',
+        cache: 'no-store',
+        headers: this._getNoCacheHeaders()
+      });
       if (resp.ok) {
         return await resp.json();
       }
@@ -155,7 +194,6 @@ class CloudflareTorneioAPI {
   async salvarAvaliacao(avaliacao) {
     try {
       const payload = {
-        // Contrato Canônico Edital 08
         equipe_id: avaliacao.equipe_id || avaliacao.id || "EQ-01",
         juiz_nome: avaliacao.juiz_nome || avaliacao.juiz || "Juiz Oficial",
         caracterizacao: Number(avaliacao.caracterizacao ?? avaliacao.nota_caracterizacao ?? 0),
@@ -203,7 +241,11 @@ class CloudflareTorneioAPI {
   // Rota Unificada de Apuração (GET /api/apuracao)
   async getApuracao() {
     try {
-      const resp = await fetch(`${this.baseUrl}/api/apuracao`, { method: 'GET' });
+      const resp = await fetch(this._getNoCacheUrl('/api/apuracao'), {
+        method: 'GET',
+        cache: 'no-store',
+        headers: this._getNoCacheHeaders()
+      });
       if (resp.ok) {
         return await resp.json();
       }

@@ -5,9 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin & Gestão de Equipes — Torneio de Robótica Anchieta</title>
   
+  <!-- Anti-cache estrito -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <!-- CSS Compartilhado e Específico -->
-  <link rel="stylesheet" href="../shared/css/design-tokens.css">
-  <link rel="stylesheet" href="../pista/css/mesa-operador.css">
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial">
+  <link rel="stylesheet" href="../pista/css/mesa-operador.css?v=20261026_oficial">
   <style>
     .admin-container {
       max-width: 1200px;
@@ -322,9 +327,9 @@
 
   </main>
 
-  <!-- Scripts -->
-  <script src="../shared/js/cloud-api.js"></script>
-  <script src="../shared/js/teams-data.js"></script>
-  <script src="js/admin.js"></script>
+  <!-- Scripts com Versionamento Anti-Cache -->
+  <script src="../shared/js/cloud-api.js?v=20261026_oficial"></script>
+  <script src="../shared/js/teams-data.js?v=20261026_oficial"></script>
+  <script src="js/admin.js?v=20261026_oficial"></script>
 </body>
 </html>
