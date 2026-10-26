@@ -3,7 +3,7 @@
  * Deduplicação Inteligente, Auto-Purga de Versão e Prioridade Nuvem (Cloudflare D1)
  */
 
-const TEAMS_CACHE_VERSION = 'v2026_anchieta_oficial_v6';
+const TEAMS_CACHE_VERSION = 'v2026_anchieta_oficial_v7';
 
 // As equipes oficiais do torneio
 const DEFAULT_TEAMS = [
@@ -79,7 +79,8 @@ class TeamsManager {
     if (window.cloudAPI) {
       try {
         const cloudTeams = await window.cloudAPI.getEquipes();
-        if (Array.isArray(cloudTeams) && cloudTeams.length > 0) {
+        if (Array.isArray(cloudTeams)) {
+          // Respeita a lista da nuvem, mesmo se o administrador tiver deletado todas as equipes ([])
           const mapped = cloudTeams.map((t, idx) => ({
             id: t.id ? `EQ-${String(t.id).padStart(2, '0')}` : `EQ-${String(idx + 1).padStart(2, '0')}`,
             name: t.equipe || t.name,
@@ -98,14 +99,12 @@ class TeamsManager {
     // 2. FALLBACK OFFLINE: Cache Local do Navegador (se a nuvem estiver indisponível)
     if (!forceRefresh) {
       const cached = localStorage.getItem('torneio_anchieta_teams');
-      if (cached) {
+      if (cached !== null) {
         try {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             this.teams = this.deduplicate(parsed);
-            if (this.teams.length > 0) {
-              return this.teams;
-            }
+            return this.teams;
           }
         } catch (e) {
           console.warn('Erro ao ler cache local de equipes:', e);
@@ -121,9 +120,11 @@ class TeamsManager {
           const resp = await fetch(`${p}?_t=${Date.now()}`);
           if (resp.ok) {
             const fileTeams = await resp.json();
-            this.teams = this.deduplicate(fileTeams);
-            this.saveCache();
-            return this.teams;
+            if (Array.isArray(fileTeams)) {
+              this.teams = this.deduplicate(fileTeams);
+              this.saveCache();
+              return this.teams;
+            }
           }
         } catch (_) {}
       }
@@ -131,7 +132,7 @@ class TeamsManager {
       // Ignora erro local
     }
 
-    // 4. FALLBACK PADRÃO SEGURO (As 9 equipes oficiais)
+    // 4. FALLBACK PADRÃO INICIAL
     this.teams = this.deduplicate(DEFAULT_TEAMS);
     this.saveCache();
     return this.teams;
@@ -143,7 +144,7 @@ class TeamsManager {
   }
 
   getAll() {
-    return this.teams.length > 0 ? this.teams : DEFAULT_TEAMS;
+    return this.teams;
   }
 
   getById(id) {

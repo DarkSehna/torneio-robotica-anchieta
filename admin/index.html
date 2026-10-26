@@ -11,8 +11,8 @@
   <meta http-equiv="Expires" content="0">
 
   <!-- CSS Compartilhado e Específico -->
-  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial_v2">
-  <link rel="stylesheet" href="../pista/css/mesa-operador.css?v=20261026_oficial_v2">
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial_v3">
+  <link rel="stylesheet" href="../pista/css/mesa-operador.css?v=20261026_oficial_v3">
   <style>
     .admin-container {
       max-width: 1200px;
@@ -269,11 +269,17 @@
           </p>
 
           <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button type="button" id="btnResetRoundsOnly" class="btn-danger-zone">
-              🗑️ Limpar Apenas Histórico de Voltas
+            <button type="button" id="btnResetRoundsOnly" class="btn-danger-zone" title="Apaga todas as voltas registradas na pista física tanto no navegador quanto no Cloudflare D1">
+              ⏱️ Limpar Voltas da Pista (Nuvem & Local)
             </button>
-            <button type="button" id="btnResetAllDefaults" class="btn-danger-zone" style="background: #E11D48; color: #FFF; border: none;">
-              ⚡ Reset Geral de Fábrica (Restaura Padrão)
+            <button type="button" id="btnResetEvalsOnly" class="btn-danger-zone" style="background: #FDF2F8; color: #BE185D; border-color: #FBCFE8;" title="Apaga todas as notas dos juízes de box do Cloudflare D1 e do celular">
+              📋 Limpar Avaliações do Paddock (Nuvem & Local)
+            </button>
+            <button type="button" id="btnResetTeamsOnly" class="btn-danger-zone" style="background: #FEF3C7; color: #B45309; border-color: #FDE68A;" title="Remove todas as equipes cadastradas na nuvem e localmente, deixando a lista vazia">
+              👥 Limpar Todas as Equipes (Nuvem & Local)
+            </button>
+            <button type="button" id="btnResetAllDefaults" class="btn-danger-zone" style="background: #E11D48; color: #FFF; border: none; font-weight: 800;" title="Zera absolutamente todo o banco de dados (pista, paddock e equipes) para iniciar o dia oficial do torneio do zero">
+              ⚡ Zerar Torneio Completo (Reset Total)
             </button>
           </div>
         </div>
@@ -333,8 +339,8 @@
   </main>
 
   <!-- Scripts com Versionamento Anti-Cache -->
-  <script src="../shared/js/cloud-api.js?v=20261026_oficial_v2"></script>
-  <script src="../shared/js/teams-data.js?v=20261026_oficial_v2"></script>
-  <script src="js/admin.js?v=20261026_oficial_v2"></script>
+  <script src="../shared/js/cloud-api.js?v=20261026_oficial_v3"></script>
+  <script src="../shared/js/teams-data.js?v=20261026_oficial_v3"></script>
+  <script src="js/admin.js?v=20261026_oficial_v3"></script>
 </body>
 </html>

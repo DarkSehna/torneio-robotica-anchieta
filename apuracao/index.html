@@ -16,8 +16,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
 
   <!-- CSS Compartilhado e Específico -->
-  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial_v2">
-  <link rel="stylesheet" href="css/apuracao.css?v=20261026_oficial_v2">
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial_v3">
+  <link rel="stylesheet" href="css/apuracao.css?v=20261026_oficial_v3">
 </head>
 <body class="apuracao-body">
 
@@ -153,24 +153,33 @@
     
     <div class="ceremony-topbar">
       <div class="ceremony-title-box">
-        <span style="background: var(--color-accent); color: #fff; font-size: 0.75rem; font-weight: 900; padding: 4px 10px; border-radius: var(--radius-full); text-transform: uppercase;">
+        <span id="ceremonyBadgeTag" style="background: var(--color-accent); color: #fff; font-size: 0.75rem; font-weight: 900; padding: 4px 10px; border-radius: var(--radius-full); text-transform: uppercase;">
           🏆 Cerimônia de Premiação
         </span>
-        <h2>PÓDIO OFICIAL DO TORNEIO</h2>
-        <p>Colégio Anchieta &bull; 05/12/2026</p>
+        <h2 id="ceremonyMainTitle">PÓDIO OFICIAL DO TORNEIO</h2>
+        <p id="ceremonySubTitle">Colégio Anchieta &bull; 05/12/2026</p>
       </div>
 
       <div class="ceremony-controls">
         <select id="ceremonySelectAward" class="ceremony-select">
-          <option value="VELOCIDADE_LEGO">🏎️ Pódio de Velocidade: LEGO / Educacional</option>
-          <option value="VELOCIDADE_MAKER">🏎️ Pódio de Velocidade: Aberta / Maker</option>
+          <optgroup label="🏎️ Pista Física (Velocidade - Top 3)">
+            <option value="VELOCIDADE_LEGO">🏎️ Pódio de Pista: LEGO / Educacional</option>
+            <option value="VELOCIDADE_MAKER">🏎️ Pódio de Pista: Aberta / Maker</option>
+          </optgroup>
+          <optgroup label="🏅 Bancadas de Box (1º Lugar Oficial - Edital 08)">
+            <option value="PREMIO_mecanica">⚙️ Troféu: Melhor Mecânica</option>
+            <option value="PREMIO_superacao">🚀 Troféu: Prêmio Superação</option>
+            <option value="PREMIO_caracterizacao">🎭 Troféu: Melhor Caracterização</option>
+            <option value="PREMIO_torcida">📣 Troféu: Melhor Torcida</option>
+            <option value="PREMIO_fair_play">🤝 Troféu: Prêmio Fair Play</option>
+          </optgroup>
         </select>
         <button type="button" id="btnCloseCeremony" class="btn-close-ceremony">✕ Fechar</button>
       </div>
     </div>
 
     <!-- Palco do Pódio 3D Virtual -->
-    <div class="podium-stage">
+    <div id="podiumStage" class="podium-stage">
       
       <!-- 2º Lugar (Prata) -->
       <div id="podiumPillar2" class="podium-pillar">
@@ -186,17 +195,17 @@
         </div>
       </div>
 
-      <!-- 1º Lugar (Ouro - Grande Campeão) -->
+      <!-- 1º Lugar (Ouro - Grande Campeão ou Vencedor do Troféu) -->
       <div id="podiumPillar1" class="podium-pillar">
         <div class="podium-team-card" style="border-color: #FDE047; box-shadow: 0 10px 40px rgba(234, 179, 8, 0.4);">
-          <span style="font-size: 2.2rem;">🥇</span>
+          <span id="podiumTrophyIcon1" style="font-size: 2.2rem;">🥇</span>
           <div id="podiumTeamName1" class="podium-team-name" style="font-size: 1.6rem; color: #FDE047;">--</div>
           <div id="podiumTeamSchool1" class="podium-team-school">--</div>
           <div id="podiumTeamTime1" class="podium-team-time" style="color: #FDE047; font-size: 1.6rem;">--:--.--</div>
         </div>
         <div class="podium-block podium-block-1">
-          <div class="podium-block-number">1</div>
-          <div class="podium-block-label">Grande Campeão</div>
+          <div id="podiumBlockNumber1" class="podium-block-number">1</div>
+          <div id="podiumBlockLabel1" class="podium-block-label">Grande Campeão</div>
         </div>
       </div>
 
@@ -228,8 +237,8 @@
   </div>
 
   <!-- Scripts com Versionamento Anti-Cache -->
-  <script src="../shared/js/cloud-api.js?v=20261026_oficial_v2"></script>
-  <script src="../shared/js/teams-data.js?v=20261026_oficial_v2"></script>
-  <script src="js/apuracao.js?v=20261026_oficial_v2"></script>
+  <script src="../shared/js/cloud-api.js?v=20261026_oficial_v3"></script>
+  <script src="../shared/js/teams-data.js?v=20261026_oficial_v3"></script>
+  <script src="js/apuracao.js?v=20261026_oficial_v3"></script>
 </body>
 </html>

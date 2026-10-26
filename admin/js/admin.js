@@ -275,26 +275,126 @@ document.addEventListener('DOMContentLoaded', async () => {
     reader.readAsText(file);
   });
 
-  // Limpar Apenas Voltas (Preserva Equipes)
-  btnResetRoundsOnly.addEventListener('click', () => {
-    if (confirm('Atenção: Isso apagará todas as voltas registradas na pista. As equipes permanecerão cadastradas. Deseja continuar?')) {
-      localStorage.removeItem('torneio_anchieta_records');
-      updateStats();
-      alert('Histórico de voltas limpo com sucesso.');
+  const btnResetEvalsOnly = document.getElementById('btnResetEvalsOnly');
+  const btnResetTeamsOnly = document.getElementById('btnResetTeamsOnly');
+
+  // 1. Limpar Apenas Voltas da Pista (Local & Nuvem D1)
+  btnResetRoundsOnly.addEventListener('click', async () => {
+    if (!confirm('Atenção: Isso apagará todas as voltas registradas na pista física tanto no navegador quanto na nuvem Cloudflare D1. As equipes permanecerão salvas. Deseja continuar?')) {
+      return;
     }
+
+    localStorage.removeItem('torneio_anchieta_records');
+    localStorage.removeItem('corridas_pista_cache');
+
+    if (window.cloudAPI) {
+      btnResetRoundsOnly.disabled = true;
+      btnResetRoundsOnly.textContent = '⏳ Limpando na Nuvem...';
+      try {
+        const res = await window.cloudAPI.limparTodasCorridas();
+        alert(`Sucesso! Histórico de voltas limpo na nuvem (${res.count || 0} corridas removidas) e no navegador.`);
+      } catch (e) {
+        alert('Voltas locais limpas. Erro ao limpar na nuvem: ' + e.message);
+      } finally {
+        btnResetRoundsOnly.disabled = false;
+        btnResetRoundsOnly.textContent = '⏱️ Limpar Voltas da Pista (Nuvem & Local)';
+      }
+    } else {
+      alert('Histórico de voltas local limpo com sucesso.');
+    }
+    updateStats();
   });
 
-  // Reset Geral de Fábrica
-  btnResetAllDefaults.addEventListener('click', () => {
-    const code = prompt('DIGITE "RESET" EM MAIÚSCULAS PARA CONFIRMAR O RESET COMPLETO DE DADOS:');
+  // 2. Limpar Apenas Avaliações de Paddock (Local & Nuvem D1)
+  if (btnResetEvalsOnly) {
+    btnResetEvalsOnly.addEventListener('click', async () => {
+      if (!confirm('Atenção: Isso apagará todas as notas e avaliações dos juízes de Paddock tanto no celular quanto na nuvem Cloudflare D1. As equipes e tempos de pista permanecerão salvos. Deseja continuar?')) {
+        return;
+      }
+
+      localStorage.removeItem('paddock_evaluations_cache');
+      localStorage.removeItem('torneio_minerva_votos');
+
+      if (window.cloudAPI) {
+        btnResetEvalsOnly.disabled = true;
+        btnResetEvalsOnly.textContent = '⏳ Limpando Avaliações...';
+        try {
+          const res = await window.cloudAPI.limparTodasAvaliacoes();
+          alert(`Sucesso! Todas as avaliações de Paddock foram apagadas da nuvem (${res.count || 0} avaliações removidas) e do cache local.`);
+        } catch (e) {
+          alert('Avaliações locais limpas. Erro ao limpar na nuvem: ' + e.message);
+        } finally {
+          btnResetEvalsOnly.disabled = false;
+          btnResetEvalsOnly.textContent = '📋 Limpar Avaliações do Paddock (Nuvem & Local)';
+        }
+      } else {
+        alert('Avaliações locais limpas com sucesso.');
+      }
+      updateStats();
+    });
+  }
+
+  // 3. Limpar Todas as Equipes (Local & Nuvem D1)
+  if (btnResetTeamsOnly) {
+    btnResetTeamsOnly.addEventListener('click', async () => {
+      if (!confirm('Atenção: Isso removerá TODAS as equipes cadastradas tanto localmente quanto na nuvem Cloudflare D1, deixando a lista 100% vazia para novos cadastros. Deseja continuar?')) {
+        return;
+      }
+
+      window.teamsManager.teams = [];
+      window.teamsManager.saveCache();
+
+      if (window.cloudAPI) {
+        btnResetTeamsOnly.disabled = true;
+        btnResetTeamsOnly.textContent = '⏳ Limpando Equipes...';
+        try {
+          await window.cloudAPI.limparTodasEquipes();
+          alert('Sucesso! Todas as equipes foram removidas da nuvem e a lista está 100% vazia.');
+        } catch (e) {
+          alert('Equipes locais limpas. Erro ao limpar na nuvem: ' + e.message);
+        } finally {
+          btnResetTeamsOnly.disabled = false;
+          btnResetTeamsOnly.textContent = '👥 Limpar Todas as Equipes (Nuvem & Local)';
+        }
+      } else {
+        alert('Lista de equipes limpa com sucesso.');
+      }
+
+      renderTeamsTable();
+      updateStats();
+    });
+  }
+
+  // 4. Reset Geral do Torneio (Zerar Tudo: Pista + Paddock + Equipes)
+  btnResetAllDefaults.addEventListener('click', async () => {
+    const code = prompt('⚠️ AÇÃO DESTRUTIVA: DIGITE "RESET" EM MAIÚSCULAS PARA CONFIRMAR O RESET TOTAL (ZERA EQUIPES, CORRIDAS E AVALIAÇÕES NA NUVEM E LOCAL):');
     if (code === 'RESET') {
       localStorage.removeItem('torneio_anchieta_records');
-      localStorage.removeItem('torneio_anchieta_teams');
-      window.teamsManager.load().then(() => {
-        renderTeamsTable();
-        updateStats();
-        alert('Sistema reiniciado para as configurações de fábrica.');
-      });
+      localStorage.removeItem('corridas_pista_cache');
+      localStorage.removeItem('paddock_evaluations_cache');
+      localStorage.removeItem('torneio_minerva_votos');
+
+      window.teamsManager.teams = [];
+      window.teamsManager.saveCache();
+
+      if (window.cloudAPI) {
+        btnResetAllDefaults.disabled = true;
+        btnResetAllDefaults.textContent = '⏳ Executando Reset Total na Nuvem...';
+        try {
+          await window.cloudAPI.resetarTorneioCompleto();
+          alert('Sucesso absoluto! Todo o banco de dados na nuvem (equipes, corridas e avaliações) foi zerado para o início oficial do torneio.');
+        } catch (e) {
+          alert('Dados locais limpos. Erro no reset da nuvem: ' + e.message);
+        } finally {
+          btnResetAllDefaults.disabled = false;
+          btnResetAllDefaults.textContent = '⚡ Zerar Torneio Completo (Reset Total)';
+        }
+      } else {
+        alert('Dados locais zerados com sucesso.');
+      }
+
+      renderTeamsTable();
+      updateStats();
     }
   });
 

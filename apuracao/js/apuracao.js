@@ -51,8 +51,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Fallback Local Resiliente (se nuvem estiver offline ou sem dados)
-    if (!cloudLoaded || teams.length === 0) {
+    // Fallback Local de Contingência (apenas se a nuvem estiver indisponível/offline)
+    if (!cloudLoaded) {
       if (window.teamsManager) {
         await window.teamsManager.load();
         teams = window.teamsManager.getAll();
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (rawEvals) {
         try { avaliacoes = JSON.parse(rawEvals); } catch(e) {}
       }
-      const rawCorridas = localStorage.getItem('corridas_pista_cache');
+      const rawCorridas = localStorage.getItem('corridas_pista_cache') || localStorage.getItem('torneio_anchieta_records');
       if (rawCorridas) {
         try { corridas = JSON.parse(rawCorridas); } catch(e) {}
       }
@@ -576,15 +576,122 @@ document.addEventListener('DOMContentLoaded', async () => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('revealed');
     });
-    btnReveal3.disabled = false;
-    btnReveal2.disabled = true;
-    btnReveal1.disabled = true;
+
+    const isBoxAward = ceremonySelectAward && ceremonySelectAward.value.startsWith('PREMIO_');
+    if (isBoxAward) {
+      if (btnReveal1) btnReveal1.disabled = false;
+    } else {
+      if (btnReveal3) btnReveal3.disabled = false;
+      if (btnReveal2) btnReveal2.disabled = true;
+      if (btnReveal1) btnReveal1.disabled = true;
+    }
   }
 
   function updateCeremonyView() {
-    const selectedMode = ceremonySelectAward.value;
+    const selectedMode = ceremonySelectAward ? ceremonySelectAward.value : 'VELOCIDADE_LEGO';
+    const mainTitleEl = document.getElementById('ceremonyMainTitle');
+    const badgeTagEl = document.getElementById('ceremonyBadgeTag');
+    const subTitleEl = document.getElementById('ceremonySubTitle');
+    const p1El = document.getElementById('podiumPillar1');
+    const p2El = document.getElementById('podiumPillar2');
+    const p3El = document.getElementById('podiumPillar3');
+    const num1El = document.getElementById('podiumBlockNumber1');
+    const label1El = document.getElementById('podiumBlockLabel1');
+    const trophy1El = document.getElementById('podiumTrophyIcon1');
+
+    // 1. MODO: TROFÉUS DE BANCADA DE BOX (EDITAL 08)
+    if (selectedMode.startsWith('PREMIO_')) {
+      const awardKey = selectedMode.replace('PREMIO_', '');
+      const meta = AWARDS_METADATA.find(m => m.id === awardKey);
+      if (!meta) return;
+
+      // Ajuste de Textos do Cabeçalho
+      if (mainTitleEl) mainTitleEl.textContent = `TROFÉU: ${meta.name.toUpperCase()}`;
+      if (badgeTagEl) badgeTagEl.textContent = `${meta.icon} Premiação Oficial de Box`;
+      if (subTitleEl) subTitleEl.textContent = meta.desc;
+
+      // Oculta Pilares 2 e 3 e Centraliza Pilar 1
+      if (p2El) p2El.style.display = 'none';
+      if (p3El) p3El.style.display = 'none';
+      if (p1El) {
+        p1El.style.display = 'flex';
+        p1El.style.maxWidth = '520px';
+        p1El.style.width = '100%';
+      }
+
+      if (num1El) num1El.textContent = meta.icon;
+      if (label1El) label1El.textContent = 'Vencedor Oficial do Troféu';
+      if (trophy1El) trophy1El.textContent = '🏆';
+
+      // Botões de Ação: Apenas botão único de revelação do campeão
+      if (btnReveal3) btnReveal3.style.display = 'none';
+      if (btnReveal2) btnReveal2.style.display = 'none';
+      if (btnReveal1) {
+        btnReveal1.style.display = 'inline-flex';
+        btnReveal1.disabled = false;
+        btnReveal1.innerHTML = `🏆 Revelar Campeão: ${meta.name}!`;
+      }
+
+      // Ordena candidatos para o prêmio selecionado
+      const candidates = teams.map(team => {
+        const track = getTrackStatsForTeam(team.name);
+        const rubrics = getRubricStatsForTeam(team.name, team.id);
+        return { team, track, rubrics };
+      });
+
+      candidates.sort((a, b) => {
+        const minervaWinner = minervaVotes[meta.id];
+        if (minervaWinner) {
+          if (a.team.name === minervaWinner) return -1;
+          if (b.team.name === minervaWinner) return 1;
+        }
+        return meta.evalTiebreak(a, b);
+      });
+
+      const winner = candidates[0];
+      const nameEl = document.getElementById('podiumTeamName1');
+      const schoolEl = document.getElementById('podiumTeamSchool1');
+      const timeEl = document.getElementById('podiumTeamTime1');
+
+      if (winner && winner.rubrics[meta.id].avg > 0) {
+        if (nameEl) nameEl.textContent = winner.team.name;
+        if (schoolEl) schoolEl.textContent = `${winner.team.school} • ${winner.team.category}`;
+        if (timeEl) {
+          timeEl.innerHTML = `<span style="font-size: 1.25rem;">Média: ${winner.rubrics[meta.id].avg.toFixed(2)} ★</span><br><span style="font-size: 0.85rem; color: #E2E8F0; font-weight: 600;">${meta.getTiebreakExplain(winner)}</span>`;
+        }
+      } else {
+        if (nameEl) nameEl.textContent = 'Aguardando Avaliações...';
+        if (schoolEl) schoolEl.textContent = 'Sem notas registradas ainda no Paddock';
+        if (timeEl) timeEl.textContent = '-- ★';
+      }
+      return;
+    }
+
+    // 2. MODO: PÓDIO DE PISTA (VELOCIDADE - TOP 3)
+    if (mainTitleEl) mainTitleEl.textContent = 'PÓDIO OFICIAL DO TORNEIO';
+    if (badgeTagEl) badgeTagEl.textContent = '🏆 Cerimônia de Premiação';
+    if (subTitleEl) subTitleEl.textContent = 'Colégio Anchieta • 05/12/2026';
+
+    if (p2El) p2El.style.display = 'flex';
+    if (p3El) p3El.style.display = 'flex';
+    if (p1El) {
+      p1El.style.display = 'flex';
+      p1El.style.maxWidth = '';
+      p1El.style.width = '';
+    }
+
+    if (num1El) num1El.textContent = '1';
+    if (label1El) label1El.textContent = 'Grande Campeão';
+    if (trophy1El) trophy1El.textContent = '🥇';
+
+    if (btnReveal3) btnReveal3.style.display = 'inline-flex';
+    if (btnReveal2) btnReveal2.style.display = 'inline-flex';
+    if (btnReveal1) {
+      btnReveal1.style.display = 'inline-flex';
+      btnReveal1.innerHTML = '🥇 Revelar Grande Campeão!';
+    }
+
     const cat = selectedMode.includes('MAKER') ? 'Aberta / Maker' : 'LEGO / Educacional';
-    
     const filteredTeams = teams.filter(t => t.category.includes(cat.includes('LEGO') ? 'LEGO' : 'Maker'));
     const candidates = filteredTeams.map(team => {
       const track = getTrackStatsForTeam(team.name);

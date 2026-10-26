@@ -223,6 +223,49 @@ class CloudflareTorneioAPI {
     }
   }
 
+  // Limpar Todas as Corridas do Cloudflare D1
+  async limparTodasCorridas() {
+    try {
+      const corridas = await this.getCorridas();
+      if (!Array.isArray(corridas) || corridas.length === 0) return { ok: true, count: 0 };
+      await Promise.all(corridas.map(c => this.excluirCorrida(c.uuid)));
+      return { ok: true, count: corridas.length };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  // Limpar Todas as Avaliações de Paddock do Cloudflare D1
+  async limparTodasAvaliacoes() {
+    try {
+      const evals = await this.getAvaliacoes();
+      if (!Array.isArray(evals) || evals.length === 0) return { ok: true, count: 0 };
+      await Promise.all(evals.map(e => this.excluirAvaliacao(e.id)));
+      return { ok: true, count: evals.length };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  // Reset Completo do Torneio no Cloudflare D1 (Equipes + Corridas + Avaliações)
+  async resetarTorneioCompleto() {
+    try {
+      const [resEquipes, resCorridas, resEvals] = await Promise.all([
+        this.limparTodasEquipes(),
+        this.limparTodasCorridas(),
+        this.limparTodasAvaliacoes()
+      ]);
+      return {
+        ok: true,
+        equipes: resEquipes,
+        corridas: resCorridas,
+        avaliacoes: resEvals
+      };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
   // Rota Unificada de Apuração (GET /api/apuracao)
   async getApuracao() {
     try {
