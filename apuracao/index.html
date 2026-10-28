@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apuração Geral & Pódio — Torneio de Robótica Anchieta</title>
+  <title>Apuração Geral & Mesa do Pódio — Torneio de Robótica Anchieta</title>
 
   <!-- Anti-cache estrito -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -16,8 +16,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
 
   <!-- CSS Compartilhado e Específico -->
-  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial_v3">
-  <link rel="stylesheet" href="css/apuracao.css?v=20261026_oficial_v3">
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261028_podio_v1">
+  <link rel="stylesheet" href="css/apuracao.css?v=20261028_podio_v1">
+  <script src="../shared/js/auth-guard.js?v=20261028_auth_v1"></script>
 </head>
 <body class="apuracao-body">
 
@@ -32,7 +33,7 @@
           ANCHIETA
         </div>
         <div class="apuracao-title">
-          <h1>APURAÇÃO GERAL & AUDITORIA</h1>
+          <h1>APURAÇÃO GERAL & MESA DE CERIMÔNIA</h1>
           <p>Cruzamento Oficial de Pista & Bancadas &bull; Edital 08 &bull; 05/12/2026</p>
         </div>
       </div>
@@ -43,7 +44,13 @@
           <span>🏠 Início</span>
         </a>
 
-        <!-- Badge da Nuvem -->
+        <!-- Badge de Status do Telão do Pódio (BroadcastChannel) -->
+        <div id="podioTelaoBadge" class="badge-status cloud-offline" style="font-size: 0.78rem; padding: 6px 12px;" title="Status da janela de projeção HDMI do Pódio">
+          <span class="status-dot"></span>
+          <span id="podioTelaoText">Aguardando Telão do Pódio</span>
+        </div>
+
+        <!-- Badge da Nuvem Cloudflare D1 -->
         <div id="cloudStatusBadge" class="badge-status cloud-offline" style="font-size: 0.78rem; padding: 6px 12px;">
           <span class="status-dot"></span>
           <span id="cloudStatusText">Verificando Nuvem...</span>
@@ -53,17 +60,11 @@
           🔄 Atualizar Dados
         </button>
 
-        <!-- Botão 1: Pódio Total Automático (Todos os 5 Troféus de Box + Pódio de Pista) -->
-        <button type="button" id="btnOpenCeremonyFull" class="btn-ceremony btn-ceremony-gold">
-          <span>🏆 PÓDIO TOTAL AUTOMÁTICO</span>
-          <small class="btn-ceremony-sub">5 Troféus do Paddock em Sequência ➔ Pódio Top 3</small>
-        </button>
-
-        <!-- Botão 2: Apenas Pódio de Velocidade da Pista (Top 3) -->
-        <button type="button" id="btnOpenCeremonyTrack" class="btn-ceremony btn-ceremony-blue">
-          <span>🏎️ SÓ PÓDIO DE PISTA (TOP 3)</span>
-          <small class="btn-ceremony-sub">Velocidade (3º ➔ 2º ➔ 1º Lugar)</small>
-        </button>
+        <!-- Botão para Abrir o Telão Limpo do Pódio (Projeção HDMI) -->
+        <a href="telao-podio.html" target="_blank" id="btnOpenTelaoPodio" class="btn-ceremony btn-ceremony-gold" style="text-decoration: none;">
+          <span>🖥️ ABRIR TELÃO DO PÓDIO ↗</span>
+          <small class="btn-ceremony-sub">Projeção 100% Limpa para o Ginásio (HDMI)</small>
+        </a>
       </div>
     </div>
   </header>
@@ -71,11 +72,160 @@
   <!-- Conteúdo Principal -->
   <main class="apuracao-container">
 
-    <!-- Barra de Filtros de Categoria (Padrão: LEGO) -->
+    <!-- ==========================================================================
+         MESA DE CONTROLE DA CERIMÔNIA DE PÓDIO (EXCLUSIVA DO OPERADOR)
+         ========================================================================== -->
+    <section id="operatorCeremonyPanel" class="ceremony-operator-panel">
+      <div class="cop-header">
+        <div class="cop-title-group">
+          <span class="cop-badge-live">🎛️ MESA DE CERIMÔNIA (OPERADOR)</span>
+          <h2>Controle de Projeção do Pódio — Manual Total & Ciclo Automático</h2>
+          <p>Você controla daqui no seu ritmo. No projetor (<strong>Telão do Pódio</strong>) aparece apenas a arte limpa, sem botões nem cursores.</p>
+        </div>
+
+        <div class="cop-header-right">
+          <div id="copLiveMonitorBadge" class="cop-monitor-pill standby">
+            <span class="monitor-dot"></span>
+            <span id="copLiveMonitorText">NO TELÃO: Tela de Espera</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. Roteiro Completo da Cerimônia (Pódio Total Manual: 5 Troféus + Pódios de Pista) -->
+      <div class="cop-steps-bar">
+        <div class="cop-steps-label">Roteiro da Cerimônia (Clique em qualquer etapa para preparar):</div>
+        <div id="copStepperList" class="cop-stepper-list">
+          <button type="button" class="cop-step-btn active" data-step="0">0. ⏳ Tela de Espera</button>
+          <button type="button" class="cop-step-btn" data-step="1">1. ⚙️ Melhor Mecânica</button>
+          <button type="button" class="cop-step-btn" data-step="2">2. 🚀 Superação</button>
+          <button type="button" class="cop-step-btn" data-step="3">3. 🎨 Caracterização</button>
+          <button type="button" class="cop-step-btn" data-step="4">4. 📣 Melhor Torcida</button>
+          <button type="button" class="cop-step-btn" data-step="5">5. 🤝 Fair Play</button>
+          <button type="button" class="cop-step-btn track-step" data-step="6">6. 🏎️ Pódio Pista (LEGO)</button>
+          <button type="button" class="cop-step-btn track-step" data-step="7">7. 🏎️ Pódio Pista (Maker)</button>
+        </div>
+      </div>
+
+      <!-- 2. Área Operacional Dividida: Visão de Bastidor (Spoiler do Operador) + Botões de Comando -->
+      <div class="cop-workspace-grid">
+
+        <!-- COLUNA ESQUERDA: Cola do Locutor / Bastidor (Só o Operador Vê) -->
+        <div class="cop-backstage-card">
+          <div class="cop-card-tag">
+            <span>👁️ VISÃO DE BASTIDOR (SÓ APARECE AQUI NO NOTEBOOK)</span>
+          </div>
+          <h3 id="copPreviewTitle" class="cop-preview-title">0. Tela de Abertura / Espera</h3>
+          <p id="copPreviewSubtitle" class="cop-preview-sub">Projeta o card de boas-vindas antes do locutor chamar o primeiro prêmio.</p>
+
+          <!-- Conteúdo Dinâmico de Bastidor (Quem ganhou, notas, tempos) -->
+          <div id="copBackstageContent" class="cop-backstage-content">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+
+        <!-- COLUNA DIREITA: Controles de Palco ao Vivo -->
+        <div class="cop-stage-controls-card">
+          <div class="cop-card-tag">
+            <span>🎬 COMANDOS AO VIVO PARA O TELÃO DO GINÁSIO</span>
+            <span style="margin-left: auto; font-size: 0.72rem; opacity: 0.85;">Atalho: [ESPAÇO] Revela / [Setas] Navega</span>
+          </div>
+
+          <!-- Painel de Botões para Etapa 0 (Standby) -->
+          <div id="copControlsStandby" class="cop-control-group">
+            <p class="cop-control-hint">O telão está exibindo a tela de espera da cerimônia. Quando o locutor estiver pronto no microfone, avance para o 1º troféu:</p>
+            <div class="cop-btn-row">
+              <button type="button" id="btnSendStandby" class="cop-action-btn secondary">
+                📽️ Atualizar Tela de Espera no Telão
+              </button>
+              <button type="button" id="btnStartFirstAward" class="cop-action-btn primary-gold">
+                🥁 Iniciar 1º Prêmio em Suspense (Mecânica) ➔
+              </button>
+            </div>
+          </div>
+
+          <!-- Painel de Botões para Etapas 1 a 5 (Troféus de Box) -->
+          <div id="copControlsSingle" class="cop-control-group" style="display: none;">
+            <p class="cop-control-hint">
+              <strong>Passo 1:</strong> Coloque o troféu em suspense no telão enquanto o locutor anuncia a categoria.<br>
+              <strong>Passo 2:</strong> Clique em <strong>Revelar Vencedor</strong> no exato momento do anúncio!
+            </p>
+            <div class="cop-btn-row">
+              <button type="button" id="btnSingleSuspense" class="cop-action-btn suspense-btn">
+                🥁 1. Colocar em Suspense no Telão (Ocultar Vencedor)
+              </button>
+              <button type="button" id="btnSingleReveal" class="cop-action-btn reveal-gold-btn">
+                🏆 2. REVELAR VENCEDOR NO TELÃO! [ESPAÇO]
+              </button>
+            </div>
+            <div class="cop-btn-row" style="margin-top: 10px;">
+              <button type="button" id="btnSingleConfetti" class="cop-action-btn subtle-btn">
+                🎊 Disparar + Confetes no Telão (Para Fotos)
+              </button>
+            </div>
+          </div>
+
+          <!-- Painel de Botões para Etapas 6 e 7 (Pódio Top 3 de Pista) -->
+          <div id="copControlsTrack" class="cop-control-group" style="display: none;">
+            <p class="cop-control-hint">
+              Controle manual de cada degrau do Pódio de Velocidade no Telão (revele um por vez no ritmo do locutor, ou todos juntos):
+            </p>
+            <div class="cop-track-buttons-grid">
+              <button type="button" id="btnTrackResetSuspense" class="cop-action-btn suspense-btn">
+                🥁 Ocultar Todos (Pódio em Suspense)
+              </button>
+              <button type="button" id="btnTrackReveal3" class="cop-action-btn bronze-btn">
+                🥉 Revelar 3º Lugar
+              </button>
+              <button type="button" id="btnTrackReveal2" class="cop-action-btn silver-btn">
+                🥈 Revelar 2º Lugar (Vice)
+              </button>
+              <button type="button" id="btnTrackReveal1" class="cop-action-btn reveal-gold-btn">
+                🥇 REVELAR 1º LUGAR (CAMPEÃO!)
+              </button>
+            </div>
+            <div class="cop-btn-row" style="margin-top: 10px;">
+              <button type="button" id="btnTrackRevealAll" class="cop-action-btn secondary">
+                ⚡ Mostrar Top 3 Completo de Uma Vez
+              </button>
+              <button type="button" id="btnTrackConfetti" class="cop-action-btn subtle-btn">
+                🎊 Disparar + Confetes no Telão
+              </button>
+            </div>
+          </div>
+
+          <!-- Barra Inferior: Navegação Sequencial Manual & Modo Ciclo Automático -->
+          <div class="cop-footer-bar">
+            <div class="cop-nav-buttons">
+              <button type="button" id="btnCopPrev" class="cop-nav-btn">
+                ⏮️ Etapa Anterior
+              </button>
+              <button type="button" id="btnCopNext" class="cop-nav-btn next-highlight">
+                Próximo Prêmio (em Suspense) ⏭️
+              </button>
+            </div>
+
+            <div class="cop-autoloop-box">
+              <select id="selectLoopMode" class="cop-loop-select" title="Modo do Ciclo Automático">
+                <option value="LOOP_REVEALED_8S">Giro Contínuo: Todos Revelados (8s cada)</option>
+                <option value="LOOP_REVEALED_12S">Giro Contínuo: Todos Revelados (12s cada)</option>
+                <option value="SHOW_SUSPENSE_ONCE">Show Automático c/ Suspense (1ª ao Pódio)</option>
+              </select>
+              <button type="button" id="btnToggleAutoLoop" class="cop-loop-btn">
+                🔄 Iniciar Ciclo Automático
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Barra de Filtros de Categoria das Tabelas Abaixo (Padrão: LEGO) -->
     <div class="filter-bar">
       <div>
         <span style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">
-          Categoria em Exibição:
+          Categoria em Exibição nas Tabelas de Auditoria:
         </span>
         <div class="category-tabs" style="margin-top: 4px;">
           <button type="button" class="category-tab-btn active" data-category="LEGO / Educacional">
@@ -154,138 +304,9 @@
 
   </main>
 
-  <!-- ==========================================================================
-       MODAL DE CERIMÔNIA DE PREMIAÇÃO (MODO TELÃO FULLSCREEN)
-       ========================================================================== -->
-  <div id="ceremonyModal" class="ceremony-overlay">
-    
-    <div class="ceremony-topbar">
-      <div class="ceremony-title-box">
-        <span id="ceremonyBadgeTag" style="background: var(--color-accent); color: #fff; font-size: 0.75rem; font-weight: 900; padding: 4px 10px; border-radius: var(--radius-full); text-transform: uppercase;">
-          🏆 Cerimônia de Premiação
-        </span>
-        <h2 id="ceremonyMainTitle">PÓDIO OFICIAL DO TORNEIO</h2>
-        <p id="ceremonySubTitle">Colégio Anchieta &bull; 05/12/2026</p>
-      </div>
-
-      <div class="ceremony-controls">
-        <select id="ceremonySelectAward" class="ceremony-select">
-          <optgroup label="🏎️ Pista Física (Velocidade - Top 3)">
-            <option value="VELOCIDADE_LEGO">🏎️ Pódio de Pista: LEGO / Educacional</option>
-            <option value="VELOCIDADE_MAKER">🏎️ Pódio de Pista: Aberta / Maker</option>
-          </optgroup>
-          <optgroup label="🏅 Bancadas de Box (1º Lugar Oficial - Edital 08)">
-            <option value="PREMIO_mecanica">⚙️ Troféu: Melhor Mecânica</option>
-            <option value="PREMIO_superacao">🚀 Troféu: Prêmio Superação</option>
-            <option value="PREMIO_caracterizacao">🎭 Troféu: Melhor Caracterização</option>
-            <option value="PREMIO_torcida">📣 Troféu: Melhor Torcida</option>
-            <option value="PREMIO_fair_play">🤝 Troféu: Prêmio Fair Play</option>
-          </optgroup>
-        </select>
-        <button type="button" id="btnCloseCeremony" class="btn-close-ceremony">✕ Fechar</button>
-      </div>
-    </div>
-
-    <!-- Banner de Status do Show / Autoplay -->
-    <div id="ceremonyStatusBanner" class="ceremony-status-banner">
-      <span id="ceremonyStatusPulse" class="status-pulse-dot"></span>
-      <span id="ceremonyStatusText">Pódio Oficial do Torneio • Pronto para apresentação</span>
-    </div>
-
-    <!-- Stepper Sequencial de Passos da Cerimônia Oficial -->
-    <div id="ceremonyStepper" class="ceremony-stepper-container">
-      <div class="step-chip active" data-step-key="PREMIO_mecanica">1. ⚙️ Mecânica</div>
-      <div class="step-chip" data-step-key="PREMIO_superacao">2. 🚀 Superação</div>
-      <div class="step-chip" data-step-key="PREMIO_caracterizacao">3. 🎭 Caracterização</div>
-      <div class="step-chip" data-step-key="PREMIO_torcida">4. 📣 Torcida</div>
-      <div class="step-chip" data-step-key="PREMIO_fair_play">5. 🤝 Fair Play</div>
-      <div class="step-chip highlight" data-step-key="VELOCIDADE_LEGO">🏁 6. Pódio Pista (Top 3)</div>
-    </div>
-
-    <!-- Palco do Pódio 3D Virtual -->
-    <div id="podiumStage" class="podium-stage">
-      
-      <!-- 2º Lugar (Prata) -->
-      <div id="podiumPillar2" class="podium-pillar">
-        <div class="podium-team-card">
-          <span style="font-size: 1.8rem;">🥈</span>
-          <div id="podiumTeamName2" class="podium-team-name">--</div>
-          <div id="podiumTeamSchool2" class="podium-team-school">--</div>
-          <div id="podiumTeamTime2" class="podium-team-time">--:--.--</div>
-        </div>
-        <div class="podium-block podium-block-2">
-          <div class="podium-block-number">2</div>
-          <div class="podium-block-label">Vice-Campeão</div>
-        </div>
-      </div>
-
-      <!-- 1º Lugar (Ouro - Grande Campeão ou Vencedor do Troféu) -->
-      <div id="podiumPillar1" class="podium-pillar">
-        <div class="podium-team-card" style="border-color: #FDE047; box-shadow: 0 10px 40px rgba(234, 179, 8, 0.4);">
-          <span id="podiumTrophyIcon1" style="font-size: 2.2rem;">🥇</span>
-          <div id="podiumTeamName1" class="podium-team-name" style="font-size: 1.6rem; color: #FDE047;">--</div>
-          <div id="podiumTeamSchool1" class="podium-team-school">--</div>
-          <div id="podiumTeamTime1" class="podium-team-time" style="color: #FDE047; font-size: 1.6rem;">--:--.--</div>
-        </div>
-        <div class="podium-block podium-block-1">
-          <div id="podiumBlockNumber1" class="podium-block-number">1</div>
-          <div id="podiumBlockLabel1" class="podium-block-label">Grande Campeão</div>
-        </div>
-      </div>
-
-      <!-- 3º Lugar (Bronze) -->
-      <div id="podiumPillar3" class="podium-pillar">
-        <div class="podium-team-card">
-          <span style="font-size: 1.8rem;">🥉</span>
-          <div id="podiumTeamName3" class="podium-team-name">--</div>
-          <div id="podiumTeamSchool3" class="podium-team-school">--</div>
-          <div id="podiumTeamTime3" class="podium-team-time">--:--.--</div>
-        </div>
-        <div class="podium-block podium-block-3">
-          <div class="podium-block-number">3</div>
-          <div class="podium-block-label">3º Lugar</div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Barra de Ações para Revelação com Suspense -->
-    <div class="ceremony-action-bar">
-      <button type="button" id="btnRevealTrackAuto" class="btn-reveal" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); font-weight: 900;">
-        ▶ Revelar Top 3 Automático
-      </button>
-      <button type="button" id="btnReveal3" class="btn-reveal">🥉 Revelar 3º Lugar</button>
-      <button type="button" id="btnReveal2" class="btn-reveal" disabled>🥈 Revelar 2º Lugar</button>
-      <button type="button" id="btnReveal1" class="btn-reveal" style="background: var(--color-accent); font-weight: 900;" disabled>
-        🥇 Revelar Grande Campeão!
-      </button>
-    </div>
-
-    <!-- Barra de Navegação Sequencial e Autoplay -->
-    <div class="ceremony-nav-bar">
-      <button type="button" id="btnCeremonyPrev" class="btn-ceremony-nav" title="Voltar ao prêmio anterior">
-        ⏮️ Anterior
-      </button>
-
-      <button type="button" id="btnCeremonyAutoPlay" class="btn-autoplay" title="Apresenta os 5 troféus e o pódio de velocidade em sequência contínua com suspense automático">
-        <span>▶ Reprodução Automática (Show)</span>
-      </button>
-
-      <button type="button" id="btnCeremonyNext" class="btn-ceremony-nav" title="Avançar para o próximo prêmio">
-        Próximo Prêmio ⏭️
-      </button>
-
-      <!-- Barra de Progresso do Timer de Transição Automática -->
-      <div id="autoplayProgress" class="autoplay-progress-bar">
-        <div id="autoplayProgressFill" class="autoplay-progress-fill"></div>
-      </div>
-    </div>
-
-  </div>
-
   <!-- Scripts com Versionamento Anti-Cache -->
-  <script src="../shared/js/cloud-api.js?v=20261026_oficial_v4"></script>
-  <script src="../shared/js/teams-data.js?v=20261026_oficial_v4"></script>
-  <script src="js/apuracao.js?v=20261026_oficial_v4"></script>
+  <script src="../shared/js/cloud-api.js?v=20261028_podio_v1"></script>
+  <script src="../shared/js/teams-data.js?v=20261028_podio_v1"></script>
+  <script src="js/apuracao.js?v=20261028_podio_v1"></script>
 </body>
 </html>

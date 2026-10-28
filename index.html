@@ -11,7 +11,7 @@
   <meta http-equiv="Expires" content="0">
 
   <!-- CSS Compartilhado -->
-  <link rel="stylesheet" href="shared/css/design-tokens.css?v=20261026_oficial_v3">
+  <link rel="stylesheet" href="shared/css/design-tokens.css?v=20261028_podio_v1">
   <style>
     .hub-container {
       max-width: 1100px;
@@ -279,7 +279,7 @@
       </div>
     </header>
 
-    <!-- Grid de Módulos do Sistema -->
+    <!-- Grid de Módulos do Sistema (6 Cards Simétricos 3x2) -->
     <div class="hub-grid">
       
       <!-- 1. Mesa da Pista -->
@@ -300,7 +300,7 @@
         <div>
           <div class="module-icon">🖥️</div>
           <div class="module-tag">Módulo 1 &bull; Projeção HDMI</div>
-          <h2 class="module-title">Telão do Ginásio</h2>
+          <h2 class="module-title">Telão da Pista</h2>
           <p class="module-desc">
             Tela cheia 100vh com tipografia gigante para projetor de 20 metros. Sincronização instantânea via BroadcastChannel com latência zero (100% offline).
           </p>
@@ -325,26 +325,39 @@
       <a href="admin/index.html" class="module-card">
         <div>
           <div class="module-icon">⚙️</div>
-          <div class="module-tag">Módulo 4 &bull; Gestão & Credenciamento</div>
+          <div class="module-tag">Módulo 4 &bull; Gestão & Credenciamento &bull; 🔒 Senha</div>
           <h2 class="module-title">Administração & Equipes</h2>
           <p class="module-desc">
             Cadastro e exclusão de equipes, importação/exportação de inscrições em JSON e sincronização bidirecional com o banco de dados Cloudflare D1.
           </p>
         </div>
-        <div class="module-btn-link">Acessar Admin ➔</div>
+        <div class="module-btn-link">Acessar Admin 🔒</div>
       </a>
 
-      <!-- 5. Apuração & Cerimônia de Pódio -->
-      <a href="apuracao/index.html" class="module-card accent-card">
+      <!-- 5. Apuração & Mesa de Cerimônia -->
+      <a href="apuracao/index.html" class="module-card">
         <div>
           <div class="module-icon">🏆</div>
-          <div class="module-tag">Módulo 5 &bull; Apuração & Premiação</div>
-          <h2 class="module-title">Apuração Geral & Pódio</h2>
+          <div class="module-tag">Módulo 5 &bull; Apuração & Mesa &bull; 🔒 Senha</div>
+          <h2 class="module-title">Apuração & Mesa do Pódio</h2>
           <p class="module-desc">
-            Cruzamento matemático de tempos de pista e rubricas do Edital 08. Auditoria, Voto de Minerva e telão de cerimônia com suspense para pódio e troféus de box.
+            Cruzamento matemático de tempos de pista e rubricas do Edital 08. Auditoria, Voto de Minerva e Mesa de Controle da Cerimônia (Manual Total e Ciclo Automático).
           </p>
         </div>
-        <div class="module-btn-link">Abrir Apuração 🏆</div>
+        <div class="module-btn-link">Abrir Mesa de Apuração 🔒</div>
+      </a>
+
+      <!-- 6. Telão do Pódio (Projeção Limpa HDMI) -->
+      <a href="apuracao/telao-podio.html" target="_blank" class="module-card accent-card">
+        <div>
+          <div class="module-icon">🥇</div>
+          <div class="module-tag">Módulo 5 &bull; Projeção HDMI</div>
+          <h2 class="module-title">Telão Oficial do Pódio</h2>
+          <p class="module-desc">
+            Tela cheia 100% limpa para o projetor na cerimônia de encerramento. Exibe os 5 troféus de bancada e o Pódio Top 3 com suspense, som e confetes em tempo real.
+          </p>
+        </div>
+        <div class="module-btn-link">Projetar Telão do Pódio ↗</div>
       </a>
 
     </div>
@@ -420,7 +433,7 @@
     </div>
   </div>
 
-  <script src="shared/js/cloud-api.js?v=20261026_oficial_v3"></script>
+  <script src="shared/js/cloud-api.js?v=20261028_podio_v1"></script>
   <script>
     function openQrModal() {
       document.getElementById('qrModal').classList.add('active');

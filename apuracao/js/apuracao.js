@@ -1,39 +1,88 @@
 /**
- * Torneio de Robótica Anchieta - Motor de Apuração Geral & Cerimônia de Pódio
+ * Torneio de Robótica Anchieta - Motor de Apuração Geral & Mesa de Cerimônia do Pódio
  * Edital Geral nº 08/2026 - Algoritmo Determinístico de Desempate
+ * Projeção HDMI Limpa via BroadcastChannel('torneio_podio')
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Elementos do DOM
+  // Elementos do DOM - Header e Status
   const elCloudStatusBadge = document.getElementById('cloudStatusBadge');
   const elCloudStatusText = document.getElementById('cloudStatusText');
+  const elPodioTelaoBadge = document.getElementById('podioTelaoBadge');
+  const elPodioTelaoText = document.getElementById('podioTelaoText');
   const btnRefreshData = document.getElementById('btnRefreshData');
-  const btnOpenCeremony = document.getElementById('btnOpenCeremony');
 
-  // Filtros de Categoria
+  // Filtros de Categoria das Tabelas
   const categoryTabBtns = document.querySelectorAll('.category-tab-btn');
-  let activeCategory = 'LEGO / Educacional'; // Padrão oficial: torneio com robôs LEGO
+  let activeCategory = 'LEGO / Educacional';
 
   // Seções de visualização
   const trackRankingBody = document.getElementById('trackRankingBody');
   const awardsGrid = document.getElementById('awardsGrid');
   const tieAlertSection = document.getElementById('tieAlertSection');
 
-  // Modal da Cerimônia
-  const ceremonyModal = document.getElementById('ceremonyModal');
-  const btnCloseCeremony = document.getElementById('btnCloseCeremony');
-  const ceremonySelectAward = document.getElementById('ceremonySelectAward');
-  const btnReveal3 = document.getElementById('btnReveal3');
-  const btnReveal2 = document.getElementById('btnReveal2');
-  const btnReveal1 = document.getElementById('btnReveal1');
+  // Elementos da Mesa de Cerimônia (Operador)
+  const copLiveMonitorBadge = document.getElementById('copLiveMonitorBadge');
+  const copLiveMonitorText = document.getElementById('copLiveMonitorText');
+  const copStepBtns = document.querySelectorAll('.cop-step-btn');
+  const copPreviewTitle = document.getElementById('copPreviewTitle');
+  const copPreviewSubtitle = document.getElementById('copPreviewSubtitle');
+  const copBackstageContent = document.getElementById('copBackstageContent');
 
-  // Estado Geral
+  const copControlsStandby = document.getElementById('copControlsStandby');
+  const copControlsSingle = document.getElementById('copControlsSingle');
+  const copControlsTrack = document.getElementById('copControlsTrack');
+
+  const btnSendStandby = document.getElementById('btnSendStandby');
+  const btnStartFirstAward = document.getElementById('btnStartFirstAward');
+  const btnSingleSuspense = document.getElementById('btnSingleSuspense');
+  const btnSingleReveal = document.getElementById('btnSingleReveal');
+  const btnSingleConfetti = document.getElementById('btnSingleConfetti');
+
+  const btnTrackResetSuspense = document.getElementById('btnTrackResetSuspense');
+  const btnTrackReveal3 = document.getElementById('btnTrackReveal3');
+  const btnTrackReveal2 = document.getElementById('btnTrackReveal2');
+  const btnTrackReveal1 = document.getElementById('btnTrackReveal1');
+  const btnTrackRevealAll = document.getElementById('btnTrackRevealAll');
+  const btnTrackConfetti = document.getElementById('btnTrackConfetti');
+
+  const btnCopPrev = document.getElementById('btnCopPrev');
+  const btnCopNext = document.getElementById('btnCopNext');
+  const selectLoopMode = document.getElementById('selectLoopMode');
+  const btnToggleAutoLoop = document.getElementById('btnToggleAutoLoop');
+
+  // Canal de Comunicação com o Telão do Pódio (telao-podio.html)
+  const podioChannel = ('BroadcastChannel' in window) ? new BroadcastChannel('torneio_podio') : null;
+  let lastTelaoHeartbeat = 0;
+
+  // Estado Geral dos Dados
   let teams = [];
   let corridas = [];
   let avaliacoes = [];
   let minervaVotes = JSON.parse(localStorage.getItem('torneio_minerva_votos') || '{}');
 
-  // 1. Carregamento Unificado dos Dados
+  // Definição das 8 Etapas do Roteiro Completo da Cerimônia
+  const CEREMONY_ROUTINE = [
+    { step: 0, key: 'STANDBY', type: 'STANDBY', title: '0. Tela de Abertura / Espera', subtitle: 'Boas-vindas no telão antes do início dos anúncios.' },
+    { step: 1, key: 'mecanica', type: 'SINGLE_AWARD', title: '1. Troféu: Melhor Mecânica', subtitle: 'Robustez estrutural, chassi firme e eficiência de montagem.' },
+    { step: 2, key: 'superacao', type: 'SINGLE_AWARD', title: '2. Troféu: Prêmio Superação', subtitle: 'Resiliência técnica e evolução comprovada entre os rounds.' },
+    { step: 3, key: 'caracterizacao', type: 'SINGLE_AWARD', title: '3. Troféu: Melhor Caracterização', subtitle: 'Temática criativa, uniforme, mascote e animação nos boxes.' },
+    { step: 4, key: 'torcida', type: 'SINGLE_AWARD', title: '4. Troféu: Melhor Torcida', subtitle: 'Torcida vibrante, organizada e respeitosa no ginásio.' },
+    { step: 5, key: 'fair_play', type: 'SINGLE_AWARD', title: '5. Troféu: Prêmio Fair Play', subtitle: 'Cooperação entre equipes, ética e espírito esportivo.' },
+    { step: 6, key: 'VELOCIDADE_LEGO', type: 'TRACK_PODIUM', category: 'LEGO / Educacional', title: '6. Pódio Oficial de Pista — Categoria LEGO', subtitle: 'Top 3 de Velocidade (3º Lugar ➔ Vice-Campeão ➔ Grande Campeão).' },
+    { step: 7, key: 'VELOCIDADE_MAKER', type: 'TRACK_PODIUM', category: 'Aberta / Maker', title: '7. Pódio Oficial de Pista — Categoria Maker', subtitle: 'Top 3 de Velocidade Aberta / Maker.' }
+  ];
+
+  // Estado da Cerimônia Controlada pelo Operador
+  let currentStepIdx = 0;
+  let singleAwardRevealed = false;
+  let trackRevealedState = { pos1: false, pos2: false, pos3: false };
+  let autoLoopActive = false;
+  let autoLoopTimer = null;
+
+  // ==========================================================================
+  // 1. CARREGAMENTO UNIFICADO DOS DADOS (CLOUDFLARE D1 + CONTINGÊNCIA LOCAL)
+  // ==========================================================================
   async function loadData() {
     let cloudLoaded = false;
     if (window.cloudAPI) {
@@ -51,7 +100,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Fallback Local de Contingência (apenas se a nuvem estiver indisponível/offline)
     if (!cloudLoaded) {
       if (window.teamsManager) {
         await window.teamsManager.load();
@@ -59,16 +107,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       const rawEvals = localStorage.getItem('paddock_evaluations_cache');
       if (rawEvals) {
-        try { avaliacoes = JSON.parse(rawEvals); } catch(e) {}
+        try { avaliacoes = JSON.parse(rawEvals); } catch (e) {}
       }
       const rawCorridas = localStorage.getItem('corridas_pista_cache') || localStorage.getItem('torneio_anchieta_records');
       if (rawCorridas) {
-        try { corridas = JSON.parse(rawCorridas); } catch(e) {}
+        try { corridas = JSON.parse(rawCorridas); } catch (e) {}
       }
     }
 
     renderAll();
     updateCloudStatus(cloudLoaded);
+    updateOperatorCeremonyUI();
   }
 
   function updateCloudStatus(online) {
@@ -82,16 +131,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 2. Processamento Estatístico de Pista por Equipe
+  // ==========================================================================
+  // 2. CÁLCULOS ESTATÍSTICOS DE PISTA E RUBRICAS (EDITAL 08)
+  // ==========================================================================
   function getTrackStatsForTeam(teamName) {
-    const teamRuns = corridas.filter(c => 
+    const teamRuns = corridas.filter(c =>
       (c.equipe || '').trim().toLowerCase() === teamName.trim().toLowerCase()
     );
 
     const validRuns = teamRuns.filter(c => c.status === 'VALID' && Number(c.tempo_ms) > 0);
 
-    let r1 = teamRuns.find(c => Number(c.rodada) === 1);
-    let r2 = teamRuns.find(c => Number(c.rodada) === 2);
+    const r1 = teamRuns.find(c => Number(c.rodada) === 1);
+    const r2 = teamRuns.find(c => Number(c.rodada) === 2);
 
     let bestRun = null;
     let otherRun = null;
@@ -104,8 +155,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Cálculo do Delta de Evolução (Prêmio Superação)
-    // Δevolução = (Tempo R1 - Tempo R2) + (Faltas R1 - Faltas R2) * 5.0
     let deltaEvolucao = 0;
     if (r1 && r2 && r1.status === 'VALID' && r2.status === 'VALID') {
       const diffSeg = (Number(r1.tempo_ms) - Number(r2.tempo_ms)) / 1000;
@@ -130,7 +179,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
   }
 
-  // Formatação de Tempo mm:ss.cc
   function formatMs(ms) {
     if (!ms || ms === Infinity) return '--:--.--';
     const totalSec = Math.floor(ms / 1000);
@@ -140,7 +188,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(hundredths).padStart(2, '0')}`;
   }
 
-  // 3. Processamento das Rubricas dos Juízes de Paddock
   function getRubricStatsForTeam(teamName, teamId) {
     const teamEvals = avaliacoes.filter(ev => {
       const evName = (ev.equipe || '').trim().toLowerCase();
@@ -165,44 +212,142 @@ document.addEventListener('DOMContentLoaded', async () => {
       const avg = scores.length > 0 ? Number((sum / scores.length).toFixed(2)) : 0;
       const count3 = scores.filter(s => s === 3).length;
 
-      result[crit] = {
-        avg,
-        scores,
-        count3
-      };
+      result[crit] = { avg, scores, count3 };
     });
 
     return result;
   }
 
-  // 4. Renderizar Classificação da Pista (Velocidade)
+  const AWARDS_METADATA = [
+    {
+      id: 'mecanica',
+      name: 'Melhor Mecânica',
+      icon: '⚙️',
+      desc: 'Robô robusto, firme, sem peças soltas, com bom acabamento estético e montagem eficiente.',
+      tiebreakName: '1º Menor Tempo de Pista ➔ 2º Faltas',
+      evalTiebreak: (a, b) => {
+        if (b.rubrics.mecanica.avg !== a.rubrics.mecanica.avg) return b.rubrics.mecanica.avg - a.rubrics.mecanica.avg;
+        if (a.track.bestTimeMs !== b.track.bestTimeMs) return a.track.bestTimeMs - b.track.bestTimeMs;
+        return a.track.bestTimeFouls - b.track.bestTimeFouls;
+      },
+      getTiebreakExplain: (item) => item.track.hasValidRun
+        ? `Melhor Volta: ${formatMs(item.track.bestTimeMs)} (${item.track.bestTimeFouls} faltas)`
+        : 'Avaliação de Bancada'
+    },
+    {
+      id: 'superacao',
+      name: 'Prêmio Superação',
+      icon: '🚀',
+      desc: 'Resiliência técnica comprovada, contornando falhas técnicas com evolução evidente.',
+      tiebreakName: '1º Maior Δevolução ➔ 2º Faltas no R2',
+      evalTiebreak: (a, b) => {
+        if (b.rubrics.superacao.avg !== a.rubrics.superacao.avg) return b.rubrics.superacao.avg - a.rubrics.superacao.avg;
+        if (b.track.deltaEvolucao !== a.track.deltaEvolucao) return b.track.deltaEvolucao - a.track.deltaEvolucao;
+        return a.track.r2Fouls - b.track.r2Fouls;
+      },
+      getTiebreakExplain: (item) => `Índice Δevolução: ${item.track.deltaEvolucao > 0 ? '+' : ''}${item.track.deltaEvolucao} pts`
+    },
+    {
+      id: 'caracterizacao',
+      name: 'Melhor Caracterização',
+      icon: '🎨',
+      desc: 'Equipe com temática criativa (fantasia, mascote, uniforme) alinhada ao robô e animação.',
+      tiebreakName: '1º Votos "Superado ★" ➔ 2º Voto de Minerva',
+      evalTiebreak: (a, b) => {
+        if (b.rubrics.caracterizacao.avg !== a.rubrics.caracterizacao.avg) return b.rubrics.caracterizacao.avg - a.rubrics.caracterizacao.avg;
+        return b.rubrics.caracterizacao.count3 - a.rubrics.caracterizacao.count3;
+      },
+      getTiebreakExplain: (item) => `${item.rubrics.caracterizacao.count3} voto(s) Superado ★`
+    },
+    {
+      id: 'torcida',
+      name: 'Melhor Torcida',
+      icon: '📣',
+      desc: 'Escola com torcida vibrante, barulhenta, com identidade visual própria e respeitosa.',
+      tiebreakName: '1º Votos "Superado ★" ➔ 2º Voto de Minerva',
+      evalTiebreak: (a, b) => {
+        if (b.rubrics.torcida.avg !== a.rubrics.torcida.avg) return b.rubrics.torcida.avg - a.rubrics.torcida.avg;
+        return b.rubrics.torcida.count3 - a.rubrics.torcida.count3;
+      },
+      getTiebreakExplain: (item) => `${item.rubrics.torcida.count3} voto(s) Superado ★`
+    },
+    {
+      id: 'fair_play',
+      name: 'Prêmio Fair Play',
+      icon: '🤝',
+      desc: 'Postura colaborativa, auxílio a outras equipes, atitude positiva e respeito às regras.',
+      tiebreakName: '1º Menor total acumulado de faltas',
+      evalTiebreak: (a, b) => {
+        if (b.rubrics.fair_play.avg !== a.rubrics.fair_play.avg) return b.rubrics.fair_play.avg - a.rubrics.fair_play.avg;
+        return a.track.totalFaltas - b.track.totalFaltas;
+      },
+      getTiebreakExplain: (item) => `Faltas totais na pista: ${item.track.totalFaltas}`
+    }
+  ];
+
+  // Retorna lista ordenada para um Prêmio de Box específico
+  function getSortedAwardCandidates(awardId) {
+    const meta = AWARDS_METADATA.find(m => m.id === awardId);
+    if (!meta) return [];
+
+    const candidates = teams.map(team => ({
+      team,
+      track: getTrackStatsForTeam(team.name),
+      rubrics: getRubricStatsForTeam(team.name, team.id)
+    }));
+
+    candidates.sort((a, b) => {
+      const minervaWinner = minervaVotes[meta.id];
+      if (minervaWinner) {
+        if (a.team.name === minervaWinner) return -1;
+        if (b.team.name === minervaWinner) return 1;
+      }
+      return meta.evalTiebreak(a, b);
+    });
+
+    return candidates;
+  }
+
+  // Retorna lista ordenada para o Pódio de Pista de uma Categoria
+  function getSortedTrackCandidates(categoryFilter = 'LEGO') {
+    const filtered = teams.filter(t =>
+      t.category.toLowerCase().includes(categoryFilter.toLowerCase().includes('maker') ? 'maker' : 'lego')
+    );
+
+    const list = filtered.map(team => ({
+      team,
+      track: getTrackStatsForTeam(team.name)
+    }));
+
+    list.sort((a, b) => {
+      if (a.track.bestTimeMs !== b.track.bestTimeMs) return a.track.bestTimeMs - b.track.bestTimeMs;
+      if (a.track.bestTimeFouls !== b.track.bestTimeFouls) return a.track.bestTimeFouls - b.track.bestTimeFouls;
+      return a.track.secondTimeMs - b.track.secondTimeMs;
+    });
+
+    return list;
+  }
+
+  // ==========================================================================
+  // 3. TABELAS DE AUDITORIA E VOTO DE MINERVA
+  // ==========================================================================
   function renderTrackRanking() {
     if (!trackRankingBody) return;
     trackRankingBody.innerHTML = '';
 
-    // Filtra equipes por categoria
     let filteredTeams = teams;
     if (activeCategory !== 'TODAS') {
       filteredTeams = teams.filter(t => t.category.includes(activeCategory.includes('LEGO') ? 'LEGO' : 'Maker'));
     }
 
-    // Calcula dados de pista
-    const rankingList = filteredTeams.map(team => {
-      const track = getTrackStatsForTeam(team.name);
-      return { team, track };
-    });
+    const rankingList = filteredTeams.map(team => ({
+      team,
+      track: getTrackStatsForTeam(team.name)
+    }));
 
-    // Ordenação Oficial da Pista:
-    // 1. Menor tempo líquido oficial (Infinity vai pro fim)
-    // 2. Menor número de faltas na melhor volta
-    // 3. Menor tempo na outra volta válida
     rankingList.sort((a, b) => {
-      if (a.track.bestTimeMs !== b.track.bestTimeMs) {
-        return a.track.bestTimeMs - b.track.bestTimeMs;
-      }
-      if (a.track.bestTimeFouls !== b.track.bestTimeFouls) {
-        return a.track.bestTimeFouls - b.track.bestTimeFouls;
-      }
+      if (a.track.bestTimeMs !== b.track.bestTimeMs) return a.track.bestTimeMs - b.track.bestTimeMs;
+      if (a.track.bestTimeFouls !== b.track.bestTimeFouls) return a.track.bestTimeFouls - b.track.bestTimeFouls;
       return a.track.secondTimeMs - b.track.secondTimeMs;
     });
 
@@ -223,12 +368,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         trophy = '—';
       }
 
-      const r1Str = item.track.r1 
-        ? `${formatMs(item.track.r1.tempo_ms)} <small style="color: var(--text-muted)">(${item.track.r1.infracoes || 0}F)</small>` 
+      const r1Str = item.track.r1
+        ? `${formatMs(item.track.r1.tempo_ms)} <small style="color: var(--text-muted)">(${item.track.r1.infracoes || 0}F)</small>`
         : '<span style="color: var(--text-muted)">--</span>';
 
-      const r2Str = item.track.r2 
-        ? `${formatMs(item.track.r2.tempo_ms)} <small style="color: var(--text-muted)">(${item.track.r2.infracoes || 0}F)</small>` 
+      const r2Str = item.track.r2
+        ? `${formatMs(item.track.r2.tempo_ms)} <small style="color: var(--text-muted)">(${item.track.r2.infracoes || 0}F)</small>`
         : '<span style="color: var(--text-muted)">--</span>';
 
       const bestTimeStr = item.track.hasValidRun ? formatMs(item.track.bestTimeMs) : '<span style="color: var(--color-danger); font-weight: 800;">SEM TEMPO</span>';
@@ -236,21 +381,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>
-          <span class="podium-rank-badge ${badgeClass}">${trophy}</span>
-        </td>
+        <td><span class="podium-rank-badge ${badgeClass}">${trophy}</span></td>
         <td>
           <strong style="color: var(--color-primary); font-size: 0.95rem;">${item.team.name}</strong>
           <div style="font-size: 0.78rem; color: var(--text-muted);">${item.team.school}</div>
         </td>
-        <td>
-          <span class="badge-pill-light" style="font-size: 0.75rem;">${item.team.category.includes('LEGO') ? 'LEGO' : 'MAKER'}</span>
-        </td>
+        <td><span class="badge-pill-light" style="font-size: 0.75rem;">${item.team.category.includes('LEGO') ? 'LEGO' : 'MAKER'}</span></td>
         <td style="font-family: var(--font-timer);">${r1Str}</td>
         <td style="font-family: var(--font-timer);">${r2Str}</td>
-        <td>
-          <span class="best-time-pill ${rank === 1 && item.track.hasValidRun ? 'first-place' : ''}">${bestTimeStr}</span>
-        </td>
+        <td><span class="best-time-pill ${rank === 1 && item.track.hasValidRun ? 'first-place' : ''}">${bestTimeStr}</span></td>
         <td style="color: var(--text-muted); font-size: 0.85rem;">${foulsStr}</td>
         <td>
           <span style="font-weight: 800; font-size: 0.75rem; color: ${item.track.hasValidRun ? '#16A34A' : '#DC2626'};">
@@ -262,111 +401,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 5. Motor de Decisão dos 5 Prêmios Oficiais (Edital 08)
-  const AWARDS_METADATA = [
-    {
-      id: 'mecanica',
-      name: 'Melhor Mecânica',
-      icon: '⚙️',
-      desc: 'Robustez estrutural, chassi e eficiência.',
-      tiebreakName: '1º Menor Tempo de Pista ➔ 2º Faltas',
-      evalTiebreak: (a, b) => {
-        // 1. Maior média na rubrica
-        if (b.rubrics.mecanica.avg !== a.rubrics.mecanica.avg) {
-          return b.rubrics.mecanica.avg - a.rubrics.mecanica.avg;
-        }
-        // 2. 1º Desempate: Menor tempo de pista
-        if (a.track.bestTimeMs !== b.track.bestTimeMs) {
-          return a.track.bestTimeMs - b.track.bestTimeMs;
-        }
-        // 3. 2º Desempate: Menor número de faltas na melhor volta
-        return a.track.bestTimeFouls - b.track.bestTimeFouls;
-      },
-      getTiebreakExplain: (item) => {
-        return `Melhor Volta: ${formatMs(item.track.bestTimeMs)} (${item.track.bestTimeFouls} faltas)`;
-      }
-    },
-    {
-      id: 'superacao',
-      name: 'Prêmio Superação',
-      icon: '🚀',
-      desc: 'Resiliência e recuperação técnica visível.',
-      tiebreakName: '1º Maior Δevolução ➔ 2º Faltas no R2',
-      evalTiebreak: (a, b) => {
-        // 1. Maior média na rubrica
-        if (b.rubrics.superacao.avg !== a.rubrics.superacao.avg) {
-          return b.rubrics.superacao.avg - a.rubrics.superacao.avg;
-        }
-        // 2. 1º Desempate: Maior delta de evolução
-        if (b.track.deltaEvolucao !== a.track.deltaEvolucao) {
-          return b.track.deltaEvolucao - a.track.deltaEvolucao;
-        }
-        // 3. 2º Desempate: Menor faltas no R2
-        return a.track.r2Fouls - b.track.r2Fouls;
-      },
-      getTiebreakExplain: (item) => {
-        return `Índice Δevolução: ${item.track.deltaEvolucao > 0 ? '+' : ''}${item.track.deltaEvolucao} pts`;
-      }
-    },
-    {
-      id: 'caracterizacao',
-      name: 'Melhor Caracterização',
-      icon: '🎨',
-      desc: 'Tema criativo, uniforme, mascote e animação.',
-      tiebreakName: '1º Votos "Superado ★" ➔ 2º Voto de Minerva',
-      evalTiebreak: (a, b) => {
-        // 1. Maior média
-        if (b.rubrics.caracterizacao.avg !== a.rubrics.caracterizacao.avg) {
-          return b.rubrics.caracterizacao.avg - a.rubrics.caracterizacao.avg;
-        }
-        // 2. Contagem de 3★
-        return b.rubrics.caracterizacao.count3 - a.rubrics.caracterizacao.count3;
-      },
-      getTiebreakExplain: (item) => {
-        return `${item.rubrics.caracterizacao.count3} voto(s) Superado ★`;
-      }
-    },
-    {
-      id: 'torcida',
-      name: 'Melhor Torcida',
-      icon: '📣',
-      desc: 'Animação vibrante, gritos e respeito às equipes.',
-      tiebreakName: '1º Votos "Superado ★" ➔ 2º Voto de Minerva',
-      evalTiebreak: (a, b) => {
-        if (b.rubrics.torcida.avg !== a.rubrics.torcida.avg) {
-          return b.rubrics.torcida.avg - a.rubrics.torcida.avg;
-        }
-        return b.rubrics.torcida.count3 - a.rubrics.torcida.count3;
-      },
-      getTiebreakExplain: (item) => {
-        return `${item.rubrics.torcida.count3} voto(s) Superado ★`;
-      }
-    },
-    {
-      id: 'fair_play',
-      name: 'Prêmio Fair Play',
-      icon: '🤝',
-      desc: 'Cooperação, atitude positiva e espírito esportivo.',
-      tiebreakName: '1º Menor total acumulado de faltas',
-      evalTiebreak: (a, b) => {
-        if (b.rubrics.fair_play.avg !== a.rubrics.fair_play.avg) {
-          return b.rubrics.fair_play.avg - a.rubrics.fair_play.avg;
-        }
-        return a.track.totalFaltas - b.track.totalFaltas;
-      },
-      getTiebreakExplain: (item) => {
-        return `Faltas totais na pista: ${item.track.totalFaltas}`;
-      }
-    }
-  ];
-
-  // Renderiza os 5 Prêmios Especiais
   function renderSpecialAwards() {
     if (!awardsGrid) return;
     awardsGrid.innerHTML = '';
     if (tieAlertSection) tieAlertSection.innerHTML = '';
 
-    // Filtra equipes da categoria ativa
     let filteredTeams = teams;
     if (activeCategory !== 'TODAS') {
       filteredTeams = teams.filter(t => t.category.includes(activeCategory.includes('LEGO') ? 'LEGO' : 'Maker'));
@@ -377,17 +416,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Para cada equipe, calcula track + rubrics
-    const candidates = filteredTeams.map(team => {
-      const track = getTrackStatsForTeam(team.name);
-      const rubrics = getRubricStatsForTeam(team.name, team.id);
-      return { team, track, rubrics };
-    });
+    const candidates = filteredTeams.map(team => ({
+      team,
+      track: getTrackStatsForTeam(team.name),
+      rubrics: getRubricStatsForTeam(team.name, team.id)
+    }));
 
-    AWARDS_METADATA.forEach(meta => {
-      // Ordena os candidatos para este prêmio específico
+    AWARDS_METADATA.forEach((meta, idx) => {
       const list = [...candidates].sort((a, b) => {
-        // Se houver Voto de Minerva registrado manualmente para este prêmio, ele tem prioridade máxima
         const minervaWinner = minervaVotes[meta.id];
         if (minervaWinner) {
           if (a.team.name === minervaWinner) return -1;
@@ -399,17 +435,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const winner = list[0];
       const second = list[1];
 
-      // Checa se há EMPATE TÉCNICO RESIDUAL no 1º lugar (mesma média e mesmos critérios)
-      let isResidualTie = false;
       if (second && !minervaVotes[meta.id]) {
         const topScore = winner.rubrics[meta.id].avg;
         const secondScore = second.rubrics[meta.id].avg;
-        if (topScore > 0 && topScore === secondScore) {
-          // Compara os critérios de desempate
-          if (meta.evalTiebreak(winner, second) === 0) {
-            isResidualTie = true;
-            renderTieAlert(meta, winner, second);
-          }
+        if (topScore > 0 && topScore === secondScore && meta.evalTiebreak(winner, second) === 0) {
+          renderTieAlert(meta, winner, second);
         }
       }
 
@@ -424,7 +454,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             <span>${meta.icon}</span>
             <span>${meta.name}</span>
           </div>
-          <span class="badge-pill-light" style="font-size: 0.75rem;">${meta.tiebreakName}</span>
+          <button type="button" class="badge-pill-light" style="cursor: pointer; border: 1px solid var(--color-primary); color: var(--color-primary); font-weight: 800; font-size: 0.72rem;" onclick="window.selectCeremonyStep(${idx + 1}, true)" title="Preparar este prêmio em suspense no Telão">
+            📽️ Levar p/ Mesa (${idx + 1})
+          </button>
         </div>
 
         <div class="award-winner-box">
@@ -443,14 +475,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
 
-        <!-- Ranking Rápido deste Prêmio -->
         <div style="font-size: 0.78rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
           Top Concorrentes:
         </div>
         <div style="display: flex; flex-direction: column; gap: 4px;">
-          ${list.slice(0, 3).map((item, idx) => `
+          ${list.slice(0, 3).map((item, i) => `
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 4px 0; border-bottom: 1px dotted var(--border-light);">
-              <span>${idx + 1}º ${item.team.name}</span>
+              <span>${i + 1}º ${item.team.name}</span>
               <strong style="color: var(--color-primary);">${item.rubrics[meta.id].avg.toFixed(2)} ★</strong>
             </div>
           `).join('')}
@@ -460,7 +491,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Renderiza o Alerta de Deliberação / Voto de Minerva
   function renderTieAlert(meta, teamA, teamB) {
     if (!tieAlertSection) return;
     const box = document.createElement('div');
@@ -484,8 +514,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <strong style="font-size: 1.05rem; color: var(--color-primary);">${teamA.team.name}</strong>
           <div style="font-size: 0.8rem; color: var(--text-muted);">${teamA.team.school}</div>
           <div class="tie-obs-box">
-            ${teamA.rubrics.observations.length > 0 
-              ? teamA.rubrics.observations.map(o => `"${o.texto}" — <em>${o.juiz}</em>`).join('<br>') 
+            ${teamA.rubrics.observations.length > 0
+              ? teamA.rubrics.observations.map(o => `"${o.texto}" — <em>${o.juiz}</em>`).join('<br>')
               : 'Sem observações registradas.'}
           </div>
           <button type="button" class="btn-minerva" onclick="window.castMinervaVote('${meta.id}', '${teamA.team.name}')">
@@ -497,8 +527,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <strong style="font-size: 1.05rem; color: var(--color-primary);">${teamB.team.name}</strong>
           <div style="font-size: 0.8rem; color: var(--text-muted);">${teamB.team.school}</div>
           <div class="tie-obs-box">
-            ${teamB.rubrics.observations.length > 0 
-              ? teamB.rubrics.observations.map(o => `"${o.texto}" — <em>${o.juiz}</em>`).join('<br>') 
+            ${teamB.rubrics.observations.length > 0
+              ? teamB.rubrics.observations.map(o => `"${o.texto}" — <em>${o.juiz}</em>`).join('<br>')
               : 'Sem observações registradas.'}
           </div>
           <button type="button" class="btn-minerva" onclick="window.castMinervaVote('${meta.id}', '${teamB.team.name}')">
@@ -510,569 +540,563 @@ document.addEventListener('DOMContentLoaded', async () => {
     tieAlertSection.appendChild(box);
   }
 
-  // Ação global de Voto de Minerva
   window.castMinervaVote = function(awardId, teamName) {
     if (confirm(`Confirma declarar a equipe "${teamName}" como vencedora oficial do prêmio por Voto de Minerva da Comissão?`)) {
       minervaVotes[awardId] = teamName;
       localStorage.setItem('torneio_minerva_votos', JSON.stringify(minervaVotes));
       renderAll();
+      updateOperatorCeremonyUI();
     }
   };
 
-  // 6. Cerimônia de Premiação no Telão (Pódios e Troféus Oficiais)
-  const CEREMONY_STEPS = [
-    'PREMIO_mecanica',
-    'PREMIO_superacao',
-    'PREMIO_caracterizacao',
-    'PREMIO_torcida',
-    'PREMIO_fair_play',
-    'VELOCIDADE_LEGO'
-  ];
+  // ==========================================================================
+  // 4. MESA DE CERIMÔNIA DO OPERADOR & SINCRONIA COM O TELÃO DO PÓDIO
+  // ==========================================================================
+  function buildTelaoPayloadForCurrentStep() {
+    const routine = CEREMONY_ROUTINE[currentStepIdx];
 
-  let currentStepIndex = 0;
-  let autoplayTimer = null;
-  let autoplayProgressTimer = null;
-  let isAutoplay = false;
-
-  const btnOpenCeremonyFull = document.getElementById('btnOpenCeremonyFull');
-  const btnOpenCeremonyTrack = document.getElementById('btnOpenCeremonyTrack');
-  const btnCeremonyPrev = document.getElementById('btnCeremonyPrev');
-  const btnCeremonyNext = document.getElementById('btnCeremonyNext');
-  const btnCeremonyAutoPlay = document.getElementById('btnCeremonyAutoPlay');
-  const btnRevealTrackAuto = document.getElementById('btnRevealTrackAuto');
-  const ceremonyStatusBanner = document.getElementById('ceremonyStatusBanner');
-  const ceremonyStatusText = document.getElementById('ceremonyStatusText');
-  const autoplayProgress = document.getElementById('autoplayProgress');
-  const autoplayProgressFill = document.getElementById('autoplayProgressFill');
-  const ceremonyStepper = document.getElementById('ceremonyStepper');
-
-  function setStatusBanner(msg, isRunning = false) {
-    if (ceremonyStatusText) ceremonyStatusText.textContent = msg;
-    if (ceremonyStatusBanner) {
-      if (isRunning) ceremonyStatusBanner.classList.add('running');
-      else ceremonyStatusBanner.classList.remove('running');
-    }
-  }
-
-  function resetPodium() {
-    ['podiumPillar1', 'podiumPillar2', 'podiumPillar3'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('revealed');
-    });
-    if (btnReveal3) btnReveal3.disabled = false;
-    if (btnReveal2) btnReveal2.disabled = true;
-    if (btnReveal1) btnReveal1.disabled = true;
-  }
-
-  window.openCeremonyModal = function(mode = 'AUTO_FULL') {
-    if (ceremonyModal) {
-      ceremonyModal.classList.add('active');
-      stopAutoplay();
-      
-      if (mode === 'TRACK') {
-        goToStep(CEREMONY_STEPS.length - 1); // Vai direto para o Pódio de Pista
-        setStatusBanner('🏎️ Pódio de Pista pronto. Clique nos botões para revelar com suspense.');
-      } else {
-        // Pódio Total Automático (Show Completo dos 5 Troféus + Pódio de Pista)
-        goToStep(0); // Inicia do primeiro prêmio (1. ⚙️ Mecânica)
-        setStatusBanner('🚀 Pódio Total Selecionado! Iniciando show automático em instantes...', true);
-        setTimeout(() => {
-          startAutoplay();
-        }, 600);
-      }
-    }
-  };
-
-  window.closeCeremonyModal = function() {
-    if (ceremonyModal) {
-      ceremonyModal.classList.remove('active');
-      stopAutoplay();
-    }
-  };
-
-  function goToStep(index) {
-    if (index < 0 || index >= CEREMONY_STEPS.length) return;
-    currentStepIndex = index;
-    const targetAward = CEREMONY_STEPS[currentStepIndex];
-
-    if (ceremonySelectAward) {
-      ceremonySelectAward.value = targetAward;
+    // MODO 0: TELA DE ESPERA
+    if (routine.type === 'STANDBY') {
+      return {
+        mode: 'STANDBY',
+        stepKey: 'STANDBY',
+        headerBadge: '🏆 Cerimônia Oficial',
+        subtitleTag: 'COLÉGIO ANCHIETA • EDITAL Nº 08/2026',
+        mainTitle: 'CERIMÔNIA DE PREMIAÇÃO',
+        criteriaDesc: 'Premiações de Bancada (Paddock) & Pódio Oficial de Velocidade'
+      };
     }
 
-    // Atualiza Stepper Chips
-    if (ceremonyStepper) {
-      const chips = ceremonyStepper.querySelectorAll('.step-chip');
-      chips.forEach((chip, idx) => {
-        if (idx === currentStepIndex) {
-          chip.classList.add('active');
-        } else {
-          chip.classList.remove('active');
-        }
-      });
-    }
-
-    // Atualiza Botões Anterior / Próximo
-    if (btnCeremonyPrev) btnCeremonyPrev.disabled = (currentStepIndex === 0);
-    if (btnCeremonyNext) btnCeremonyNext.disabled = (currentStepIndex === CEREMONY_STEPS.length - 1);
-
-    resetPodium();
-    updateCeremonyView();
-  }
-
-  function stopAutoplay() {
-    isAutoplay = false;
-    clearTimeout(autoplayTimer);
-    clearInterval(autoplayProgressTimer);
-    if (btnCeremonyAutoPlay) {
-      btnCeremonyAutoPlay.classList.remove('running');
-      btnCeremonyAutoPlay.innerHTML = '<span>▶ Iniciar Show Automático</span>';
-    }
-    if (autoplayProgress) {
-      autoplayProgress.classList.remove('active');
-    }
-    if (autoplayProgressFill) {
-      autoplayProgressFill.style.width = '0%';
-    }
-    setStatusBanner('Apresentação pausada. Você pode avançar manualmente ou retomar o show.', false);
-  }
-
-  function startAutoplay() {
-    isAutoplay = true;
-    if (btnCeremonyAutoPlay) {
-      btnCeremonyAutoPlay.classList.add('running');
-      btnCeremonyAutoPlay.innerHTML = '<span>⏸️ Pausar Apresentação</span>';
-    }
-    if (autoplayProgress) {
-      autoplayProgress.classList.add('active');
-    }
-    runAutoplayStep();
-  }
-
-  function runAutoplayStep() {
-    if (!isAutoplay) return;
-
-    const currentKey = CEREMONY_STEPS[currentStepIndex];
-    const isBoxAward = currentKey.startsWith('PREMIO_');
-
-    if (isBoxAward) {
-      const awardKey = currentKey.replace('PREMIO_', '');
-      const meta = AWARDS_METADATA.find(m => m.id === awardKey);
-      const awardName = meta ? meta.name : 'Troféu Oficial';
-
-      // 1. Prêmio de Box: Suspense de 2.5s
-      resetPodium();
-      setStatusBanner(`🥁 Atenção Ginásio! Apurando vencedor de: ${awardName.toUpperCase()}...`, true);
-
-      animateProgressBar(2500, () => {
-        if (!isAutoplay) return;
-        window.revealPillar(1);
-        
-        const winnerEl = document.getElementById('podiumTeamName1');
-        const winnerName = winnerEl ? winnerEl.textContent : '';
-        setStatusBanner(`🎉 PARABÉNS: ${winnerName}! Vencedor do Troféu ${awardName}!`, true);
-
-        // 2. Tempo de Comemoração de 6.5s antes de passar ao próximo
-        animateProgressBar(6500, () => {
-          if (!isAutoplay) return;
-          if (currentStepIndex < CEREMONY_STEPS.length - 1) {
-            goToStep(currentStepIndex + 1);
-            runAutoplayStep();
-          } else {
-            stopAutoplay();
-            setStatusBanner('🏆 Cerimônia Concluída com Sucesso!', false);
-          }
-        });
-      });
-    } else {
-      // 2. Grand Finale: Pódio de Pista (3º -> 2º -> 1º)
-      runTrackAutoplay();
-    }
-  }
-
-  function runTrackAutoplay() {
-    resetPodium();
-    if (autoplayProgress) autoplayProgress.classList.add('active');
-    
-    // Revelação 3º Lugar (Bronze)
-    setStatusBanner('🥉 Ginásio em suspense... Revelando o 3º Lugar da Pista!', true);
-    animateProgressBar(2200, () => {
-      window.revealPillar(3);
-      const name3 = document.getElementById('podiumTeamName3')?.textContent || '';
-      setStatusBanner(`🥉 3º Lugar: ${name3}! Preparando revelação do Vice-Campeão...`, true);
-
-      // Revelação 2º Lugar (Prata)
-      animateProgressBar(3500, () => {
-        window.revealPillar(2);
-        const name2 = document.getElementById('podiumTeamName2')?.textContent || '';
-        setStatusBanner(`🥈 Vice-Campeão: ${name2}! E agora... O Grande Campeão da Pista!`, true);
-
-        // Revelação 1º Lugar (Ouro / Grande Campeão)
-        setStatusBanner('🥁 E O GRANDE CAMPEÃO DO TORNEIO DE ROBÓTICA ANCHIETA É...', true);
-        animateProgressBar(3500, () => {
-          window.revealPillar(1);
-          const name1 = document.getElementById('podiumTeamName1')?.textContent || '';
-          setStatusBanner(`🏆 🥇 GRANDE CAMPEÃO: ${name1}! PARABÉNS A TODAS AS EQUIPES!`, true);
-
-          animateProgressBar(8000, () => {
-            if (isAutoplay) stopAutoplay();
-            setStatusBanner('🏆 Cerimônia Oficial Concluída com Sucesso! Parabéns a Todos!', false);
-          });
-        });
-      });
-    });
-  }
-
-  function animateProgressBar(durationMs, onComplete) {
-    if (autoplayProgressFill) autoplayProgressFill.style.width = '0%';
-    const startTime = Date.now();
-
-    clearInterval(autoplayProgressTimer);
-    autoplayProgressTimer = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const pct = Math.min(100, (elapsed / durationMs) * 100);
-      if (autoplayProgressFill) autoplayProgressFill.style.width = `${pct}%`;
-
-      if (elapsed >= durationMs) {
-        clearInterval(autoplayProgressTimer);
-        if (onComplete) onComplete();
-      }
-    }, 40);
-  }
-
-  window.revealPillar = function(pos) {
-    if (pos === 3) {
-      const p3 = document.getElementById('podiumPillar3');
-      if (p3) p3.classList.add('revealed');
-      if (btnReveal3) btnReveal3.disabled = true;
-      if (btnReveal2) btnReveal2.disabled = false;
-      playBeep();
-    } else if (pos === 2) {
-      const p2 = document.getElementById('podiumPillar2');
-      if (p2) p2.classList.add('revealed');
-      if (btnReveal2) btnReveal2.disabled = true;
-      if (btnReveal1) btnReveal1.disabled = false;
-      playBeep();
-    } else if (pos === 1) {
-      const p1 = document.getElementById('podiumPillar1');
-      if (p1) p1.classList.add('revealed');
-      if (btnReveal1) btnReveal1.disabled = true;
-      triggerFanfare();
-      triggerConfetti();
-    }
-  };
-
-  function triggerConfetti() {
-    try {
-      const stage = document.getElementById('podiumStage');
-      if (!stage) return;
-      const colors = ['#F59E0B', '#EF4444', '#10B981', '#3B82F6', '#EC4899', '#FDE047'];
-      for (let i = 0; i < 35; i++) {
-        const flake = document.createElement('div');
-        flake.style.position = 'absolute';
-        flake.style.width = `${Math.floor(Math.random() * 8 + 6)}px`;
-        flake.style.height = `${Math.floor(Math.random() * 12 + 6)}px`;
-        flake.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        flake.style.left = `${Math.random() * 100}%`;
-        flake.style.top = '-20px';
-        flake.style.opacity = '1';
-        flake.style.borderRadius = '2px';
-        flake.style.zIndex = '999';
-        flake.style.pointerEvents = 'none';
-        flake.style.transition = `all ${Math.random() * 2 + 2}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-        stage.appendChild(flake);
-
-        setTimeout(() => {
-          flake.style.top = `${Math.random() * 80 + 20}%`;
-          flake.style.transform = `rotate(${Math.random() * 720 - 360}deg) translateX(${Math.random() * 100 - 50}px)`;
-          flake.style.opacity = '0';
-        }, 50);
-
-        setTimeout(() => flake.remove(), 4500);
-      }
-    } catch(e) {}
-  }
-
-  function setupCeremony() {
-    if (btnOpenCeremonyFull) {
-      btnOpenCeremonyFull.addEventListener('click', () => window.openCeremonyModal('AUTO_FULL'));
-    }
-    if (btnOpenCeremonyTrack) {
-      btnOpenCeremonyTrack.addEventListener('click', () => window.openCeremonyModal('TRACK'));
-    }
-    if (btnCloseCeremony) {
-      btnCloseCeremony.addEventListener('click', window.closeCeremonyModal);
-    }
-    if (btnRevealTrackAuto) {
-      btnRevealTrackAuto.addEventListener('click', () => runTrackAutoplay());
-    }
-
-    if (btnCeremonyPrev) {
-      btnCeremonyPrev.addEventListener('click', () => {
-        stopAutoplay();
-        goToStep(currentStepIndex - 1);
-      });
-    }
-
-    if (btnCeremonyNext) {
-      btnCeremonyNext.addEventListener('click', () => {
-        stopAutoplay();
-        goToStep(currentStepIndex + 1);
-      });
-    }
-
-    if (btnCeremonyAutoPlay) {
-      btnCeremonyAutoPlay.addEventListener('click', () => {
-        if (isAutoplay) {
-          stopAutoplay();
-        } else {
-          startAutoplay();
-        }
-      });
-    }
-
-    if (ceremonyStepper) {
-      const chips = ceremonyStepper.querySelectorAll('.step-chip');
-      chips.forEach((chip, idx) => {
-        chip.addEventListener('click', () => {
-          stopAutoplay();
-          goToStep(idx);
-        });
-      });
-    }
-
-    if (ceremonySelectAward) {
-      ceremonySelectAward.addEventListener('change', () => {
-        stopAutoplay();
-        const val = ceremonySelectAward.value;
-        const foundIdx = CEREMONY_STEPS.indexOf(val);
-        if (foundIdx >= 0) {
-          goToStep(foundIdx);
-        } else {
-          resetPodium();
-          updateCeremonyView();
-        }
-      });
-    }
-
-    if (btnReveal3) btnReveal3.addEventListener('click', () => window.revealPillar(3));
-    if (btnReveal2) btnReveal2.addEventListener('click', () => window.revealPillar(2));
-    if (btnReveal1) btnReveal1.addEventListener('click', () => window.revealPillar(1));
-
-    // Suporte a Atalhos de Teclado no Modo Telão Fullscreen
-    document.addEventListener('keydown', (e) => {
-      if (!ceremonyModal || !ceremonyModal.classList.contains('active')) return;
-
-      if (e.key === 'Escape') {
-        window.closeCeremonyModal();
-      } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
-        stopAutoplay();
-        goToStep(currentStepIndex + 1);
-      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        stopAutoplay();
-        goToStep(currentStepIndex - 1);
-      } else if (e.key === ' ') {
-        e.preventDefault();
-        const currentKey = CEREMONY_STEPS[currentStepIndex];
-        if (currentKey.startsWith('PREMIO_')) {
-          window.revealPillar(1);
-        } else {
-          if (!btnReveal3.disabled) window.revealPillar(3);
-          else if (!btnReveal2.disabled) window.revealPillar(2);
-          else if (!btnReveal1.disabled) window.revealPillar(1);
-        }
-      }
-    });
-  }
-
-  function updateCeremonyView() {
-    const selectedMode = ceremonySelectAward ? ceremonySelectAward.value : 'VELOCIDADE_LEGO';
-    const mainTitleEl = document.getElementById('ceremonyMainTitle');
-    const badgeTagEl = document.getElementById('ceremonyBadgeTag');
-    const subTitleEl = document.getElementById('ceremonySubTitle');
-    const p1El = document.getElementById('podiumPillar1');
-    const p2El = document.getElementById('podiumPillar2');
-    const p3El = document.getElementById('podiumPillar3');
-    const num1El = document.getElementById('podiumBlockNumber1');
-    const label1El = document.getElementById('podiumBlockLabel1');
-    const trophy1El = document.getElementById('podiumTrophyIcon1');
-
-    // 1. MODO: TROFÉUS DE BANCADA DE BOX (EDITAL 08)
-    if (selectedMode.startsWith('PREMIO_')) {
-      const awardKey = selectedMode.replace('PREMIO_', '');
-      const meta = AWARDS_METADATA.find(m => m.id === awardKey);
-      if (!meta) return;
-
-      // Ajuste de Textos do Cabeçalho
-      if (mainTitleEl) mainTitleEl.textContent = `TROFÉU: ${meta.name.toUpperCase()}`;
-      if (badgeTagEl) badgeTagEl.textContent = `${meta.icon} Premiação Oficial de Box`;
-      if (subTitleEl) subTitleEl.textContent = meta.desc;
-
-      // Oculta Pilares 2 e 3 e Centraliza Pilar 1
-      if (p2El) p2El.style.display = 'none';
-      if (p3El) p3El.style.display = 'none';
-      if (p1El) {
-        p1El.style.display = 'flex';
-        p1El.style.maxWidth = '520px';
-        p1El.style.width = '100%';
-      }
-
-      if (num1El) num1El.textContent = meta.icon;
-      if (label1El) label1El.textContent = 'Vencedor Oficial do Troféu';
-      if (trophy1El) trophy1El.textContent = '🏆';
-
-      // Botões de Ação: Apenas botão único de revelação do campeão
-      if (btnRevealTrackAuto) btnRevealTrackAuto.style.display = 'none';
-      if (btnReveal3) btnReveal3.style.display = 'none';
-      if (btnReveal2) btnReveal2.style.display = 'none';
-      if (btnReveal1) {
-        btnReveal1.style.display = 'inline-flex';
-        btnReveal1.disabled = false;
-        btnReveal1.innerHTML = `🏆 Revelar Campeão: ${meta.name}!`;
-      }
-
-      // Ordena candidatos para o prêmio selecionado
-      const candidates = teams.map(team => {
-        const track = getTrackStatsForTeam(team.name);
-        const rubrics = getRubricStatsForTeam(team.name, team.id);
-        return { team, track, rubrics };
-      });
-
-      candidates.sort((a, b) => {
-        const minervaWinner = minervaVotes[meta.id];
-        if (minervaWinner) {
-          if (a.team.name === minervaWinner) return -1;
-          if (b.team.name === minervaWinner) return 1;
-        }
-        return meta.evalTiebreak(a, b);
-      });
-
+    // MODO 1..5: TROFÉU DE BANCADA / BOX
+    if (routine.type === 'SINGLE_AWARD') {
+      const meta = AWARDS_METADATA.find(m => m.id === routine.key);
+      const candidates = getSortedAwardCandidates(routine.key);
       const winner = candidates[0];
-      const nameEl = document.getElementById('podiumTeamName1');
-      const schoolEl = document.getElementById('podiumTeamSchool1');
-      const timeEl = document.getElementById('podiumTeamTime1');
+      const hasScore = winner && winner.rubrics[routine.key].avg > 0;
 
-      if (winner && winner.rubrics[meta.id].avg > 0) {
-        if (nameEl) nameEl.textContent = winner.team.name;
-        if (schoolEl) schoolEl.textContent = `${winner.team.school} • ${winner.team.category}`;
-        if (timeEl) {
-          timeEl.innerHTML = `<span style="font-size: 1.25rem;">Média: ${winner.rubrics[meta.id].avg.toFixed(2)} ★</span><br><span style="font-size: 0.85rem; color: #E2E8F0; font-weight: 600;">${meta.getTiebreakExplain(winner)}</span>`;
+      return {
+        mode: 'SINGLE_AWARD',
+        stepKey: routine.key,
+        headerBadge: `${meta.icon} Troféu Oficial de Bancada`,
+        subtitleTag: `PRÊMIO OFICIAL #${routine.step} • EDITAL 08`,
+        mainTitle: `TROFÉU: ${meta.name.toUpperCase()}`,
+        criteriaDesc: meta.desc,
+        icon: meta.icon,
+        singleRevealed: singleAwardRevealed,
+        winner: {
+          name: winner ? winner.team.name : 'Sem Equipe',
+          school: winner ? `${winner.team.school} • ${winner.team.category}` : '--',
+          scoreText: hasScore ? `${winner.rubrics[routine.key].avg.toFixed(2)} ★` : 'Destaque Oficial ★',
+          detailText: winner ? meta.getTiebreakExplain(winner) : '--'
         }
-      } else {
-        if (nameEl) nameEl.textContent = 'Aguardando Avaliações...';
-        if (schoolEl) schoolEl.textContent = 'Sem notas registradas ainda no Paddock';
-        if (timeEl) timeEl.textContent = '-- ★';
+      };
+    }
+
+    // MODO 6..7: PÓDIO TRIPLO DE VELOCIDADE
+    const isMaker = routine.key === 'VELOCIDADE_MAKER';
+    const candidates = getSortedTrackCandidates(isMaker ? 'Maker' : 'LEGO');
+
+    const formatCandidate = (cand) => {
+      if (!cand) {
+        return { name: '—', school: 'Sem equipe', time: '--:--.--', foulsText: '' };
       }
-      return;
-    }
+      if (!cand.track.hasValidRun) {
+        return { name: cand.team.name, school: cand.team.school, time: 'SEM TEMPO', foulsText: 'Volta pendente / DNF' };
+      }
+      const f = cand.track.bestTimeFouls;
+      return {
+        name: cand.team.name,
+        school: cand.team.school,
+        time: formatMs(cand.track.bestTimeMs),
+        foulsText: f === 0 ? '✓ Volta Limpa (0 Faltas)' : `⚠ ${f} ${f === 1 ? 'falta' : 'faltas'} na volta`
+      };
+    };
 
-    // 2. MODO: PÓDIO DE PISTA (VELOCIDADE - TOP 3)
-    if (mainTitleEl) mainTitleEl.textContent = 'PÓDIO OFICIAL DO TORNEIO';
-    if (badgeTagEl) badgeTagEl.textContent = '🏆 Cerimônia de Premiação';
-    if (subTitleEl) subTitleEl.textContent = 'Colégio Anchieta • 05/12/2026';
-
-    if (p2El) p2El.style.display = 'flex';
-    if (p3El) p3El.style.display = 'flex';
-    if (p1El) {
-      p1El.style.display = 'flex';
-      p1El.style.maxWidth = '';
-      p1El.style.width = '';
-    }
-
-    if (num1El) num1El.textContent = '1';
-    if (label1El) label1El.textContent = 'Grande Campeão';
-    if (trophy1El) trophy1El.textContent = '🥇';
-
-    if (btnRevealTrackAuto) btnRevealTrackAuto.style.display = 'inline-flex';
-    if (btnReveal3) btnReveal3.style.display = 'inline-flex';
-    if (btnReveal2) btnReveal2.style.display = 'inline-flex';
-    if (btnReveal1) {
-      btnReveal1.style.display = 'inline-flex';
-      btnReveal1.innerHTML = '🥇 Revelar Grande Campeão!';
-    }
-
-    const cat = selectedMode.includes('MAKER') ? 'Aberta / Maker' : 'LEGO / Educacional';
-    const filteredTeams = teams.filter(t => t.category.includes(cat.includes('LEGO') ? 'LEGO' : 'Maker'));
-    const candidates = filteredTeams.map(team => {
-      const track = getTrackStatsForTeam(team.name);
-      return { team, track };
-    });
-
-    candidates.sort((a, b) => {
-      if (a.track.bestTimeMs !== b.track.bestTimeMs) return a.track.bestTimeMs - b.track.bestTimeMs;
-      if (a.track.bestTimeFouls !== b.track.bestTimeFouls) return a.track.bestTimeFouls - b.track.bestTimeFouls;
-      return a.track.secondTimeMs - b.track.secondTimeMs;
-    });
-
-    const p1 = candidates[0];
-    const p2 = candidates[1];
-    const p3 = candidates[2];
-
-    setPodiumTeamUI(1, p1);
-    setPodiumTeamUI(2, p2);
-    setPodiumTeamUI(3, p3);
+    return {
+      mode: 'TRACK_PODIUM',
+      stepKey: routine.key,
+      headerBadge: isMaker ? '🟠 Categoria Aberta / Maker' : '🔵 Categoria LEGO / Educacional',
+      subtitleTag: 'GRANDE FINAL DE VELOCIDADE NA PISTA',
+      mainTitle: isMaker ? 'PÓDIO DE PISTA — ABERTA / MAKER' : 'PÓDIO OFICIAL DE PISTA — LEGO',
+      criteriaDesc: 'Classificação Oficial: Menor Tempo Líquido (Art. 7º e Art. 8º)',
+      trackRevealed: { ...trackRevealedState },
+      podium: {
+        pos1: formatCandidate(candidates[0]),
+        pos2: formatCandidate(candidates[1]),
+        pos3: formatCandidate(candidates[2])
+      }
+    };
   }
 
-  function setPodiumTeamUI(pos, candidate) {
-    const nameEl = document.getElementById(`podiumTeamName${pos}`);
-    const schoolEl = document.getElementById(`podiumTeamSchool${pos}`);
-    const timeEl = document.getElementById(`podiumTeamTime${pos}`);
+  function broadcastToPodioTelao(effect = null) {
+    const state = buildTelaoPayloadForCurrentStep();
+    const packet = {
+      state,
+      effect,
+      updatedAt: Date.now()
+    };
 
-    if (!nameEl) return;
-    if (candidate) {
-      nameEl.textContent = candidate.team.name;
-      schoolEl.textContent = `${candidate.team.school} • ${candidate.team.category}`;
-      if (candidate.track.hasValidRun) {
-        const timeFormatted = formatMs(candidate.track.bestTimeMs);
-        const fouls = candidate.track.bestTimeFouls;
-        timeEl.innerHTML = `
-          <div style="font-size: 1.4rem; font-weight: 900;">${timeFormatted}</div>
-          <div style="font-size: 0.80rem; opacity: 0.88; font-weight: 600; margin-top: 2px;">
-            ${fouls === 0 ? '✓ Volta Limpa (0 Faltas)' : `⚠ ${fouls} ${fouls === 1 ? 'falta' : 'faltas'}`}
+    try {
+      localStorage.setItem('torneio_podio_live_state', JSON.stringify(packet));
+    } catch (e) {}
+
+    if (podioChannel) {
+      try {
+        podioChannel.postMessage({
+          type: 'PODIO_SYNC_STATE',
+          payload: packet
+        });
+      } catch (e) {}
+    }
+
+    updateOperatorCeremonyUI();
+  }
+
+  // Atualiza a interface da Mesa de Cerimônia (Operador)
+  function updateOperatorCeremonyUI() {
+    const routine = CEREMONY_ROUTINE[currentStepIdx];
+
+    // 1. Destaca botão ativo no Roteiro
+    copStepBtns.forEach(btn => {
+      const stepNum = Number(btn.dataset.step);
+      btn.classList.toggle('active', stepNum === currentStepIdx);
+    });
+
+    // 2. Atualiza Títulos de Bastidor
+    if (copPreviewTitle) copPreviewTitle.textContent = routine.title;
+    if (copPreviewSubtitle) copPreviewSubtitle.textContent = routine.subtitle;
+
+    // 3. Alterna grupos de botões da direita
+    copControlsStandby.style.display = routine.type === 'STANDBY' ? 'flex' : 'none';
+    copControlsSingle.style.display = routine.type === 'SINGLE_AWARD' ? 'flex' : 'none';
+    copControlsTrack.style.display = routine.type === 'TRACK_PODIUM' ? 'flex' : 'none';
+
+    // 4. Botões Anterior / Próximo
+    if (btnCopPrev) btnCopPrev.disabled = currentStepIdx === 0;
+    if (btnCopNext) btnCopNext.disabled = currentStepIdx === CEREMONY_ROUTINE.length - 1;
+
+    // 5. Atualiza Badge do Monitor ao Vivo e Cola Confidencial de Bastidor
+    if (routine.type === 'STANDBY') {
+      copLiveMonitorBadge.className = 'cop-monitor-pill standby';
+      copLiveMonitorText.textContent = 'NO TELÃO: Tela de Espera';
+      copBackstageContent.innerHTML = `
+        <div style="color: #CBD5E1; font-size: 0.88rem; line-height: 1.5;">
+          <strong>Status do Telão:</strong> Exibindo tela institucional de abertura.<br>
+          <span style="color: #94A3B8; font-size: 0.8rem;">Dica: Abra o <strong>Telão do Pódio ↗</strong>, arraste para o projetor HDMI em tela cheia (F11) e clique no prêmio 1 para começar.</span>
+        </div>
+      `;
+    } else if (routine.type === 'SINGLE_AWARD') {
+      const meta = AWARDS_METADATA.find(m => m.id === routine.key);
+      const candidates = getSortedAwardCandidates(routine.key);
+      const winner = candidates[0];
+      const runnerUp = candidates[1];
+
+      if (singleAwardRevealed) {
+        copLiveMonitorBadge.className = 'cop-monitor-pill revealed';
+        copLiveMonitorText.textContent = `🎉 NO TELÃO: ${winner ? winner.team.name : 'Revelado'} (${meta.name})`;
+      } else {
+        copLiveMonitorBadge.className = 'cop-monitor-pill suspense';
+        copLiveMonitorText.textContent = `🥁 NO TELÃO: ${meta.name} EM SUSPENSE (Oculto)`;
+      }
+
+      if (winner) {
+        const avg = winner.rubrics[routine.key].avg.toFixed(2);
+        copBackstageContent.innerHTML = `
+          <div class="backstage-winner-row">
+            <div>
+              <span style="font-size: 0.72rem; font-weight: 900; color: #FDE047; text-transform: uppercase;">🏆 Vencedor Oficial (Spoiler p/ Locutor):</span>
+              <div style="font-size: 1.35rem; font-weight: 900; color: #FFFFFF;">${winner.team.name}</div>
+              <div style="font-size: 0.82rem; color: #94A3B8;">${winner.team.school} &bull; ${winner.team.category}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 1.25rem; font-weight: 900; color: #FDE047;">${avg} ★</div>
+              <div style="font-size: 0.75rem; color: #CBD5E1;">${meta.getTiebreakExplain(winner)}</div>
+            </div>
+          </div>
+          ${runnerUp ? `
+            <div style="font-size: 0.76rem; color: #94A3B8; padding-top: 6px;">
+              2º colocado na rubrica: <strong>${runnerUp.team.name}</strong> (${runnerUp.rubrics[routine.key].avg.toFixed(2)} ★)
+            </div>
+          ` : ''}
+        `;
+      }
+    } else if (routine.type === 'TRACK_PODIUM') {
+      const isMaker = routine.key === 'VELOCIDADE_MAKER';
+      const candidates = getSortedTrackCandidates(isMaker ? 'Maker' : 'LEGO');
+      const p1 = candidates[0];
+      const p2 = candidates[1];
+      const p3 = candidates[2];
+
+      const anyRev = trackRevealedState.pos1 || trackRevealedState.pos2 || trackRevealedState.pos3;
+      const allRev = trackRevealedState.pos1 && trackRevealedState.pos2 && trackRevealedState.pos3;
+
+      if (allRev) {
+        copLiveMonitorBadge.className = 'cop-monitor-pill revealed';
+        copLiveMonitorText.textContent = '🎉 NO TELÃO: Pódio Top 3 Completo Revelado!';
+      } else if (anyRev) {
+        copLiveMonitorBadge.className = 'cop-monitor-pill suspense';
+        copLiveMonitorText.textContent = `🥁 NO TELÃO: Pódio Parcial (${trackRevealedState.pos3 ? '3º ' : ''}${trackRevealedState.pos2 ? '2º ' : ''}${trackRevealedState.pos1 ? '1º' : ''})`;
+      } else {
+        copLiveMonitorBadge.className = 'cop-monitor-pill suspense';
+        copLiveMonitorText.textContent = '🥁 NO TELÃO: Pódio em Suspense (3 Degraus Ocultos)';
+      }
+
+      const renderRow = (medal, label, cand, isRevealed) => {
+        const statusChip = isRevealed
+          ? '<span style="color: #6EE7B7; font-weight: 800; font-size: 0.74rem;">● NO AR</span>'
+          : '<span style="color: #FDE047; font-weight: 800; font-size: 0.74rem;">○ OCULTO</span>';
+        if (!cand) {
+          return `<div class="backstage-winner-row"><span>${medal} ${label}: <em>Sem equipe</em></span>${statusChip}</div>`;
+        }
+        const timeStr = cand.track.hasValidRun ? `${formatMs(cand.track.bestTimeMs)} (${cand.track.bestTimeFouls}F)` : 'SEM TEMPO';
+        return `
+          <div class="backstage-winner-row">
+            <div>
+              <strong style="color: #FFFFFF; font-size: 0.92rem;">${medal} ${label}: ${cand.team.name}</strong>
+              <span style="color: #94A3B8; font-size: 0.78rem; margin-left: 6px;">(${cand.team.school})</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <strong style="font-family: var(--font-timer); color: #38BDF8; font-size: 0.9rem;">${timeStr}</strong>
+              ${statusChip}
+            </div>
           </div>
         `;
-      } else {
-        timeEl.innerHTML = `<span style="color: var(--color-danger); font-weight: 800; font-size: 1rem;">SEM TEMPO</span>`;
-      }
-    } else {
-      nameEl.textContent = 'Aguardando...';
-      schoolEl.textContent = '--';
-      timeEl.textContent = '--:--.--';
+      };
+
+      copBackstageContent.innerHTML = `
+        ${renderRow('🥇', '1º Campeão', p1, trackRevealedState.pos1)}
+        ${renderRow('🥈', '2º Vice', p2, trackRevealedState.pos2)}
+        ${renderRow('🥉', '3º Lugar', p3, trackRevealedState.pos3)}
+      `;
     }
   }
 
-  function playBeep() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.5);
-    } catch(e) {}
+  // Selecionar uma Etapa da Cerimônia (Modo Manual)
+  window.selectCeremonyStep = function(stepIndex, scrollToPanel = false) {
+    if (stepIndex < 0 || stepIndex >= CEREMONY_ROUTINE.length) return;
+    stopAutoLoop();
+
+    currentStepIdx = stepIndex;
+    const routine = CEREMONY_ROUTINE[currentStepIdx];
+
+    // Sempre entra inicialmente em modo Suspense para proteger contra spoiler acidental no telão
+    singleAwardRevealed = false;
+    trackRevealedState = { pos1: false, pos2: false, pos3: false };
+
+    const effect = routine.type === 'STANDBY' ? null : 'DRUMROLL';
+    broadcastToPodioTelao(effect);
+
+    if (scrollToPanel) {
+      const panel = document.getElementById('operatorCeremonyPanel');
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // ==========================================================================
+  // 5. CICLO AUTOMÁTICO NO TELÃO (GIRO CONTÍNUO PÓS-PREMIAÇÃO OU SHOW)
+  // ==========================================================================
+  function stopAutoLoop() {
+    if (!autoLoopActive) return;
+    autoLoopActive = false;
+    clearTimeout(autoLoopTimer);
+    if (btnToggleAutoLoop) {
+      btnToggleAutoLoop.classList.remove('active');
+      btnToggleAutoLoop.innerHTML = '🔄 Iniciar Ciclo Automático';
+    }
   }
 
-  function triggerFanfare() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.12);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.12 + 0.8);
-        osc.start(ctx.currentTime + idx * 0.12);
-        osc.stop(ctx.currentTime + idx * 0.12 + 0.8);
-      });
-    } catch(e) {}
+  function startAutoLoop() {
+    autoLoopActive = true;
+    if (btnToggleAutoLoop) {
+      btnToggleAutoLoop.classList.add('active');
+      btnToggleAutoLoop.innerHTML = '⏹️ Parar Ciclo Automático';
+    }
+
+    const mode = selectLoopMode ? selectLoopMode.value : 'LOOP_REVEALED_8S';
+
+    // Verifica se há equipes Maker com corrida válida para incluir ou não o passo 7 no loop automático
+    const makerCandidates = getSortedTrackCandidates('Maker');
+    const hasMakerValid = makerCandidates.some(c => c.track.hasValidRun);
+    const maxStep = hasMakerValid ? 7 : 6;
+
+    if (currentStepIdx === 0 || currentStepIdx > maxStep) {
+      currentStepIdx = 1;
+    }
+
+    if (mode === 'SHOW_SUSPENSE_ONCE') {
+      runSuspenseShowStep(maxStep);
+    } else {
+      const intervalMs = mode === 'LOOP_REVEALED_12S' ? 12000 : 8000;
+      runContinuousRevealedLoop(intervalMs, maxStep);
+    }
   }
 
-  // 7. Eventos dos Filtros
+  function runContinuousRevealedLoop(intervalMs, maxStep) {
+    if (!autoLoopActive) return;
+
+    const routine = CEREMONY_ROUTINE[currentStepIdx];
+    if (routine.type === 'SINGLE_AWARD') {
+      singleAwardRevealed = true;
+      broadcastToPodioTelao('CONFETTI_ONLY');
+    } else if (routine.type === 'TRACK_PODIUM') {
+      trackRevealedState = { pos1: true, pos2: true, pos3: true };
+      broadcastToPodioTelao('CONFETTI_ONLY');
+    }
+
+    autoLoopTimer = setTimeout(() => {
+      if (!autoLoopActive) return;
+      currentStepIdx++;
+      if (currentStepIdx > maxStep) {
+        currentStepIdx = 1; // Volta para o 1º troféu em loop infinito
+      }
+      runContinuousRevealedLoop(intervalMs, maxStep);
+    }, intervalMs);
+  }
+
+  function runSuspenseShowStep(maxStep) {
+    if (!autoLoopActive) return;
+    const routine = CEREMONY_ROUTINE[currentStepIdx];
+
+    if (routine.type === 'SINGLE_AWARD') {
+      singleAwardRevealed = false;
+      broadcastToPodioTelao('DRUMROLL');
+
+      autoLoopTimer = setTimeout(() => {
+        if (!autoLoopActive) return;
+        singleAwardRevealed = true;
+        broadcastToPodioTelao('REVEAL_CHAMPION');
+
+        autoLoopTimer = setTimeout(() => {
+          if (!autoLoopActive) return;
+          if (currentStepIdx < maxStep) {
+            currentStepIdx++;
+            runSuspenseShowStep(maxStep);
+          } else {
+            stopAutoLoop();
+          }
+        }, 6500);
+      }, 2800);
+    } else if (routine.type === 'TRACK_PODIUM') {
+      trackRevealedState = { pos1: false, pos2: false, pos3: false };
+      broadcastToPodioTelao('DRUMROLL');
+
+      autoLoopTimer = setTimeout(() => {
+        if (!autoLoopActive) return;
+        trackRevealedState.pos3 = true;
+        broadcastToPodioTelao('REVEAL_MINOR');
+
+        autoLoopTimer = setTimeout(() => {
+          if (!autoLoopActive) return;
+          trackRevealedState.pos2 = true;
+          broadcastToPodioTelao('REVEAL_MINOR');
+
+          autoLoopTimer = setTimeout(() => {
+            if (!autoLoopActive) return;
+            trackRevealedState.pos1 = true;
+            broadcastToPodioTelao('REVEAL_CHAMPION');
+
+            autoLoopTimer = setTimeout(() => {
+              if (!autoLoopActive) return;
+              if (currentStepIdx < maxStep) {
+                currentStepIdx++;
+                runSuspenseShowStep(maxStep);
+              } else {
+                stopAutoLoop();
+              }
+            }, 8000);
+          }, 3500);
+        }, 3500);
+      }, 2500);
+    }
+  }
+
+  // ==========================================================================
+  // 6. EVENT LISTENERS DOS CONTROLES DO OPERADOR
+  // ==========================================================================
+  copStepBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.step);
+      window.selectCeremonyStep(idx, false);
+    });
+  });
+
+  if (btnSendStandby) {
+    btnSendStandby.addEventListener('click', () => {
+      stopAutoLoop();
+      currentStepIdx = 0;
+      broadcastToPodioTelao(null);
+    });
+  }
+
+  if (btnStartFirstAward) {
+    btnStartFirstAward.addEventListener('click', () => {
+      window.selectCeremonyStep(1, false);
+    });
+  }
+
+  if (btnSingleSuspense) {
+    btnSingleSuspense.addEventListener('click', () => {
+      stopAutoLoop();
+      singleAwardRevealed = false;
+      broadcastToPodioTelao('DRUMROLL');
+    });
+  }
+
+  if (btnSingleReveal) {
+    btnSingleReveal.addEventListener('click', () => {
+      stopAutoLoop();
+      singleAwardRevealed = true;
+      broadcastToPodioTelao('REVEAL_CHAMPION');
+    });
+  }
+
+  if (btnSingleConfetti) {
+    btnSingleConfetti.addEventListener('click', () => {
+      broadcastToPodioTelao('CONFETTI_ONLY');
+    });
+  }
+
+  if (btnTrackResetSuspense) {
+    btnTrackResetSuspense.addEventListener('click', () => {
+      stopAutoLoop();
+      trackRevealedState = { pos1: false, pos2: false, pos3: false };
+      broadcastToPodioTelao('DRUMROLL');
+    });
+  }
+
+  if (btnTrackReveal3) {
+    btnTrackReveal3.addEventListener('click', () => {
+      stopAutoLoop();
+      trackRevealedState.pos3 = true;
+      broadcastToPodioTelao('REVEAL_MINOR');
+    });
+  }
+
+  if (btnTrackReveal2) {
+    btnTrackReveal2.addEventListener('click', () => {
+      stopAutoLoop();
+      trackRevealedState.pos2 = true;
+      broadcastToPodioTelao('REVEAL_MINOR');
+    });
+  }
+
+  if (btnTrackReveal1) {
+    btnTrackReveal1.addEventListener('click', () => {
+      stopAutoLoop();
+      trackRevealedState.pos1 = true;
+      broadcastToPodioTelao('REVEAL_CHAMPION');
+    });
+  }
+
+  if (btnTrackRevealAll) {
+    btnTrackRevealAll.addEventListener('click', () => {
+      stopAutoLoop();
+      trackRevealedState = { pos1: true, pos2: true, pos3: true };
+      broadcastToPodioTelao('REVEAL_CHAMPION');
+    });
+  }
+
+  if (btnTrackConfetti) {
+    btnTrackConfetti.addEventListener('click', () => {
+      broadcastToPodioTelao('CONFETTI_ONLY');
+    });
+  }
+
+  if (btnCopPrev) {
+    btnCopPrev.addEventListener('click', () => {
+      if (currentStepIdx > 0) {
+        window.selectCeremonyStep(currentStepIdx - 1, false);
+      }
+    });
+  }
+
+  if (btnCopNext) {
+    btnCopNext.addEventListener('click', () => {
+      if (currentStepIdx < CEREMONY_ROUTINE.length - 1) {
+        window.selectCeremonyStep(currentStepIdx + 1, false);
+      }
+    });
+  }
+
+  if (btnToggleAutoLoop) {
+    btnToggleAutoLoop.addEventListener('click', () => {
+      if (autoLoopActive) {
+        stopAutoLoop();
+      } else {
+        startAutoLoop();
+      }
+    });
+  }
+
+  // Atalhos de Teclado para o Operador na Tela de Apuração
+  document.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+    const routine = CEREMONY_ROUTINE[currentStepIdx];
+    if (e.code === 'Space') {
+      e.preventDefault();
+      stopAutoLoop();
+      if (routine.type === 'STANDBY') {
+        window.selectCeremonyStep(1, false);
+      } else if (routine.type === 'SINGLE_AWARD') {
+        if (!singleAwardRevealed) {
+          singleAwardRevealed = true;
+          broadcastToPodioTelao('REVEAL_CHAMPION');
+        }
+      } else if (routine.type === 'TRACK_PODIUM') {
+        if (!trackRevealedState.pos3) {
+          trackRevealedState.pos3 = true;
+          broadcastToPodioTelao('REVEAL_MINOR');
+        } else if (!trackRevealedState.pos2) {
+          trackRevealedState.pos2 = true;
+          broadcastToPodioTelao('REVEAL_MINOR');
+        } else if (!trackRevealedState.pos1) {
+          trackRevealedState.pos1 = true;
+          broadcastToPodioTelao('REVEAL_CHAMPION');
+        }
+      }
+    } else if (e.key === 'ArrowRight') {
+      if (currentStepIdx < CEREMONY_ROUTINE.length - 1) {
+        window.selectCeremonyStep(currentStepIdx + 1, false);
+      }
+    } else if (e.key === 'ArrowLeft') {
+      if (currentStepIdx > 0) {
+        window.selectCeremonyStep(currentStepIdx - 1, false);
+      }
+    }
+  });
+
+  // Monitoramento de Conexão com a Janela do Telão do Pódio
+  function updateTelaoBadgeStatus() {
+    const isConnected = (Date.now() - lastTelaoHeartbeat) < 5000;
+    if (!elPodioTelaoBadge || !elPodioTelaoText) return;
+    if (isConnected) {
+      elPodioTelaoBadge.className = 'badge-status cloud-online';
+      elPodioTelaoText.textContent = '🟢 Telão do Pódio Conectado';
+    } else {
+      elPodioTelaoBadge.className = 'badge-status cloud-offline';
+      elPodioTelaoText.textContent = '⚪ Aguardando Telão do Pódio';
+    }
+  }
+
+  if (podioChannel) {
+    podioChannel.onmessage = (event) => {
+      const msg = event.data;
+      if (msg && msg.type === 'PODIO_TELAO_ONLINE') {
+        const wasOffline = (Date.now() - lastTelaoHeartbeat) >= 5000;
+        lastTelaoHeartbeat = Date.now();
+        updateTelaoBadgeStatus();
+        if (wasOffline) {
+          // Assim que o telão abre, sincroniza o estado atual imediatamente
+          broadcastToPodioTelao(null);
+        }
+      }
+    };
+    podioChannel.postMessage({ type: 'PODIO_PING' });
+    setInterval(updateTelaoBadgeStatus, 2500);
+  }
+
+  // Filtros de Categoria da Tabela
   categoryTabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       categoryTabBtns.forEach(b => b.classList.remove('active'));
@@ -1096,6 +1120,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Inicialização
-  setupCeremony();
   await loadData();
+  broadcastToPodioTelao(null);
 });

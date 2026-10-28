@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ESTILOS - MÓDULO DE APURAÇÃO, AUDITORIA & CERIMÔNIA DE PÓDIO
+   ESTILOS - MÓDULO DE APURAÇÃO, AUDITORIA & MESA DE CERIMÔNIA DE PÓDIO
    Torneio de Robótica Colégio Anchieta 2026
    ========================================================================== */
 
@@ -65,10 +65,10 @@ body.apuracao-body {
   background: linear-gradient(135deg, #F26522 0%, #E05412 100%);
   color: #FFFFFF;
   border: none;
-  padding: 10px 22px;
+  padding: 9px 20px;
   border-radius: var(--radius-md);
   font-weight: 800;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(242, 101, 34, 0.35);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -80,20 +80,14 @@ body.apuracao-body {
   box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45);
 }
 
-.btn-ceremony-blue {
-  background: linear-gradient(135deg, #002B49 0%, #0D3B66 100%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 12px rgba(0, 43, 73, 0.35);
-}
-
 .btn-ceremony:hover {
   transform: translateY(-2px);
   filter: brightness(1.08);
 }
 
 .btn-ceremony-sub {
-  font-size: 0.70rem;
-  opacity: 0.92;
+  font-size: 0.68rem;
+  opacity: 0.94;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -119,11 +113,410 @@ body.apuracao-body {
 
 /* Container Principal */
 .apuracao-container {
-  max-width: 1280px;
+  max-width: 1320px;
   margin: 0 auto;
   width: 100%;
-  padding: 24px 20px 48px;
+  padding: 24px 20px 56px;
   flex: 1;
+}
+
+/* ==========================================================================
+   MESA DE CONTROLE DA CERIMÔNIA DE PÓDIO (EXCLUSIVA DO OPERADOR)
+   ========================================================================== */
+.ceremony-operator-panel {
+  background: linear-gradient(180deg, #00233D 0%, #00182B 100%);
+  border: 2px solid #0E4166;
+  border-radius: var(--radius-xl);
+  padding: 24px 26px;
+  color: #FFFFFF;
+  margin-bottom: 28px;
+  box-shadow: 0 12px 32px rgba(0, 43, 73, 0.22);
+}
+
+.cop-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 16px;
+}
+
+.cop-badge-live {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.cop-title-group h2 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.cop-title-group p {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  margin-top: 2px;
+}
+
+.cop-monitor-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: #E2E8F0;
+}
+
+.cop-monitor-pill.suspense {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #F59E0B;
+  color: #FDE047;
+}
+
+.cop-monitor-pill.revealed {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10B981;
+  color: #6EE7B7;
+}
+
+.monitor-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* Barra de Roteiro Sequencial (Stepper do Operador) */
+.cop-steps-bar {
+  margin-bottom: 18px;
+}
+
+.cop-steps-label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94A3B8;
+  margin-bottom: 8px;
+}
+
+.cop-stepper-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cop-step-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  color: #CBD5E1;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.cop-step-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+}
+
+.cop-step-btn.active {
+  background: var(--color-accent);
+  border-color: #FDBA74;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(242, 101, 34, 0.45);
+  transform: translateY(-1px);
+}
+
+.cop-step-btn.track-step {
+  border-color: rgba(253, 224, 71, 0.4);
+}
+
+.cop-step-btn.track-step.active {
+  background: linear-gradient(135deg, #EAB308 0%, #CA8A04 100%);
+  border-color: #FEF08A;
+  color: #00182B;
+}
+
+/* Workspace Dividido (Cola de Bastidor vs Comandos do Telão) */
+.cop-workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 20px;
+}
+
+@media (max-width: 980px) {
+  .cop-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cop-backstage-card,
+.cop-stage-controls-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cop-card-tag {
+  display: flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #38BDF8;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cop-preview-title {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #FDE047;
+  margin-bottom: 4px;
+}
+
+.cop-preview-sub {
+  font-size: 0.82rem;
+  color: #94A3B8;
+  margin-bottom: 14px;
+}
+
+.cop-backstage-content {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.backstage-winner-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.backstage-winner-row:last-child {
+  border-bottom: none;
+}
+
+/* Botões de Ação de Palco */
+.cop-control-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cop-control-hint {
+  font-size: 0.84rem;
+  color: #CBD5E1;
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.cop-btn-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cop-track-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.cop-action-btn {
+  flex: 1;
+  min-width: 180px;
+  padding: 13px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 900;
+  font-size: 0.88rem;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.cop-action-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.cop-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cop-action-btn.suspense-btn {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #F59E0B;
+  color: #FDE047;
+}
+
+.cop-action-btn.reveal-gold-btn {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border-color: #34D399;
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+}
+
+.cop-action-btn.primary-gold {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #FFFFFF;
+}
+
+.cop-action-btn.bronze-btn {
+  background: linear-gradient(135deg, #EA580C 0%, #9A3412 100%);
+  border-color: #FDBA74;
+  color: #FFFFFF;
+}
+
+.cop-action-btn.silver-btn {
+  background: linear-gradient(135deg, #64748B 0%, #334155 100%);
+  border-color: #CBD5E1;
+  color: #FFFFFF;
+}
+
+.cop-action-btn.secondary {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+.cop-action-btn.subtle-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #CBD5E1;
+  padding: 9px 14px;
+  font-size: 0.8rem;
+}
+
+/* Barra Inferior da Mesa de Cerimônia (Navegação + Ciclo Automático) */
+.cop-footer-bar {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cop-nav-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.cop-nav-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cop-nav-btn.next-highlight {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.cop-nav-btn:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.cop-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cop-autoloop-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cop-loop-select {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #E2E8F0;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.cop-loop-select option {
+  background: #00233D;
+  color: #FFFFFF;
+}
+
+.cop-loop-btn {
+  background: rgba(56, 189, 248, 0.18);
+  border: 1.5px solid #38BDF8;
+  color: #7DD3FC;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cop-loop-btn.active {
+  background: #EF4444;
+  border-color: #FCA5A5;
+  color: #FFFFFF;
+  animation: pulseLoop 1.5s infinite;
+}
+
+@keyframes pulseLoop {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
 }
 
 /* Barra de Filtros e Categorias */
@@ -236,11 +629,11 @@ body.apuracao-body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
+  width: 44px;
+  height: 32px;
+  border-radius: 999px;
   font-weight: 900;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .rank-1 { background: #FEF08A; color: #854D0E; border: 2px solid #EAB308; box-shadow: 0 2px 6px rgba(234, 179, 8, 0.3); }
@@ -431,380 +824,4 @@ body.apuracao-body {
 
 .btn-minerva:hover {
   opacity: 0.9;
-}
-
-/* ==========================================================================
-   MODAL DE CERIMÔNIA DE PREMIAÇÃO (MODO TELÃO FULLSCREEN)
-   ========================================================================== */
-.ceremony-overlay {
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(circle at center, #002B49 0%, #001424 100%);
-  color: #FFFFFF;
-  z-index: 10000;
-  display: none;
-  flex-direction: column;
-  padding: 30px 40px;
-  overflow-y: auto;
-}
-
-.ceremony-overlay.active {
-  display: flex;
-}
-
-.ceremony-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.ceremony-title-box h2 {
-  font-size: 1.8rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: #FFFFFF;
-}
-
-.ceremony-title-box p {
-  color: #94A3B8;
-  font-size: 0.95rem;
-}
-
-.ceremony-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.ceremony-select {
-  background: rgba(255, 255, 255, 0.12);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  font-weight: 800;
-  font-size: 0.9rem;
-  outline: none;
-  cursor: pointer;
-}
-
-.ceremony-select option {
-  background: #002B49;
-  color: #FFFFFF;
-}
-
-.btn-close-ceremony {
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  color: #FFFFFF;
-  padding: 8px 18px;
-  border-radius: var(--radius-md);
-  font-weight: 800;
-  cursor: pointer;
-}
-
-/* Palco do Pódio 3D Virtual */
-.podium-stage {
-  flex: 1;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 20px;
-  max-width: 1000px;
-  margin: 0 auto;
-  width: 100%;
-  padding-bottom: 40px;
-}
-
-.podium-pillar {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-  opacity: 0;
-  transform: translateY(60px);
-}
-
-.podium-pillar.revealed {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.podium-team-card {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-xl);
-  padding: 20px 16px;
-  text-align: center;
-  width: 100%;
-  margin-bottom: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.podium-team-name {
-  font-size: 1.35rem;
-  font-weight: 900;
-  color: #FFFFFF;
-  line-height: 1.2;
-}
-
-.podium-team-school {
-  font-size: 0.82rem;
-  color: #CBD5E1;
-  margin-top: 4px;
-}
-
-.podium-team-time {
-  font-family: var(--font-timer);
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: var(--color-accent);
-  margin-top: 10px;
-}
-
-/* Blocos Físicos dos Degraus */
-.podium-block {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px 16px 0 0;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.2);
-}
-
-.podium-block-1 {
-  height: 220px;
-  background: linear-gradient(180deg, #EAB308 0%, #854D0E 100%);
-  border-color: #FDE047;
-}
-
-.podium-block-2 {
-  height: 160px;
-  background: linear-gradient(180deg, #94A3B8 0%, #334155 100%);
-  border-color: #CBD5E1;
-}
-
-.podium-block-3 {
-  height: 110px;
-  background: linear-gradient(180deg, #F97316 0%, #7C2D12 100%);
-  border-color: #FDBA74;
-}
-
-.podium-block-number {
-  font-size: 3.5rem;
-  font-weight: 900;
-  line-height: 1;
-  color: #FFFFFF;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-.podium-block-label {
-  font-size: 0.85rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.9;
-}
-
-/* Botões de Ação da Cerimônia */
-.ceremony-action-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: var(--radius-xl);
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.btn-reveal {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #FFFFFF;
-  padding: 10px 20px;
-  border-radius: var(--radius-md);
-  font-weight: 800;
-  font-size: 0.88rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-reveal:hover:not(:disabled) {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  transform: translateY(-2px);
-}
-
-/* Banner de Status do Show / Autoplay */
-.ceremony-status-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 10px 22px;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-full);
-  margin: 0 auto 18px;
-  max-width: 680px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #F8FAFC;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  text-align: center;
-}
-
-.ceremony-status-banner.running {
-  border-color: #10B981;
-  background: rgba(16, 185, 129, 0.15);
-}
-
-.status-pulse-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #10B981;
-  box-shadow: 0 0 10px #10B981;
-  animation: pulseDot 1.4s infinite;
-  flex-shrink: 0;
-}
-
-@keyframes pulseDot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(0.75); }
-}
-
-/* Stepper e Controles Sequenciais da Cerimônia */
-.ceremony-stepper-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-
-.step-chip {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #94A3B8;
-  padding: 6px 14px;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.step-chip:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #FFFFFF;
-}
-
-.step-chip.active {
-  background: var(--color-accent);
-  color: #FFFFFF;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 12px rgba(242, 101, 34, 0.5);
-  transform: scale(1.05);
-}
-
-.step-chip.highlight {
-  border-color: #FDE047;
-}
-
-.step-chip.highlight.active {
-  background: #EAB308;
-  color: #000;
-  box-shadow: 0 0 15px rgba(234, 179, 8, 0.6);
-}
-
-/* Barra de Navegação e Autoplay */
-.ceremony-nav-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 24px;
-  background: rgba(0, 0, 0, 0.35);
-  border-radius: var(--radius-xl);
-  max-width: 820px;
-  margin: 16px auto 0;
-  width: 100%;
-  flex-wrap: wrap;
-}
-
-.btn-ceremony-nav {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #FFFFFF;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  font-weight: 800;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-ceremony-nav:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: #FFFFFF;
-}
-
-.btn-ceremony-nav:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.btn-autoplay {
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  border: none;
-  color: #FFFFFF;
-  padding: 8px 18px;
-  border-radius: var(--radius-md);
-  font-weight: 900;
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
-  transition: all 0.2s;
-}
-
-.btn-autoplay.running {
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-}
-
-.autoplay-progress-bar {
-  width: 100%;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 8px;
-  display: none;
-}
-
-.autoplay-progress-bar.active {
-  display: block;
-}
-
-.autoplay-progress-fill {
-  height: 100%;
-  width: 0%;
-  background: var(--color-accent);
-  transition: width 0.1s linear;
 }

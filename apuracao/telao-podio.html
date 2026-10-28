@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telão do Pódio — Cerimônia de Premiação Anchieta 2026</title>
+
+  <!-- Anti-cache estrito -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <!-- CSS Compartilhado e Específico do Telão -->
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261028_podio_v1">
+  <link rel="stylesheet" href="css/telao-podio.css?v=20261028_podio_v1">
+</head>
+<body class="telao-podio-body">
+
+  <!-- Barra Superior Institucional (Laranja Anchieta #F26522) -->
+  <div class="anchieta-topbar"></div>
+
+  <!-- Container de Confetes -->
+  <div id="confettiStage" class="confetti-stage"></div>
+
+  <div class="telao-podio-viewport">
+
+    <!-- Cabeçalho Limpo de Projeção -->
+    <header class="tp-header">
+      <div class="tp-brand">
+        <div class="tp-logo-pill">ANCHIETA</div>
+        <div class="tp-event-title">TORNEIO OFICIAL DE ROBÓTICA 2026 &bull; CERIMÔNIA DE PREMIAÇÃO</div>
+      </div>
+
+      <div id="tpHeaderBadge" class="tp-category-badge">
+        🏆 Premiação Oficial
+      </div>
+    </header>
+
+    <!-- Título Principal Dinâmico do Prêmio Atual -->
+    <section class="tp-hero-banner">
+      <div id="tpSubtitleTag" class="tp-subtitle-tag">EDITAL GERAL Nº 08/2026</div>
+      <h1 id="tpMainTitle" class="tp-main-title">CERIMÔNIA DE PREMIAÇÃO</h1>
+      <p id="tpCriteriaDesc" class="tp-criteria-desc">Colégio Anchieta &bull; 05 de Dezembro de 2026</p>
+    </section>
+
+    <!-- PALCO PRINCIPAL (Alterna entre Espera, Troféu Único de Box e Pódio Triplo de Pista) -->
+    <main class="tp-stage-area">
+
+      <!-- MODO 1: TELA DE ABERTURA / ESPERA -->
+      <div id="stageStandby" class="tp-stage-view active">
+        <div class="standby-card">
+          <div class="standby-trophy-glow">🏆</div>
+          <h2>AGUARDANDO INÍCIO DA PREMIAÇÃO</h2>
+          <p>Preparem a torcida! Os vencedores das Bancadas de Box e o Pódio Oficial de Velocidade serão anunciados em instantes.</p>
+          <div class="standby-pills">
+            <span>⚙️ Melhor Mecânica</span>
+            <span>🚀 Superação</span>
+            <span>🎨 Caracterização</span>
+            <span>📣 Melhor Torcida</span>
+            <span>🤝 Fair Play</span>
+            <span>🏎️ Pódio Top 3 Pista</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODO 2: TROFÉU DE BANCADA / BOX (1 VENCEDOR EM DESTAQUE GIGANTE) -->
+      <div id="stageSingleAward" class="tp-stage-view">
+        
+        <!-- Estado: Em Suspense -->
+        <div id="singleSuspenseBox" class="single-suspense-card">
+          <div id="singleSuspenseIcon" class="suspense-icon-pulse">⚙️</div>
+          <div class="suspense-drum-text">🥁 RUFEM OS TAMBORES...</div>
+          <p class="suspense-sub-text">Quem levará este troféu oficial para casa?</p>
+        </div>
+
+        <!-- Estado: Vencedor Revelado -->
+        <div id="singleWinnerBox" class="single-winner-card">
+          <div class="winner-crown-badge">
+            <span id="singleWinnerIcon">🏆</span>
+            <span>VENCEDOR OFICIAL DO TROFÉU</span>
+          </div>
+          <div id="singleWinnerName" class="winner-giant-name">--</div>
+          <div id="singleWinnerSchool" class="winner-school-name">--</div>
+
+          <div class="winner-metrics-strip">
+            <div class="metric-pill gold">
+              <span class="metric-label">Média Oficial</span>
+              <strong id="singleWinnerScore" class="metric-val">-- ★</strong>
+            </div>
+            <div class="metric-pill">
+              <span class="metric-label">Destaque / Critério</span>
+              <strong id="singleWinnerDetail" class="metric-val">--</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MODO 3: PÓDIO TRIPLO DE VELOCIDADE (3º, 2º e 1º LUGAR) -->
+      <div id="stageTrackPodium" class="tp-stage-view">
+        <div class="tp-podium-grid">
+
+          <!-- 2º LUGAR (PRATA - ESQUERDA) -->
+          <div id="tpPillar2" class="tp-pillar pillar-silver">
+            <div class="tp-card-wrapper">
+              <!-- Frente: Suspense -->
+              <div class="tp-card-suspense">
+                <span class="tp-medal-icon">🥈</span>
+                <span class="tp-suspense-label">2º LUGAR</span>
+                <span class="tp-suspense-wait">Aguardando anúncio...</span>
+              </div>
+              <!-- Verso: Revelado -->
+              <div class="tp-card-revealed">
+                <div class="tp-medal-floating">🥈</div>
+                <div id="tpName2" class="tp-team-name">--</div>
+                <div id="tpSchool2" class="tp-team-school">--</div>
+                <div id="tpTime2" class="tp-team-time">--:--.--</div>
+                <div id="tpFouls2" class="tp-team-fouls">--</div>
+              </div>
+            </div>
+            <div class="tp-step-block block-2">
+              <span class="step-num">2</span>
+              <span class="step-title">VICE-CAMPEÃO</span>
+            </div>
+          </div>
+
+          <!-- 1º LUGAR (OURO - CENTRO MAIS ALTO) -->
+          <div id="tpPillar1" class="tp-pillar pillar-gold">
+            <div class="tp-card-wrapper">
+              <!-- Frente: Suspense -->
+              <div class="tp-card-suspense">
+                <span class="tp-medal-icon">🥇</span>
+                <span class="tp-suspense-label">GRANDE CAMPEÃO</span>
+                <span class="tp-suspense-wait">Aguardando anúncio...</span>
+              </div>
+              <!-- Verso: Revelado -->
+              <div class="tp-card-revealed">
+                <div class="tp-medal-floating">👑 🥇</div>
+                <div id="tpName1" class="tp-team-name gold-text">--</div>
+                <div id="tpSchool1" class="tp-team-school">--</div>
+                <div id="tpTime1" class="tp-team-time gold-time">--:--.--</div>
+                <div id="tpFouls1" class="tp-team-fouls">--</div>
+              </div>
+            </div>
+            <div class="tp-step-block block-1">
+              <span class="step-num">1</span>
+              <span class="step-title">GRANDE CAMPEÃO</span>
+            </div>
+          </div>
+
+          <!-- 3º LUGAR (BRONZE - DIREITA) -->
+          <div id="tpPillar3" class="tp-pillar pillar-bronze">
+            <div class="tp-card-wrapper">
+              <!-- Frente: Suspense -->
+              <div class="tp-card-suspense">
+                <span class="tp-medal-icon">🥉</span>
+                <span class="tp-suspense-label">3º LUGAR</span>
+                <span class="tp-suspense-wait">Aguardando anúncio...</span>
+              </div>
+              <!-- Verso: Revelado -->
+              <div class="tp-card-revealed">
+                <div class="tp-medal-floating">🥉</div>
+                <div id="tpName3" class="tp-team-name">--</div>
+                <div id="tpSchool3" class="tp-team-school">--</div>
+                <div id="tpTime3" class="tp-team-time">--:--.--</div>
+                <div id="tpFouls3" class="tp-team-fouls">--</div>
+              </div>
+            </div>
+            <div class="tp-step-block block-3">
+              <span class="step-num">3</span>
+              <span class="step-title">3º LUGAR</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Botão Discreto de Tela Cheia (Ocultado automaticamente em Fullscreen F11) -->
+    <button type="button" id="btnFullscreenPodio" class="btn-fullscreen-podio" title="Alternar Tela Cheia (F11)">
+      ⛶ Tela Cheia (F11)
+    </button>
+
+  </div>
+
+  <script src="js/telao-podio.js?v=20261028_podio_v1"></script>
+</body>
+</html>
+
