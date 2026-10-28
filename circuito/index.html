@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking Geral do Circuito Anual — Torneio de Robótica Anchieta</title>
+
+  <!-- Anti-cache estrito -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <!-- CSS Compartilhado e Específico -->
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261028_circuito_v1">
+  <link rel="stylesheet" href="css/circuito.css?v=20261028_circuito_v1">
+</head>
+<body class="circuito-body">
+
+  <!-- Barra Superior Institucional (Laranja Anchieta #F26522) -->
+  <div class="anchieta-topbar"></div>
+
+  <!-- Header Superior -->
+  <header class="circuito-header">
+    <div class="circuito-header-top">
+      <div class="circuito-brand">
+        <div class="badge-pill-light" style="background: var(--color-accent); color: #fff; font-weight: 900; letter-spacing: 1px;">
+          CIRCUITO
+        </div>
+        <div class="circuito-title">
+          <h1>RANKING GERAL DO CIRCUITO INTERCOLEGIAL</h1>
+          <p>Pontuação Unificada de Temporada (Pista + Paddock + Troféus) &bull; Escala 100 Pontos/Etapa</p>
+        </div>
+      </div>
+
+      <div class="circuito-actions">
+        <a href="../index.html" class="btn-hub-nav" title="Voltar à Central do Torneio" style="display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid var(--border-medium); color: var(--text-main); padding: 7px 14px; border-radius: var(--radius-md); text-decoration: none; font-size: 0.85rem; font-weight: 700; box-shadow: var(--shadow-sm);">
+          <span>🏠 Início</span>
+        </a>
+
+        <a href="../apuracao/index.html" class="btn-hub-nav" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28); color: #FFFFFF; padding: 7px 14px; border-radius: var(--radius-md); text-decoration: none; font-size: 0.82rem; font-weight: 800;">
+          <span>🏆 Apuração da Etapa</span>
+        </a>
+
+        <div id="cloudStatusBadge" class="badge-status cloud-offline" style="font-size: 0.78rem; padding: 6px 12px;">
+          <span class="status-dot"></span>
+          <span id="cloudStatusText">Verificando Nuvem...</span>
+        </div>
+
+        <button type="button" id="btnRefreshCircuit" class="btn-refresh">
+          🔄 Atualizar Pontos
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="circuito-container">
+
+    <!-- Banner Explicativo da Fórmula Oficial de 100 Pontos por Etapa -->
+    <section class="formula-explainer-card">
+      <div class="formula-header">
+        <div>
+          <span class="formula-tag">📐 Metodologia Matemática Justa (Independente do Nº de Etapas no Ano)</span>
+          <h2>Como Funciona a Pontuação de Cada Etapa do Circuito (Máx. 100 pts/etapa)</h2>
+        </div>
+        <div class="season-actions">
+          <button type="button" id="btnSaveStageSnapshot" class="btn-stage-action primary" title="Salva os pontos do torneio atual como uma etapa concluída na temporada">
+            📌 Salvar Etapa Atual na Temporada
+          </button>
+          <button type="button" id="btnExportCircuitCSV" class="btn-stage-action">
+            📥 Exportar CSV
+          </button>
+          <button type="button" id="btnExportCircuitJSON" class="btn-stage-action">
+            📦 Baixar Temporada (JSON)
+          </button>
+          <label class="btn-stage-action" style="cursor: pointer; margin: 0;">
+            📤 Importar Temporada
+            <input type="file" id="inputImportCircuitJSON" accept=".json" style="display: none;">
+          </label>
+        </div>
+      </div>
+
+      <div class="formula-pillars-grid">
+        <div class="formula-pillar">
+          <div class="fp-head">
+            <span class="fp-icon">🏎️</span>
+            <strong>1. Desempenho na Pista</strong>
+            <span class="fp-max">Até 50 pts</span>
+          </div>
+          <p>
+            Estilo Fórmula 1 pela colocação de velocidade na pista:
+            <strong>1º:</strong> 50 pts &bull; <strong>2º:</strong> 42 &bull; <strong>3º:</strong> 36 &bull; <strong>4º:</strong> 31 &bull; <strong>5º:</strong> 27 &bull; <strong>6º:</strong> 24 &bull; <strong>7º:</strong> 21 &bull; <strong>8º:</strong> 18 &bull; <strong>9º:</strong> 15 &bull; <strong>10º:</strong> 12 &bull; <strong>11º+:</strong> 10 pts (DNF/Tentativa = 5 pts).
+          </p>
+        </div>
+
+        <div class="formula-pillar">
+          <div class="fp-head">
+            <span class="fp-icon">📋</span>
+            <strong>2. Notas Reais de Paddock</strong>
+            <span class="fp-max">Até 45 pts</span>
+          </div>
+          <p>
+            Soma das médias nas 5 rubricas (Mecânica, Superação, Caracterização, Torcida e Fair Play: até 15,0 ★) <strong>multiplicada por 3</strong>.
+            <em>Conta para todas as equipes, mesmo quem ganhou na pista!</em>
+          </p>
+        </div>
+
+        <div class="formula-pillar">
+          <div class="fp-head">
+            <span class="fp-icon">🏅</span>
+            <strong>3. Bônus de Troféu Oficial</strong>
+            <span class="fp-max">+5 pts</span>
+          </div>
+          <p>
+            Toda equipe que conquista um dos 8 troféus oficiais da etapa (Top 3 de Velocidade na Pista ou um dos 5 Troféus de Paddock) recebe <strong>+5 pontos de bônus de pódio</strong>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gerenciador de Etapas Salvas na Temporada (Caso já existam etapas gravadas) -->
+    <div id="savedStagesBanner" class="saved-stages-bar" style="display: none;">
+      <div class="saved-stages-info">
+        <strong>📅 Etapas Gravadas na Temporada:</strong>
+        <div id="savedStagesChips" class="saved-stages-chips"></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="chkIncludeLiveStage" checked>
+          Somar Etapa Ao Vivo Atual na Tabela
+        </label>
+        <button type="button" id="btnClearSavedStages" class="btn-clear-stages">
+          🗑️ Limpar Etapas Salvas
+        </button>
+      </div>
+    </div>
+
+    <!-- 1. COPA DAS ESCOLAS (RANKING INTERCOLEGIAL POR INSTITUIÇÃO) -->
+    <section style="margin-bottom: 32px;">
+      <div class="section-title-bar">
+        <h2 class="section-title">
+          <span>🏫</span>
+          <span>Copa Intercolegial das Escolas (Desempenho por Instituição)</span>
+        </h2>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">
+          Média Geral por Equipe da Escola & Pontuação Acumulada
+        </span>
+      </div>
+
+      <div id="schoolsGrid" class="schools-ranking-grid">
+        <!-- Preenchido via JS -->
+      </div>
+    </section>
+
+    <!-- 2. TABELA PRINCIPAL: RANKING GERAL DE EQUIPES DO CIRCUITO -->
+    <section>
+      <div class="section-title-bar">
+        <h2 class="section-title">
+          <span>🌍</span>
+          <span>Classificação Geral de Equipes — Circuito Anual</span>
+        </h2>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">
+          Ordenação: Maior Pontuação Geral ➔ Maior Pontos de Pista ➔ Maior Pontos de Paddock
+        </span>
+      </div>
+
+      <div class="table-card">
+        <div style="overflow-x: auto;">
+          <table class="circuito-table">
+            <thead id="circuitTableHead">
+              <!-- Cabeçalho dinâmico conforme etapas -->
+            </thead>
+            <tbody id="circuitTableBody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                  Calculando pontuação oficial do circuito...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="../shared/js/cloud-api.js?v=20261028_circuito_v1"></script>
+  <script src="../shared/js/teams-data.js?v=20261028_circuito_v1"></script>
+  <script src="js/circuito.js?v=20261028_circuito_v1"></script>
+</body>
+</html>
+

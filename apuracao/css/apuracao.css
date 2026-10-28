@@ -825,3 +825,47 @@ body.apuracao-body {
 .btn-minerva:hover {
   opacity: 0.9;
 }
+
+/* Botão Seletor da Regra de Não-Cumulatividade (1 Prêmio por Equipe) */
+.exclusivity-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1.5px solid #CBD5E1;
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.exclusivity-toggle-btn.active {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: #10B981;
+  color: #065F46;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.18);
+}
+
+.exclusivity-toggle-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Caixa de Menção Honrosa (Quando a equipe de maior nota já ganhou outro troféu) */
+.honorable-mention-box {
+  background: #FFFBEB;
+  border: 1.5px dashed #F59E0B;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+  color: #92400E;
+  line-height: 1.4;
+}
+
+.honorable-mention-box strong {
+  color: #78350F;
+}
+

@@ -1,6 +1,6 @@
 /**
  * Torneio de Robótica Anchieta - Motor de Apuração Geral & Mesa de Cerimônia do Pódio
- * Edital Geral nº 08/2026 - Algoritmo Determinístico de Desempate
+ * Edital Geral nº 08/2026 - Algoritmo Determinístico de Desempate & Regra de Não-Cumulatividade
  * Projeção HDMI Limpa via BroadcastChannel('torneio_podio')
  */
 
@@ -12,9 +12,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const elPodioTelaoText = document.getElementById('podioTelaoText');
   const btnRefreshData = document.getElementById('btnRefreshData');
 
-  // Filtros de Categoria das Tabelas
+  // Filtros de Categoria e Regra de Exclusividade
   const categoryTabBtns = document.querySelectorAll('.category-tab-btn');
   let activeCategory = 'LEGO / Educacional';
+
+  const btnToggleExclusivity = document.getElementById('btnToggleExclusivity');
+  const exclusivityIcon = document.getElementById('exclusivityIcon');
+  const exclusivityLabel = document.getElementById('exclusivityLabel');
+
+  // Por padrão (Coordenação): Cada equipe pode ganhar somente 1 prêmio (Pista > Paddock)
+  let exclusivityRuleActive = localStorage.getItem('torneio_exclusivity_rule') !== 'false';
 
   // Seções de visualização
   const trackRankingBody = document.getElementById('trackRankingBody');
@@ -79,6 +86,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   let trackRevealedState = { pos1: false, pos2: false, pos3: false };
   let autoLoopActive = false;
   let autoLoopTimer = null;
+
+  // Atualiza UI do botão de Regra de Exclusividade
+  function updateExclusivityButtonUI() {
+    if (!btnToggleExclusivity) return;
+    if (exclusivityRuleActive) {
+      btnToggleExclusivity.classList.add('active');
+      if (exclusivityIcon) exclusivityIcon.textContent = '🔒';
+      if (exclusivityLabel) exclusivityLabel.textContent = '1 Prêmio por Equipe (Oficial: Pista exclui Paddock)';
+    } else {
+      btnToggleExclusivity.classList.remove('active');
+      if (exclusivityIcon) exclusivityIcon.textContent = '🔓';
+      if (exclusivityLabel) exclusivityLabel.textContent = 'Modo Cumulativo Livre (Sem restrição)';
+    }
+  }
+
+  if (btnToggleExclusivity) {
+    btnToggleExclusivity.addEventListener('click', () => {
+      exclusivityRuleActive = !exclusivityRuleActive;
+      localStorage.setItem('torneio_exclusivity_rule', String(exclusivityRuleActive));
+      updateExclusivityButtonUI();
+      renderAll();
+      broadcastToPodioTelao(null);
+    });
+    updateExclusivityButtonUI();
+  }
 
   // ==========================================================================
   // 1. CARREGAMENTO UNIFICADO DOS DADOS (CLOUDFLARE D1 + CONTINGÊNCIA LOCAL)
@@ -285,29 +317,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   ];
 
-  // Retorna lista ordenada para um Prêmio de Box específico
-  function getSortedAwardCandidates(awardId) {
-    const meta = AWARDS_METADATA.find(m => m.id === awardId);
-    if (!meta) return [];
-
-    const candidates = teams.map(team => ({
-      team,
-      track: getTrackStatsForTeam(team.name),
-      rubrics: getRubricStatsForTeam(team.name, team.id)
-    }));
-
-    candidates.sort((a, b) => {
-      const minervaWinner = minervaVotes[meta.id];
-      if (minervaWinner) {
-        if (a.team.name === minervaWinner) return -1;
-        if (b.team.name === minervaWinner) return 1;
-      }
-      return meta.evalTiebreak(a, b);
-    });
-
-    return candidates;
-  }
-
   // Retorna lista ordenada para o Pódio de Pista de uma Categoria
   function getSortedTrackCandidates(categoryFilter = 'LEGO') {
     const filtered = teams.filter(t =>
@@ -326,6 +335,106 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     return list;
+  }
+
+  // ==========================================================================
+  // MOTOR DE DISTRIBUIÇÃO DE TROFÉUS (NÃO-CUMULATIVIDADE + MENÇÃO HONROSA)
+  // ==========================================================================
+  function resolveOfficialAwards(teamPool = teams) {
+    // Mapa de equipes que já conquistaram um troféu oficial (nome_lower -> nome do prêmio)
+    const awardedTeamsMap = new Map();
+
+    if (exclusivityRuleActive) {
+      // 1. Identifica os vencedores do Top 3 da Pista (LEGO e Maker) que têm volta válida
+      ['LEGO', 'Maker'].forEach(cat => {
+        const trackList = getSortedTrackCandidates(cat);
+        const labels = ['🥇 1º Lugar Pista', '🥈 2º Lugar Pista', '🥉 3º Lugar Pista'];
+        for (let i = 0; i < 3; i++) {
+          const item = trackList[i];
+          if (item && item.track.hasValidRun) {
+            awardedTeamsMap.set(item.team.name.trim().toLowerCase(), labels[i]);
+          }
+        }
+      });
+    }
+
+    // Prepara candidatos com estatísticas de pista + rubricas
+    const allCandidates = teamPool.map(team => ({
+      team,
+      track: getTrackStatsForTeam(team.name),
+      rubrics: getRubricStatsForTeam(team.name, team.id)
+    }));
+
+    const resolvedByAward = {};
+
+    AWARDS_METADATA.forEach(meta => {
+      // Ordenação técnica pura (Edital 08 + eventual Voto de Minerva)
+      const rawSorted = [...allCandidates].sort((a, b) => {
+        const minervaWinner = minervaVotes[meta.id];
+        if (minervaWinner) {
+          if (a.team.name === minervaWinner) return -1;
+          if (b.team.name === minervaWinner) return 1;
+        }
+        return meta.evalTiebreak(a, b);
+      });
+
+      let officialWinner = rawSorted[0] || null;
+      let secondEligible = rawSorted[1] || null;
+      const honorableMentions = [];
+
+      if (exclusivityRuleActive && rawSorted.length > 0) {
+        const minervaWinner = minervaVotes[meta.id];
+
+        if (minervaWinner) {
+          // Se a comissão deu Voto de Minerva explícito nesta categoria, respeita a decisão
+          officialWinner = rawSorted.find(c => c.team.name === minervaWinner) || rawSorted[0];
+        } else {
+          // Busca a 1ª equipe elegível que ainda NÃO ganhou troféu na Pista nem em outro Paddock
+          const eligibleList = [];
+          for (const cand of rawSorted) {
+            const key = cand.team.name.trim().toLowerCase();
+            if (awardedTeamsMap.has(key)) {
+              // Se ainda não escolhemos o vencedor oficial, esta equipe superou na nota mas já tem troféu -> Menção Honrosa!
+              if (eligibleList.length === 0 && cand.rubrics[meta.id].avg > 0) {
+                honorableMentions.push({
+                  candidate: cand,
+                  previousAward: awardedTeamsMap.get(key)
+                });
+              }
+            } else {
+              eligibleList.push(cand);
+            }
+          }
+
+          if (eligibleList.length > 0) {
+            officialWinner = eligibleList[0];
+            secondEligible = eligibleList[1] || null;
+          }
+        }
+
+        // Registra o vencedor oficial deste troféu para não acumular um segundo troféu de Paddock
+        if (officialWinner && officialWinner.rubrics[meta.id].avg > 0) {
+          const winKey = officialWinner.team.name.trim().toLowerCase();
+          if (!awardedTeamsMap.has(winKey)) {
+            awardedTeamsMap.set(winKey, `${meta.icon} ${meta.name}`);
+          }
+        }
+      }
+
+      resolvedByAward[meta.id] = {
+        meta,
+        officialWinner,
+        secondEligible,
+        rawSorted,
+        honorableMentions,
+        awardedSnapshot: new Map(awardedTeamsMap)
+      };
+    });
+
+    return {
+      resolvedByAward,
+      awardedTeamsMap
+    };
   }
 
   // ==========================================================================
@@ -416,26 +525,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const candidates = filteredTeams.map(team => ({
-      team,
-      track: getTrackStatsForTeam(team.name),
-      rubrics: getRubricStatsForTeam(team.name, team.id)
-    }));
+    const { resolvedByAward } = resolveOfficialAwards(filteredTeams);
 
     AWARDS_METADATA.forEach((meta, idx) => {
-      const list = [...candidates].sort((a, b) => {
-        const minervaWinner = minervaVotes[meta.id];
-        if (minervaWinner) {
-          if (a.team.name === minervaWinner) return -1;
-          if (b.team.name === minervaWinner) return 1;
-        }
-        return meta.evalTiebreak(a, b);
-      });
+      const awardResult = resolvedByAward[meta.id];
+      const winner = awardResult.officialWinner;
+      const second = awardResult.secondEligible;
+      const rawSorted = awardResult.rawSorted;
+      const honorableMentions = awardResult.honorableMentions;
 
-      const winner = list[0];
-      const second = list[1];
-
-      if (second && !minervaVotes[meta.id]) {
+      // Checa empate técnico residual entre os dois primeiros ELEGÍVEIS ao troféu
+      if (winner && second && !minervaVotes[meta.id]) {
         const topScore = winner.rubrics[meta.id].avg;
         const secondScore = second.rubrics[meta.id].avg;
         if (topScore > 0 && topScore === secondScore && meta.evalTiebreak(winner, second) === 0) {
@@ -443,8 +543,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      const scoreNum = winner.rubrics[meta.id].avg;
-      const tieExplain = meta.getTiebreakExplain(winner);
+      const scoreNum = winner ? winner.rubrics[meta.id].avg : 0;
+      const tieExplain = winner ? meta.getTiebreakExplain(winner) : '--';
+
+      // Bloco HTML de Menção Honrosa (se houver equipe que tirou nota maior mas já levou outro prêmio)
+      let honorableHtml = '';
+      if (honorableMentions.length > 0) {
+        const hmItems = honorableMentions.map(hm =>
+          `<strong>${hm.candidate.team.name}</strong> (${hm.candidate.rubrics[meta.id].avg.toFixed(2)} ★ — Já premiada em: <em>${hm.previousAward}</em>)`
+        ).join('<br>');
+        honorableHtml = `
+          <div class="honorable-mention-box">
+            <div style="font-weight: 900; text-transform: uppercase; font-size: 0.70rem; letter-spacing: 0.04em; margin-bottom: 2px;">
+              ⭐ Menção Honrosa na Auditoria (Maior Nota Bruta):
+            </div>
+            ${hmItems}
+          </div>
+        `;
+      }
 
       const card = document.createElement('div');
       card.className = 'award-card';
@@ -459,10 +575,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           </button>
         </div>
 
+        ${honorableHtml}
+
         <div class="award-winner-box">
-          <div class="award-winner-badge">🏆 Líder Oficial</div>
-          <div class="award-winner-title">${winner.team.name}</div>
-          <div class="award-winner-school">${winner.team.school} &bull; ${winner.team.category.includes('LEGO') ? 'LEGO' : 'MAKER'}</div>
+          <div class="award-winner-badge">🏆 Vencedor Oficial do Troféu</div>
+          <div class="award-winner-title">${winner ? winner.team.name : '--'}</div>
+          <div class="award-winner-school">${winner ? `${winner.team.school} &bull; ${winner.team.category.includes('LEGO') ? 'LEGO' : 'MAKER'}` : '--'}</div>
 
           <div class="award-score-row">
             <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">Média da Rubrica:</span>
@@ -471,20 +589,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <div class="award-tiebreak-note">
             <strong>Critério:</strong> ${tieExplain}
+            ${exclusivityRuleActive && honorableMentions.length > 0 ? '<br><span style="color: #059669; font-weight: 800;">✓ 1ª Equipe Elegível (Regra 1 Troféu/Equipe)</span>' : ''}
             ${minervaVotes[meta.id] ? '<br><span style="color: #F26522; font-weight: 800;">⚖️ Decidido por Voto de Minerva</span>' : ''}
           </div>
         </div>
 
-        <div style="font-size: 0.78rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
-          Top Concorrentes:
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+          Ranking Bruto da Rubrica (Auditoria):
         </div>
         <div style="display: flex; flex-direction: column; gap: 4px;">
-          ${list.slice(0, 3).map((item, i) => `
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 4px 0; border-bottom: 1px dotted var(--border-light);">
-              <span>${i + 1}º ${item.team.name}</span>
-              <strong style="color: var(--color-primary);">${item.rubrics[meta.id].avg.toFixed(2)} ★</strong>
-            </div>
-          `).join('')}
+          ${rawSorted.slice(0, 4).map((item, i) => {
+            const isOfficialWin = winner && item.team.name === winner.team.name;
+            const hmMatch = honorableMentions.find(h => h.candidate.team.name === item.team.name);
+            const tag = isOfficialWin
+              ? '<span style="background:#DCFCE7; color:#15803D; font-size:0.68rem; padding:1px 6px; border-radius:4px; font-weight:800; margin-left:4px;">🏆 Troféu</span>'
+              : (hmMatch ? `<span style="background:#FEF3C7; color:#B45309; font-size:0.68rem; padding:1px 6px; border-radius:4px; font-weight:800; margin-left:4px;">⭐ ${hmMatch.previousAward}</span>` : '');
+            return `
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; padding: 4px 0; border-bottom: 1px dotted var(--border-light);">
+                <span>${i + 1}º ${item.team.name} ${tag}</span>
+                <strong style="color: var(--color-primary);">${item.rubrics[meta.id].avg.toFixed(2)} ★</strong>
+              </div>
+            `;
+          }).join('')}
         </div>
       `;
       awardsGrid.appendChild(card);
@@ -506,7 +632,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </span>
       </div>
       <p style="font-size: 0.88rem; color: #78350F; line-height: 1.45;">
-        As equipes <strong>${teamA.team.name}</strong> e <strong>${teamB.team.name}</strong> obtiveram a mesma pontuação exata (${teamA.rubrics[meta.id].avg.toFixed(2)} ★) e empataram em todos os critérios automáticos do Edital. A Comissão Julgadora deve deliberar com base nas justificativas abaixo:
+        As equipes elegíveis <strong>${teamA.team.name}</strong> e <strong>${teamB.team.name}</strong> obtiveram a mesma pontuação exata (${teamA.rubrics[meta.id].avg.toFixed(2)} ★) e empataram em todos os critérios automáticos do Edital. A Comissão Julgadora deve deliberar com base nas justificativas abaixo:
       </p>
 
       <div class="tie-teams-comparison">
@@ -567,11 +693,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
     }
 
-    // MODO 1..5: TROFÉU DE BANCADA / BOX
+    // MODO 1..5: TROFÉU DE BANCADA / BOX (Respeitando a Regra de Não-Cumulatividade)
     if (routine.type === 'SINGLE_AWARD') {
       const meta = AWARDS_METADATA.find(m => m.id === routine.key);
-      const candidates = getSortedAwardCandidates(routine.key);
-      const winner = candidates[0];
+      const { resolvedByAward } = resolveOfficialAwards(teams);
+      const awardResult = resolvedByAward[routine.key];
+      const winner = awardResult ? awardResult.officialWinner : null;
       const hasScore = winner && winner.rubrics[routine.key].avg > 0;
 
       return {
@@ -687,9 +814,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
     } else if (routine.type === 'SINGLE_AWARD') {
       const meta = AWARDS_METADATA.find(m => m.id === routine.key);
-      const candidates = getSortedAwardCandidates(routine.key);
-      const winner = candidates[0];
-      const runnerUp = candidates[1];
+      const { resolvedByAward } = resolveOfficialAwards(teams);
+      const awardResult = resolvedByAward[routine.key];
+      const winner = awardResult ? awardResult.officialWinner : null;
+      const runnerUp = awardResult ? awardResult.secondEligible : null;
+      const honorableMentions = awardResult ? awardResult.honorableMentions : [];
 
       if (singleAwardRevealed) {
         copLiveMonitorBadge.className = 'cop-monitor-pill revealed';
@@ -701,10 +830,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (winner) {
         const avg = winner.rubrics[routine.key].avg.toFixed(2);
+        const hmNote = honorableMentions.length > 0
+          ? `<div style="margin-top: 6px; padding: 6px 10px; background: rgba(245, 158, 11, 0.16); border-left: 3px solid #FDE047; border-radius: 4px; font-size: 0.76rem; color: #FEF08A;">
+               ⭐ <strong>Menção Honrosa (Maior Nota):</strong> ${honorableMentions.map(h => `${h.candidate.team.name} (${h.candidate.rubrics[routine.key].avg.toFixed(2)}★ — já levou ${h.previousAward})`).join(', ')}
+             </div>`
+          : '';
+
         copBackstageContent.innerHTML = `
           <div class="backstage-winner-row">
             <div>
-              <span style="font-size: 0.72rem; font-weight: 900; color: #FDE047; text-transform: uppercase;">🏆 Vencedor Oficial (Spoiler p/ Locutor):</span>
+              <span style="font-size: 0.72rem; font-weight: 900; color: #FDE047; text-transform: uppercase;">🏆 Vencedor Oficial do Troféu (Cola p/ Locutor):</span>
               <div style="font-size: 1.35rem; font-weight: 900; color: #FFFFFF;">${winner.team.name}</div>
               <div style="font-size: 0.82rem; color: #94A3B8;">${winner.team.school} &bull; ${winner.team.category}</div>
             </div>
@@ -713,9 +848,10 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div style="font-size: 0.75rem; color: #CBD5E1;">${meta.getTiebreakExplain(winner)}</div>
             </div>
           </div>
+          ${hmNote}
           ${runnerUp ? `
             <div style="font-size: 0.76rem; color: #94A3B8; padding-top: 6px;">
-              2º colocado na rubrica: <strong>${runnerUp.team.name}</strong> (${runnerUp.rubrics[routine.key].avg.toFixed(2)} ★)
+              Próxima equipe elegível: <strong>${runnerUp.team.name}</strong> (${runnerUp.rubrics[routine.key].avg.toFixed(2)} ★)
             </div>
           ` : ''}
         `;
@@ -779,7 +915,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentStepIdx = stepIndex;
     const routine = CEREMONY_ROUTINE[currentStepIdx];
 
-    // Sempre entra inicialmente em modo Suspense para proteger contra spoiler acidental no telão
     singleAwardRevealed = false;
     trackRevealedState = { pos1: false, pos2: false, pos3: false };
 
@@ -814,7 +949,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const mode = selectLoopMode ? selectLoopMode.value : 'LOOP_REVEALED_8S';
 
-    // Verifica se há equipes Maker com corrida válida para incluir ou não o passo 7 no loop automático
     const makerCandidates = getSortedTrackCandidates('Maker');
     const hasMakerValid = makerCandidates.some(c => c.track.hasValidRun);
     const maxStep = hasMakerValid ? 7 : 6;
@@ -847,7 +981,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!autoLoopActive) return;
       currentStepIdx++;
       if (currentStepIdx > maxStep) {
-        currentStepIdx = 1; // Volta para o 1º troféu em loop infinito
+        currentStepIdx = 1;
       }
       runContinuousRevealedLoop(intervalMs, maxStep);
     }, intervalMs);
@@ -1087,7 +1221,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         lastTelaoHeartbeat = Date.now();
         updateTelaoBadgeStatus();
         if (wasOffline) {
-          // Assim que o telão abre, sincroniza o estado atual imediatamente
           broadcastToPodioTelao(null);
         }
       }
