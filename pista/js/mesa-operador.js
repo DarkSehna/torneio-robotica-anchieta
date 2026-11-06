@@ -65,9 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   let telaoConnected = false;
   let lastBroadcastTick = 0;
 
-  // Motor do Cronômetro
+  // Motor do Cronômetro (parametrizado via config/regrasTorneio.js)
+  const MAX_TRACK_TIME_MS = Number(window.REGRAS_TORNEIO?.regrasPista?.tempoMaximoMs ?? 180000);
   const timer = new window.PrecisionTimer({
-    maxTimeMs: 180000, // 3 minutos
+    maxTimeMs: MAX_TRACK_TIME_MS,
     onTick: (ms, formatted) => {
       sessionState.timeMs = ms;
       sessionState.timeFormatted = formatted;
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     },
     onTimeUp: () => {
       sessionState.status = 'TIME_UP';
-      sessionState.timeMs = 180000;
+      sessionState.timeMs = MAX_TRACK_TIME_MS;
       sessionState.timeFormatted = '03:00.00';
       window.audioCues.playFinishAlarm(false);
       window.pistaBus.send('TIMER_TIME_UP', { timeMs: 180000, timeFormatted: '03:00.00' });

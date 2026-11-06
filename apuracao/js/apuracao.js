@@ -28,10 +28,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const awardsGrid = document.getElementById('awardsGrid');
   const tieAlertSection = document.getElementById('tieAlertSection');
 
+  // Referência à Configuração Central (Single Source of Truth)
+  const REGRAS = window.REGRAS_TORNEIO;
+
   // Elementos da Mesa de Cerimônia (Operador)
   const copLiveMonitorBadge = document.getElementById('copLiveMonitorBadge');
   const copLiveMonitorText = document.getElementById('copLiveMonitorText');
-  const copStepBtns = document.querySelectorAll('.cop-step-btn');
+  const copStepperList = document.getElementById('copStepperList');
+  let copStepBtns = document.querySelectorAll('.cop-step-btn');
   const copPreviewTitle = document.getElementById('copPreviewTitle');
   const copPreviewSubtitle = document.getElementById('copPreviewSubtitle');
   const copBackstageContent = document.getElementById('copBackstageContent');
@@ -68,17 +72,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   let avaliacoes = [];
   let minervaVotes = JSON.parse(localStorage.getItem('torneio_minerva_votos') || '{}');
 
-  // Definição das 8 Etapas do Roteiro Completo da Cerimônia
+  // Critérios de Paddock ordenados pela sequência oficial da Cerimônia (config/regrasTorneio.js)
+  const sortedCeremonyCriteria = [...(REGRAS?.criteriosPaddock || [])].sort(
+    (a, b) => (a.ordemCerimonia || 99) - (b.ordemCerimonia || 99)
+  );
+
+  // Construção Dinâmica do Roteiro Completo da Cerimônia a partir de REGRAS_TORNEIO
   const CEREMONY_ROUTINE = [
     { step: 0, key: 'STANDBY', type: 'STANDBY', title: '0. Tela de Abertura / Espera', subtitle: 'Boas-vindas no telão antes do início dos anúncios.' },
-    { step: 1, key: 'mecanica', type: 'SINGLE_AWARD', title: '1. Troféu: Melhor Mecânica', subtitle: 'Robustez estrutural, chassi firme e eficiência de montagem.' },
-    { step: 2, key: 'superacao', type: 'SINGLE_AWARD', title: '2. Troféu: Prêmio Superação', subtitle: 'Resiliência técnica e evolução comprovada entre os rounds.' },
-    { step: 3, key: 'caracterizacao', type: 'SINGLE_AWARD', title: '3. Troféu: Melhor Caracterização', subtitle: 'Temática criativa, uniforme, mascote e animação nos boxes.' },
-    { step: 4, key: 'torcida', type: 'SINGLE_AWARD', title: '4. Troféu: Melhor Torcida', subtitle: 'Torcida vibrante, organizada e respeitosa no ginásio.' },
-    { step: 5, key: 'fair_play', type: 'SINGLE_AWARD', title: '5. Troféu: Prêmio Fair Play', subtitle: 'Cooperação entre equipes, ética e espírito esportivo.' },
-    { step: 6, key: 'VELOCIDADE_LEGO', type: 'TRACK_PODIUM', category: 'LEGO / Educacional', title: '6. Pódio Oficial de Pista — Categoria LEGO', subtitle: 'Top 3 de Velocidade (3º Lugar ➔ Vice-Campeão ➔ Grande Campeão).' },
-    { step: 7, key: 'VELOCIDADE_MAKER', type: 'TRACK_PODIUM', category: 'Aberta / Maker', title: '7. Pódio Oficial de Pista — Categoria Maker', subtitle: 'Top 3 de Velocidade Aberta / Maker.' }
+    ...sortedCeremonyCriteria.map((crit, idx) => ({
+      step: idx + 1,
+      key: crit.id,
+      type: 'SINGLE_AWARD',
+      icon: crit.icone,
+      shortLabel: crit.premio,
+      title: `${idx + 1}. Troféu: ${crit.premio}`,
+      subtitle: crit.resumoCurto || crit.descricao
+    })),
+    {
+      step: sortedCeremonyCriteria.length + 1,
+      key: 'VELOCIDADE_LEGO',
+      type: 'TRACK_PODIUM',
+      category: 'LEGO / Educacional',
+      title: `${sortedCeremonyCriteria.length + 1}. Pódio Oficial de Pista — Categoria LEGO`,
+      subtitle: 'Top 3 de Velocidade (3º Lugar ➔ Vice-Campeão ➔ Grande Campeão).'
+    },
+    {
+      step: sortedCeremonyCriteria.length + 2,
+      key: 'VELOCIDADE_MAKER',
+      type: 'TRACK_PODIUM',
+      category: 'Aberta / Maker',
+      title: `${sortedCeremonyCriteria.length + 2}. Pódio Oficial de Pista — Categoria Maker`,
+      subtitle: 'Top 3 de Velocidade Aberta / Maker.'
+    }
   ];
+
+  // Renderiza dinamicamente os botões de etapas da cerimônia conforme REGRAS_TORNEIO
+  if (copStepperList && sortedCeremonyCriteria.length > 0) {
+    copStepperList.innerHTML = CEREMONY_ROUTINE.map(item => {
+      if (item.type === 'STANDBY') {
+        return `<button type="button" class="cop-step-btn active" data-step="0">0. ⏳ Tela de Espera</button>`;
+      }
+      if (item.type === 'SINGLE_AWARD') {
+        return `<button type="button" class="cop-step-btn" data-step="${item.step}">${item.step}. ${item.icon} ${item.shortLabel}</button>`;
+      }
+      const catLabel = item.key === 'VELOCIDADE_MAKER' ? 'Pódio Pista (Maker)' : 'Pódio Pista (LEGO)';
+      return `<button type="button" class="cop-step-btn track-step" data-step="${item.step}">${item.step}. 🏎️ ${catLabel}</button>`;
+    }).join('');
+    copStepBtns = copStepperList.querySelectorAll('.cop-step-btn');
+  }
 
   // Estado da Cerimônia Controlada pelo Operador
   let currentStepIdx = 0;
@@ -188,9 +230,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let deltaEvolucao = 0;
+    const pesoFaltaDelta = Number(REGRAS?.regrasPista?.pesoFaltaDeltaEvolucao ?? 5.0);
     if (r1 && r2 && r1.status === 'VALID' && r2.status === 'VALID') {
       const diffSeg = (Number(r1.tempo_ms) - Number(r2.tempo_ms)) / 1000;
-      const diffFaltas = (Number(r1.infracoes || 0) - Number(r2.infracoes || 0)) * 5.0;
+      const diffFaltas = (Number(r1.infracoes || 0) - Number(r2.infracoes || 0)) * pesoFaltaDelta;
       deltaEvolucao = Number((diffSeg + diffFaltas).toFixed(2));
     }
 
@@ -229,93 +272,41 @@ document.addEventListener('DOMContentLoaded', async () => {
       return (evName && evName === tName) || (evId && evId === tId);
     });
 
-    const criteria = ['mecanica', 'superacao', 'caracterizacao', 'torcida', 'fair_play'];
     const result = {
       evalCount: teamEvals.length,
       observations: teamEvals.map(ev => ({ juiz: ev.juiz_nome || ev.juiz, texto: ev.observacoes })).filter(o => o.texto)
     };
 
-    criteria.forEach(crit => {
-      const scores = teamEvals.map(ev => {
-        return Number(ev[crit] ?? ev[`nota_${crit}`] ?? (ev[`voto_${crit}`] ? 3 : 2)) || 0;
-      }).filter(s => s > 0);
-
-      const sum = scores.reduce((a, b) => a + b, 0);
-      const avg = scores.length > 0 ? Number((sum / scores.length).toFixed(2)) : 0;
-      const count3 = scores.filter(s => s === 3).length;
-
-      result[crit] = { avg, scores, count3 };
+    const criteriaList = REGRAS?.criteriosPaddock || [];
+    criteriaList.forEach(crit => {
+      if (REGRAS && typeof REGRAS.calcularEstatisticaCriterio === 'function') {
+        result[crit.id] = REGRAS.calcularEstatisticaCriterio(teamEvals, crit.id);
+      } else {
+        const scores = teamEvals.map(ev => Number(ev[crit.id] ?? ev[`nota_${crit.id}`]) || 0).filter(s => s > 0);
+        const sum = scores.reduce((a, b) => a + b, 0);
+        const avg = scores.length > 0 ? Number((sum / scores.length).toFixed(2)) : 0;
+        const count3 = scores.filter(s => s === 3).length;
+        result[crit.id] = { avg, rawAvg: avg, peso: 1.0, scores, count3 };
+      }
     });
 
     return result;
   }
 
-  const AWARDS_METADATA = [
-    {
-      id: 'mecanica',
-      name: 'Melhor Mecânica',
-      icon: '⚙️',
-      desc: 'Robô robusto, firme, sem peças soltas, com bom acabamento estético e montagem eficiente.',
-      tiebreakName: '1º Menor Tempo de Pista ➔ 2º Faltas',
-      evalTiebreak: (a, b) => {
-        if (b.rubrics.mecanica.avg !== a.rubrics.mecanica.avg) return b.rubrics.mecanica.avg - a.rubrics.mecanica.avg;
-        if (a.track.bestTimeMs !== b.track.bestTimeMs) return a.track.bestTimeMs - b.track.bestTimeMs;
-        return a.track.bestTimeFouls - b.track.bestTimeFouls;
-      },
-      getTiebreakExplain: (item) => item.track.hasValidRun
-        ? `Melhor Volta: ${formatMs(item.track.bestTimeMs)} (${item.track.bestTimeFouls} faltas)`
-        : 'Avaliação de Bancada'
-    },
-    {
-      id: 'superacao',
-      name: 'Prêmio Superação',
-      icon: '🚀',
-      desc: 'Resiliência técnica comprovada, contornando falhas técnicas com evolução evidente.',
-      tiebreakName: '1º Maior Δevolução ➔ 2º Faltas no R2',
-      evalTiebreak: (a, b) => {
-        if (b.rubrics.superacao.avg !== a.rubrics.superacao.avg) return b.rubrics.superacao.avg - a.rubrics.superacao.avg;
-        if (b.track.deltaEvolucao !== a.track.deltaEvolucao) return b.track.deltaEvolucao - a.track.deltaEvolucao;
-        return a.track.r2Fouls - b.track.r2Fouls;
-      },
-      getTiebreakExplain: (item) => `Índice Δevolução: ${item.track.deltaEvolucao > 0 ? '+' : ''}${item.track.deltaEvolucao} pts`
-    },
-    {
-      id: 'caracterizacao',
-      name: 'Melhor Caracterização',
-      icon: '🎨',
-      desc: 'Equipe com temática criativa (fantasia, mascote, uniforme) alinhada ao robô e animação.',
-      tiebreakName: '1º Votos "Superado ★" ➔ 2º Voto de Minerva',
-      evalTiebreak: (a, b) => {
-        if (b.rubrics.caracterizacao.avg !== a.rubrics.caracterizacao.avg) return b.rubrics.caracterizacao.avg - a.rubrics.caracterizacao.avg;
-        return b.rubrics.caracterizacao.count3 - a.rubrics.caracterizacao.count3;
-      },
-      getTiebreakExplain: (item) => `${item.rubrics.caracterizacao.count3} voto(s) Superado ★`
-    },
-    {
-      id: 'torcida',
-      name: 'Melhor Torcida',
-      icon: '📣',
-      desc: 'Escola com torcida vibrante, barulhenta, com identidade visual própria e respeitosa.',
-      tiebreakName: '1º Votos "Superado ★" ➔ 2º Voto de Minerva',
-      evalTiebreak: (a, b) => {
-        if (b.rubrics.torcida.avg !== a.rubrics.torcida.avg) return b.rubrics.torcida.avg - a.rubrics.torcida.avg;
-        return b.rubrics.torcida.count3 - a.rubrics.torcida.count3;
-      },
-      getTiebreakExplain: (item) => `${item.rubrics.torcida.count3} voto(s) Superado ★`
-    },
-    {
-      id: 'fair_play',
-      name: 'Prêmio Fair Play',
-      icon: '🤝',
-      desc: 'Postura colaborativa, auxílio a outras equipes, atitude positiva e respeito às regras.',
-      tiebreakName: '1º Menor total acumulado de faltas',
-      evalTiebreak: (a, b) => {
-        if (b.rubrics.fair_play.avg !== a.rubrics.fair_play.avg) return b.rubrics.fair_play.avg - a.rubrics.fair_play.avg;
-        return a.track.totalFaltas - b.track.totalFaltas;
-      },
-      getTiebreakExplain: (item) => `Faltas totais na pista: ${item.track.totalFaltas}`
-    }
-  ];
+  // Metadados e regras de desempate gerados dinamicamente a partir de config/regrasTorneio.js
+  const AWARDS_METADATA = sortedCeremonyCriteria.map(crit => {
+    const desempateCfg = REGRAS?.regrasDesempate?.[crit.id] || {};
+    return {
+      id: crit.id,
+      name: crit.premio,
+      icon: crit.icone,
+      peso: Number(crit.peso || 1.0),
+      desc: crit.resumoCurto || crit.descricao,
+      tiebreakName: desempateCfg.descricaoRotulo || 'Média Ponderada Oficial',
+      evalTiebreak: (a, b) => REGRAS.compararCandidatosRubrica(crit.id, a, b),
+      getTiebreakExplain: (item) => REGRAS.explicarDesempateRubrica(crit.id, item, formatMs)
+    };
+  });
 
   // Retorna lista ordenada para o Pódio de Pista de uma Categoria
   function getSortedTrackCandidates(categoryFilter = 'LEGO') {
@@ -328,11 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       track: getTrackStatsForTeam(team.name)
     }));
 
-    list.sort((a, b) => {
-      if (a.track.bestTimeMs !== b.track.bestTimeMs) return a.track.bestTimeMs - b.track.bestTimeMs;
-      if (a.track.bestTimeFouls !== b.track.bestTimeFouls) return a.track.bestTimeFouls - b.track.bestTimeFouls;
-      return a.track.secondTimeMs - b.track.secondTimeMs;
-    });
+    list.sort((a, b) => REGRAS.compararCandidatosPista(a, b));
 
     return list;
   }
@@ -454,11 +441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       track: getTrackStatsForTeam(team.name)
     }));
 
-    rankingList.sort((a, b) => {
-      if (a.track.bestTimeMs !== b.track.bestTimeMs) return a.track.bestTimeMs - b.track.bestTimeMs;
-      if (a.track.bestTimeFouls !== b.track.bestTimeFouls) return a.track.bestTimeFouls - b.track.bestTimeFouls;
-      return a.track.secondTimeMs - b.track.secondTimeMs;
-    });
+    rankingList.sort((a, b) => REGRAS.compararCandidatosPista(a, b));
 
     if (rankingList.length === 0) {
       trackRankingBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">Nenhuma equipe cadastrada nesta categoria.</td></tr>`;
@@ -583,12 +566,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="award-winner-school">${winner ? `${winner.team.school} &bull; ${winner.team.category.includes('LEGO') ? 'LEGO' : 'MAKER'}` : '--'}</div>
 
           <div class="award-score-row">
-            <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">Média da Rubrica:</span>
+            <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">Média Ponderada${meta.peso !== 1 ? ` (Peso ${meta.peso}x)` : ''}:</span>
             <span class="award-score-number">${scoreNum.toFixed(2)} ★</span>
           </div>
 
           <div class="award-tiebreak-note">
-            <strong>Critério:</strong> ${tieExplain}
+            <strong>Desempate (${meta.tiebreakName}):</strong><br>${tieExplain}
             ${exclusivityRuleActive && honorableMentions.length > 0 ? '<br><span style="color: #059669; font-weight: 800;">✓ 1ª Equipe Elegível (Regra 1 Troféu/Equipe)</span>' : ''}
             ${minervaVotes[meta.id] ? '<br><span style="color: #F26522; font-weight: 800;">⚖️ Decidido por Voto de Minerva</span>' : ''}
           </div>

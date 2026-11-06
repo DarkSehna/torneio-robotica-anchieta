@@ -25,8 +25,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const circuitTableHead = document.getElementById('circuitTableHead');
   const circuitTableBody = document.getElementById('circuitTableBody');
 
-  // Escala F1 de Pontos de Pista (1º ao 10º lugar, 11º+ = 10 pts)
-  const TRACK_POINTS_SCALE = [50, 42, 36, 31, 27, 24, 21, 18, 15, 12];
+  // Referência à Configuração Central (Single Source of Truth)
+  const REGRAS = window.REGRAS_TORNEIO;
+  const TRACK_POINTS_SCALE = REGRAS?.circuitoAnual?.escalaPontosPista || [50, 42, 36, 31, 27, 24, 21, 18, 15, 12];
+  const TRACK_POINTS_OTHERS = Number(REGRAS?.circuitoAnual?.pontosPistaDemaisValidos ?? 10);
+  const TRACK_POINTS_DNF = Number(REGRAS?.circuitoAnual?.pontosPistaParticipacaoDNF ?? 5);
+  const PADDOCK_MULTIPLIER = Number(REGRAS?.circuitoAnual?.multiplicadorSomaRubricasPaddock ?? 3.0);
+  const TROPHY_BONUS_PTS = Number(REGRAS?.circuitoAnual?.bonusTrofeuEtapa ?? 5.0);
 
   let teams = [];
   let corridas = [];
@@ -114,9 +119,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let deltaEvolucao = 0;
+    const pesoFaltaDelta = Number(REGRAS?.regrasPista?.pesoFaltaDeltaEvolucao ?? 5.0);
     if (r1 && r2 && r1.status === 'VALID' && r2.status === 'VALID') {
       const diffSeg = (Number(r1.tempo_ms) - Number(r2.tempo_ms)) / 1000;
-      const diffFaltas = (Number(r1.infracoes || 0) - Number(r2.infracoes || 0)) * 5.0;
+      const diffFaltas = (Number(r1.infracoes || 0) - Number(r2.infracoes || 0)) * pesoFaltaDelta;
       deltaEvolucao = Number((diffSeg + diffFaltas).toFixed(2));
     }
 
@@ -143,25 +149,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       return (evName && evName === tName) || (evId && evId === tId);
     });
 
-    const criteria = ['mecanica', 'superacao', 'caracterizacao', 'torcida', 'fair_play'];
+    const criteriaList = REGRAS?.criteriosPaddock || [];
     const result = { evalCount: teamEvals.length, sumAvgs: 0 };
 
-    criteria.forEach(crit => {
-      const scores = teamEvals.map(ev =>
-        Number(ev[crit] ?? ev[`nota_${crit}`] ?? (ev[`voto_${crit}`] ? 3 : 2)) || 0
-      ).filter(s => s > 0);
-
-      const sum = scores.reduce((a, b) => a + b, 0);
-      const avg = scores.length > 0 ? Number((sum / scores.length).toFixed(2)) : 0;
-      const count3 = scores.filter(s => s === 3).length;
-
-      result[crit] = { avg, count3 };
-      result.sumAvgs += avg;
+    criteriaList.forEach(crit => {
+      const stat = REGRAS.calcularEstatisticaCriterio(teamEvals, crit.id);
+      result[crit.id] = stat;
+      result.sumAvgs += stat.avg;
     });
 
     result.sumAvgs = Number(result.sumAvgs.toFixed(2));
-    // Multiplicador Oficial: Soma das 5 médias (máx 15.0) * 3 = até 45.0 pontos!
-    result.paddockPoints = Number((result.sumAvgs * 3).toFixed(1));
+    // Multiplicador Oficial parametrizado em REGRAS_TORNEIO.circuitoAnual
+    result.paddockPoints = Number((result.sumAvgs * PADDOCK_MULTIPLIER).toFixed(1));
     return result;
   }
 
@@ -183,72 +182,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     }));
 
     // Ordena por velocidade para definir posição de pista
-    const trackSorted = [...enriched].sort((a, b) => {
-      if (a.track.bestTimeMs !== b.track.bestTimeMs) return a.track.bestTimeMs - b.track.bestTimeMs;
-      if (a.track.bestTimeFouls !== b.track.bestTimeFouls) return a.track.bestTimeFouls - b.track.bestTimeFouls;
-      return a.track.secondTimeMs - b.track.secondTimeMs;
-    });
+    const trackSorted = [...enriched].sort((a, b) => REGRAS.compararCandidatosPista(a, b));
 
     const awardedTrophiesMap = new Map(); // teamName_lower -> Nome do Troféu
 
     trackSorted.forEach((item, idx) => {
       if (item.track.hasValidRun) {
         item.trackRank = idx + 1;
-        item.trackPoints = idx < TRACK_POINTS_SCALE.length ? TRACK_POINTS_SCALE[idx] : 10;
+        item.trackPoints = idx < TRACK_POINTS_SCALE.length ? TRACK_POINTS_SCALE[idx] : TRACK_POINTS_OTHERS;
         if (idx === 0) awardedTrophiesMap.set(item.team.name.toLowerCase(), '🥇 1º Pista');
         else if (idx === 1) awardedTrophiesMap.set(item.team.name.toLowerCase(), '🥈 2º Pista');
         else if (idx === 2) awardedTrophiesMap.set(item.team.name.toLowerCase(), '🥉 3º Pista');
       } else if (item.track.attempted) {
-        item.trackPoints = 5; // Pontos de participação na pista (tentou, mas teve DNF/TimeUp)
+        item.trackPoints = TRACK_POINTS_DNF; // Pontos de participação na pista (tentou, mas teve DNF/TimeUp)
       } else {
         item.trackPoints = 0;
       }
     });
 
-    // 3.2 Identifica vencedores dos 5 Troféus de Paddock (para o Bônus de +5 pts)
-    const awardRules = [
-      {
-        id: 'mecanica', label: '⚙️ Mecânica',
-        cmp: (a, b) => (b.rubrics.mecanica.avg - a.rubrics.mecanica.avg) || (a.track.bestTimeMs - b.track.bestTimeMs) || (a.track.bestTimeFouls - b.track.bestTimeFouls)
-      },
-      {
-        id: 'superacao', label: '🚀 Superação',
-        cmp: (a, b) => (b.rubrics.superacao.avg - a.rubrics.superacao.avg) || (b.track.deltaEvolucao - a.track.deltaEvolucao) || (a.track.r2Fouls - b.track.r2Fouls)
-      },
-      {
-        id: 'caracterizacao', label: '🎨 Caracterização',
-        cmp: (a, b) => (b.rubrics.caracterizacao.avg - a.rubrics.caracterizacao.avg) || (b.rubrics.caracterizacao.count3 - a.rubrics.caracterizacao.count3)
-      },
-      {
-        id: 'torcida', label: '📣 Torcida',
-        cmp: (a, b) => (b.rubrics.torcida.avg - a.rubrics.torcida.avg) || (b.rubrics.torcida.count3 - a.rubrics.torcida.count3)
-      },
-      {
-        id: 'fair_play', label: '🤝 Fair Play',
-        cmp: (a, b) => (b.rubrics.fair_play.avg - a.rubrics.fair_play.avg) || (a.track.totalFaltas - b.track.totalFaltas)
-      }
-    ];
+    // 3.2 Identifica vencedores dos Troféus de Paddock (para o Bônus de +5 pts) consumindo REGRAS_TORNEIO
+    const sortedCriteria = [...(REGRAS?.criteriosPaddock || [])].sort(
+      (a, b) => (a.ordemCerimonia || 99) - (b.ordemCerimonia || 99)
+    );
 
-    awardRules.forEach(rule => {
+    sortedCriteria.forEach(crit => {
       const sorted = [...enriched].sort((a, b) => {
-        const mv = minervaVotes[rule.id];
+        const mv = minervaVotes[crit.id];
         if (mv) {
           if (a.team.name === mv) return -1;
           if (b.team.name === mv) return 1;
         }
-        return rule.cmp(a, b);
+        return REGRAS.compararCandidatosRubrica(crit.id, a, b);
       });
 
       let chosen = sorted[0];
-      if (exclusivityActive && !minervaVotes[rule.id]) {
+      if (exclusivityActive && !minervaVotes[crit.id]) {
         const eligible = sorted.find(c => !awardedTrophiesMap.has(c.team.name.toLowerCase()));
         if (eligible) chosen = eligible;
       }
 
-      if (chosen && chosen.rubrics[rule.id].avg > 0) {
+      if (chosen && chosen.rubrics[crit.id]?.avg > 0) {
         const k = chosen.team.name.toLowerCase();
         if (!awardedTrophiesMap.has(k)) {
-          awardedTrophiesMap.set(k, rule.label);
+          awardedTrophiesMap.set(k, `${crit.icone} ${crit.premio}`);
         }
       }
     });
@@ -259,7 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const trophy = awardedTrophiesMap.get(item.team.name.toLowerCase());
       if (trophy) {
         item.trophyName = trophy;
-        item.trophyBonus = 5;
+        item.trophyBonus = TROPHY_BONUS_PTS;
       }
       item.stageTotal = Number((item.trackPoints + item.paddockPoints + item.trophyBonus).toFixed(1));
     });

@@ -1,13 +1,15 @@
 /**
- * Torneio de Robótica Anchieta - Controlador dos Juízes de Paddock (Tela 3)
- * Ficha Oficial de Rubricas de 3 Níveis (Edital 08)
- * Mobile First - Touchscreen, 4G/Wi-Fi e Sincronização Cloudflare Workers
+ * Torneio de Robótica Anchieta - Controlador dos Juízes de Paddock (Mobile / Tablet)
+ * Renderização e Validação 100% Dinâmicas a partir de `config/regrasTorneio.js` (Single Source of Truth)
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const REGRAS = window.REGRAS_TORNEIO;
+
   // Elementos do DOM
   const elCloudStatusBadge = document.getElementById('cloudStatusBadge');
   const elCloudStatusText = document.getElementById('cloudStatusText');
+  const paddockSubtitleEdition = document.getElementById('paddockSubtitleEdition');
   const activeJudgeName = document.getElementById('activeJudgeName');
   const btnChangeJudge = document.getElementById('btnChangeJudge');
 
@@ -17,6 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const paddockTeamCat = document.getElementById('paddockTeamCat');
   const evaluatedStatusBadge = document.getElementById('evaluatedStatusBadge');
 
+  const dynamicRubricsContainer = document.getElementById('dynamicRubricsContainer');
+  const labelObservacoesGerais = document.getElementById('labelObservacoesGerais');
   const inputObservacoes = document.getElementById('inputObservacoes');
   const formPaddockEval = document.getElementById('formPaddockEval');
   const btnSubmitEval = document.getElementById('btnSubmitEval');
@@ -26,19 +30,80 @@ document.addEventListener('DOMContentLoaded', async () => {
   const myEvalsCount = document.getElementById('myEvalsCount');
   const accordionArrow = document.getElementById('accordionArrow');
 
-  // Os 5 Prêmios Oficiais (Edital 08)
-  const CRITERIA_KEYS = ['caracterizacao', 'mecanica', 'superacao', 'torcida', 'fair_play'];
+  // Atualiza subtítulo da edição dinamicamente
+  if (REGRAS && paddockSubtitleEdition) {
+    paddockSubtitleEdition.innerHTML = `Avaliação de Boxes &amp; Bancadas &bull; ${REGRAS.edicao} (${REGRAS.dataEvento})`;
+  }
+
+  // Lista ordenada dos critérios do formulário a partir da configuração central
+  const CRITERIOS_CONFIG = [...(REGRAS?.criteriosPaddock || [])].sort(
+    (a, b) => (a.ordemFormulario || 0) - (b.ordemFormulario || 0)
+  );
+  const ESCALA_NOTAS = REGRAS?.escalaNotas || [];
+  const CRITERIA_KEYS = CRITERIOS_CONFIG.map(c => c.id);
+
+  if (labelObservacoesGerais) {
+    labelObservacoesGerais.textContent = `📝 ${CRITERIOS_CONFIG.length + 1}. Observações Gerais`;
+  }
 
   // Estado das Notas Atuais (Iniciam como null para exigir seleção ativa)
-  const currentScores = {
-    caracterizacao: null,
-    mecanica: null,
-    superacao: null,
-    torcida: null,
-    fair_play: null
-  };
+  const currentScores = {};
+  CRITERIA_KEYS.forEach(k => {
+    currentScores[k] = null;
+  });
 
-  // 1. Gestão do Nome do Juiz
+  // 1. Renderiza Dinamicamente os Cards de Critérios e Botões de Escala
+  function buildDynamicRubricCards() {
+    if (!dynamicRubricsContainer) return;
+    dynamicRubricsContainer.innerHTML = '';
+
+    CRITERIOS_CONFIG.forEach(crit => {
+      const section = document.createElement('section');
+      section.className = 'mobile-card';
+      section.id = `card-${crit.id}`;
+
+      const pesoTag = crit.peso && Number(crit.peso) !== 1.0
+        ? `<small style="font-size: 0.7rem; color: var(--color-accent); font-weight: 800; margin-left: 6px;">(Peso ${crit.peso}x)</small>`
+        : '';
+
+      const buttonsHtml = ESCALA_NOTAS.map(escala => `
+        <button type="button" class="rubric-chip-btn" data-value="${escala.valor}">
+          <span class="rubric-chip-title">${escala.rotulo}</span>
+          <span class="rubric-chip-sub">${escala.subtitulo || `${escala.nivel} (${escala.valor})`}</span>
+        </button>
+      `).join('');
+
+      section.innerHTML = `
+        <div class="rubric-header">
+          <div class="rubric-title">
+            <span>${crit.nomeExibicao || `${crit.icone} ${crit.premio}`}${pesoTag}</span>
+          </div>
+          <span id="badgeStatus-${crit.id}" class="rubric-badge-status">⏳ Pendente</span>
+        </div>
+        <p class="rubric-desc">${crit.descricao}</p>
+        <div class="rubric-segmented-grid" data-criterion="${crit.id}" style="grid-template-columns: repeat(${ESCALA_NOTAS.length}, 1fr);">
+          ${buttonsHtml}
+        </div>
+      `;
+
+      // Registra eventos de toque nos botões da escala para este critério
+      const grid = section.querySelector('.rubric-segmented-grid');
+      grid.querySelectorAll('.rubric-chip-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = Number(btn.dataset.value);
+          currentScores[crit.id] = val;
+          updateCriterionUI(crit.id, val);
+          if (navigator.vibrate) navigator.vibrate(18);
+        });
+      });
+
+      dynamicRubricsContainer.appendChild(section);
+    });
+  }
+
+  buildDynamicRubricCards();
+
+  // 2. Gestão do Nome do Juiz
   function initJudgeName() {
     let name = localStorage.getItem('paddock_judge_name');
     if (!name || name.trim() === '') {
@@ -63,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initJudgeName();
 
-  // 2. Histórico Local de Avaliações (Fila Local Resiliente)
+  // 3. Histórico Local de Avaliações (Fila Local Resiliente)
   function getMyEvals() {
     const raw = localStorage.getItem('paddock_evaluations_cache');
     try {
@@ -78,8 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const judge = evalData.juiz_nome || evalData.juiz;
     const teamId = evalData.equipe_id || evalData.equipe;
 
-    const index = evals.findIndex(e => 
-      (e.equipe_id === teamId || e.equipe === evalData.equipe) && 
+    const index = evals.findIndex(e =>
+      (e.equipe_id === teamId || e.equipe === evalData.equipe) &&
       (e.juiz_nome === judge || e.juiz === judge)
     );
 
@@ -93,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderMyEvals();
   }
 
-  // 3. Atualizar Estado Visual de cada Critério de Rubrica
+  // 4. Atualizar Estado Visual de cada Critério de Rubrica consumindo `escalaNotas`
   function updateCriterionUI(criterion, val) {
     const container = document.querySelector(`.rubric-segmented-grid[data-criterion="${criterion}"]`);
     const badge = document.getElementById(`badgeStatus-${criterion}`);
@@ -112,41 +177,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (badge) {
       badge.className = 'rubric-badge-status';
-      if (val === 1) {
-        badge.classList.add('status-1');
-        badge.textContent = 'Em Desenv. (1)';
-      } else if (val === 2) {
-        badge.classList.add('status-2');
-        badge.textContent = 'Desenvolvido (2)';
-      } else if (val === 3) {
-        badge.classList.add('status-3');
-        badge.textContent = 'Superado ★ (3)';
+      const nivelEncontrado = ESCALA_NOTAS.find(n => Number(n.valor) === Number(val));
+      if (val !== null && nivelEncontrado) {
+        if (nivelEncontrado.classeCss) {
+          badge.classList.add(nivelEncontrado.classeCss);
+        }
+        badge.textContent = nivelEncontrado.badgeTexto || `${nivelEncontrado.nivel} (${nivelEncontrado.valor})`;
       } else {
         badge.textContent = '⏳ Pendente';
       }
     }
   }
 
-  // Configura os cliques dos botões segmentados
-  CRITERIA_KEYS.forEach(criterion => {
-    const container = document.querySelector(`.rubric-segmented-grid[data-criterion="${criterion}"]`);
-    if (!container) return;
-
-    container.querySelectorAll('.rubric-chip-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const val = Number(btn.dataset.value);
-        currentScores[criterion] = val;
-        updateCriterionUI(criterion, val);
-        if (navigator.vibrate) navigator.vibrate(18);
-      });
-    });
-
-    updateCriterionUI(criterion, null);
-  });
-
   const btnRefreshTeams = document.getElementById('btnRefreshTeams');
-
-  // 4. Carregamento de Equipes
   let teams = [];
 
   async function reloadTeamsFromCloud(animateBtn = false) {
@@ -174,11 +217,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Recarrega automaticamente ao focar na janela ou destravar o celular
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-      reloadTeamsFromCloud(false);
-    }
+    if (!document.hidden) reloadTeamsFromCloud(false);
   });
   window.addEventListener('focus', () => {
     reloadTeamsFromCloud(false);
@@ -225,9 +265,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     paddockTeamSchool.textContent = team.school;
     paddockTeamCat.textContent = team.category;
 
-    // Verifica se já foi avaliada por este juiz
     const currentJudge = localStorage.getItem('paddock_judge_name');
-    const existing = getMyEvals().find(e => 
+    const existing = getMyEvals().find(e =>
       ((e.equipe_id && e.equipe_id.toLowerCase() === (team.id || '').toLowerCase()) ||
        (e.equipe && e.equipe.toLowerCase() === team.name.toLowerCase())) &&
       ((e.juiz_nome || e.juiz) === currentJudge)
@@ -238,8 +277,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       evaluatedStatusBadge.textContent = '✅ Já Avaliada por Você';
 
       CRITERIA_KEYS.forEach(key => {
-        const val = existing[key] ?? existing[`nota_${key}`] ?? (existing[`voto_${key}`] ? 3 : 2);
-        currentScores[key] = val !== undefined ? Number(val) : null;
+        const val = REGRAS ? REGRAS.extrairNotaDeRegistro(existing, key) : Number(existing[key]);
+        currentScores[key] = val > 0 ? Number(val) : null;
         updateCriterionUI(key, currentScores[key]);
       });
 
@@ -248,7 +287,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       evaluatedStatusBadge.className = 'evaluated-badge pending';
       evaluatedStatusBadge.textContent = '⏳ Aguardando Avaliação';
 
-      // Reseta para null (força toque ativo)
       CRITERIA_KEYS.forEach(key => {
         currentScores[key] = null;
         updateCriterionUI(key, null);
@@ -260,7 +298,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   selectTeamPaddock.addEventListener('change', updateSelectedTeamUI);
 
-  // 5. Envio Oficial da Avaliação
+  // 5. Envio Oficial da Avaliação Validado contra REGRAS_TORNEIO
   formPaddockEval.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -271,16 +309,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Validação Obrigatória dos 5 Critérios de Rubrica
-    const missing = CRITERIA_KEYS.filter(k => currentScores[k] === null);
+    // Validação Obrigatória de todos os critérios configurados em `REGRAS_TORNEIO.criteriosPaddock`
+    const missing = CRITERIA_KEYS.filter(k => {
+      const val = currentScores[k];
+      if (val === null || val === undefined) return true;
+      return REGRAS ? REGRAS.validarNota(val) === null : false;
+    });
+
     if (missing.length > 0) {
       missing.forEach(k => {
         const card = document.getElementById(`card-${k}`);
-        if (card) {
-          card.style.borderColor = 'var(--color-danger)';
-        }
+        if (card) card.style.borderColor = 'var(--color-danger)';
       });
-      alert('⚠️ Atenção: Por favor, selecione os 5 critérios oficiais (Em Desenvolvimento, Desenvolvido ou Superado ★) antes de enviar!');
+      const nomesNiveis = ESCALA_NOTAS.map(n => n.rotulo).join(', ');
+      alert(`⚠️ Atenção: Por favor, avalie todos os ${CRITERIA_KEYS.length} critérios oficiais (${nomesNiveis}) antes de enviar!`);
       const firstMissing = document.getElementById(`card-${missing[0]}`);
       if (firstMissing) firstMissing.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -288,28 +330,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const currentJudge = localStorage.getItem('paddock_judge_name') || 'Juiz Oficial';
 
-    // Formato Canônico Exato do Edital 08
+    // Monta payload dinamicamente para todos os critérios configurados + metadados
     const payload = {
       equipe_id: team.id || 'EQ-01',
       juiz_nome: currentJudge,
-      caracterizacao: currentScores.caracterizacao,
-      mecanica: currentScores.mecanica,
-      superacao: currentScores.superacao,
-      torcida: currentScores.torcida,
-      fair_play: currentScores.fair_play,
       observacoes: inputObservacoes.value.trim(),
       timestamp: new Date().toISOString(),
-      // Metadados auxiliares para cache local
       equipe: team.name,
       escola: team.school,
       categoria: team.category,
       synced: false
     };
 
-    // Feedback tátil
+    CRITERIOS_CONFIG.forEach(crit => {
+      const notaValidada = REGRAS.validarNota(currentScores[crit.id]);
+      payload[crit.id] = notaValidada;
+      if (crit.colunaLegadaDb) {
+        payload[crit.colunaLegadaDb] = notaValidada;
+      }
+    });
+
     if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
 
-    // Animação de envio no botão
     const originalText = btnSubmitEval.innerHTML;
     btnSubmitEval.innerHTML = '<span>⏳ ENVIANDO AVALIAÇÃO...</span>';
     btnSubmitEval.disabled = true;
@@ -325,10 +367,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.warn('Envio em background / contingência offline:', err);
     }
 
-    // Salva cópia local resiliente
     saveMyEval(payload);
 
-    // Feedback de sucesso
     btnSubmitEval.innerHTML = '<span>✅ AVALIAÇÃO REGISTRADA COM SUCESSO!</span>';
     btnSubmitEval.style.background = 'linear-gradient(135deg, #16A34A 0%, #15803D 100%)';
 
@@ -342,11 +382,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 1600);
   });
 
-  // 6. Accordion e Lista de Minhas Avaliações
+  // 6. Accordion e Lista de Minhas Avaliações (Dinâmica conforme escalaNotas)
   function formatRubricChip(score) {
-    if (score === 3) return '<span style="color: #F26522; font-weight: 800;">3★</span>';
-    if (score === 2) return '<span style="color: #002B49; font-weight: 800;">2</span>';
-    if (score === 1) return '<span style="color: #92400E; font-weight: 800;">1</span>';
+    const nivel = ESCALA_NOTAS.find(n => Number(n.valor) === Number(score));
+    if (nivel) {
+      return `<span style="color: ${nivel.corHex || '#002B49'}; font-weight: 800;">${nivel.chipResumo || nivel.valor}</span>`;
+    }
     return '-';
   }
 
@@ -364,21 +405,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     myEvals.forEach(ev => {
       const div = document.createElement('div');
       div.className = 'eval-history-card';
-      const syncBadge = ev.synced !== false 
-        ? '<span style="color: #16A34A; font-weight: 800; font-size: 0.75rem;">🟢 Nuvem</span>' 
+      const syncBadge = ev.synced !== false
+        ? '<span style="color: #16A34A; font-weight: 800; font-size: 0.75rem;">🟢 Nuvem</span>'
         : '<span style="color: #F26522; font-weight: 800; font-size: 0.75rem;">🟡 Celular</span>';
 
       const teamLabel = ev.equipe || ev.equipe_id;
+      const summaryParts = CRITERIOS_CONFIG.map(crit => {
+        const nota = REGRAS ? REGRAS.extrairNotaDeRegistro(ev, crit.id) : ev[crit.id];
+        return `${crit.icone} ${formatRubricChip(nota)}`;
+      }).join(' &bull; ');
 
       div.innerHTML = `
         <div>
           <div class="eval-history-team">${teamLabel}</div>
           <div class="eval-history-scores" style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.4;">
-            Caract: ${formatRubricChip(ev.caracterizacao)} &bull; 
-            Mec: ${formatRubricChip(ev.mecanica)} &bull; 
-            Super: ${formatRubricChip(ev.superacao)} &bull; 
-            Torc: ${formatRubricChip(ev.torcida)} &bull; 
-            Fair: ${formatRubricChip(ev.fair_play)}
+            ${summaryParts}
           </div>
         </div>
         <div>${syncBadge}</div>

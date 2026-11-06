@@ -11,8 +11,8 @@
   <meta http-equiv="Expires" content="0">
   
   <!-- CSS Compartilhado e Específico -->
-  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261026_oficial_v3">
-  <link rel="stylesheet" href="css/paddock.css?v=20261026_oficial_v3">
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261106_ssot_v1">
+  <link rel="stylesheet" href="css/paddock.css?v=20261106_ssot_v1">
 </head>
 <body class="paddock-body">
 
@@ -26,7 +26,7 @@
         <div class="paddock-logo-tag">ANCHIETA</div>
         <div class="paddock-title">
           <h1>JUÍZES DE PADDOCK</h1>
-          <p>Avaliação de Boxes & Bancadas &bull; 05/12/2026</p>
+          <p id="paddockSubtitleEdition">Avaliação de Boxes & Bancadas &bull; 05/12/2026</p>
         </div>
       </div>
 
@@ -84,148 +84,18 @@
       </div>
     </section>
 
-    <!-- Formulário de Avaliação (Ficha Oficial de Rubricas - Edital 08) -->
+    <!-- Formulário de Avaliação Renderizado Dinamicamente via config/regrasTorneio.js -->
     <form id="formPaddockEval">
 
-      <!-- 1. Melhor Caracterização -->
-      <section class="mobile-card" id="card-caracterizacao">
-        <div class="rubric-header">
-          <div class="rubric-title">
-            <span>🎨 1. Melhor Caracterização</span>
-          </div>
-          <span id="badgeStatus-caracterizacao" class="rubric-badge-status">⏳ Pendente</span>
-        </div>
-        <p class="rubric-desc">
-          A equipe está caracterizada com uma temática criativa (fantasia, mascote, uniforme) que combina com o robô e demonstra animação?
-        </p>
-        <div class="rubric-segmented-grid" data-criterion="caracterizacao">
-          <button type="button" class="rubric-chip-btn" data-value="1">
-            <span class="rubric-chip-title">Em Desenvolvimento</span>
-            <span class="rubric-chip-sub">Básico (1)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="2">
-            <span class="rubric-chip-title">Desenvolvido</span>
-            <span class="rubric-chip-sub">Atende (2)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="3">
-            <span class="rubric-chip-title">Superado ★</span>
-            <span class="rubric-chip-sub">Destaque! (3)</span>
-          </button>
-        </div>
-      </section>
+      <!-- Container Dinâmico dos Critérios de Rubrica e Escala de Notas -->
+      <div id="dynamicRubricsContainer">
+        <!-- Preenchido dinamicamente por paddock.js consumindo window.REGRAS_TORNEIO -->
+      </div>
 
-      <!-- 2. Melhor Mecânica -->
-      <section class="mobile-card" id="card-mecanica">
-        <div class="rubric-header">
-          <div class="rubric-title">
-            <span>⚙️ 2. Melhor Mecânica</span>
-          </div>
-          <span id="badgeStatus-mecanica" class="rubric-badge-status">⏳ Pendente</span>
-        </div>
-        <p class="rubric-desc">
-          O robô é robusto, firme, não solta peças na pista, possui bom acabamento estético e montagem eficiente?
-        </p>
-        <div class="rubric-segmented-grid" data-criterion="mecanica">
-          <button type="button" class="rubric-chip-btn" data-value="1">
-            <span class="rubric-chip-title">Em Desenvolvimento</span>
-            <span class="rubric-chip-sub">Básico (1)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="2">
-            <span class="rubric-chip-title">Desenvolvido</span>
-            <span class="rubric-chip-sub">Atende (2)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="3">
-            <span class="rubric-chip-title">Superado ★</span>
-            <span class="rubric-chip-sub">Destaque! (3)</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- 3. Prêmio Superação -->
-      <section class="mobile-card" id="card-superacao">
-        <div class="rubric-header">
-          <div class="rubric-title">
-            <span>🚀 3. Prêmio Superação</span>
-          </div>
-          <span id="badgeStatus-superacao" class="rubric-badge-status">⏳ Pendente</span>
-        </div>
-        <p class="rubric-desc">
-          A equipe demonstrou resiliência, contornando problemas técnicos (mecânica ou código) com transparência e clara evolução?
-        </p>
-        <div class="rubric-segmented-grid" data-criterion="superacao">
-          <button type="button" class="rubric-chip-btn" data-value="1">
-            <span class="rubric-chip-title">Em Desenvolvimento</span>
-            <span class="rubric-chip-sub">Básico (1)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="2">
-            <span class="rubric-chip-title">Desenvolvido</span>
-            <span class="rubric-chip-sub">Atende (2)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="3">
-            <span class="rubric-chip-title">Superado ★</span>
-            <span class="rubric-chip-sub">Destaque! (3)</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- 4. Melhor Torcida -->
-      <section class="mobile-card" id="card-torcida">
-        <div class="rubric-header">
-          <div class="rubric-title">
-            <span>📣 4. Melhor Torcida</span>
-          </div>
-          <span id="badgeStatus-torcida" class="rubric-badge-status">⏳ Pendente</span>
-        </div>
-        <p class="rubric-desc">
-          A escola levou uma torcida vibrante, barulhenta, com identidade visual própria e que respeitou as demais equipes?
-        </p>
-        <div class="rubric-segmented-grid" data-criterion="torcida">
-          <button type="button" class="rubric-chip-btn" data-value="1">
-            <span class="rubric-chip-title">Em Desenvolvimento</span>
-            <span class="rubric-chip-sub">Básico (1)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="2">
-            <span class="rubric-chip-title">Desenvolvido</span>
-            <span class="rubric-chip-sub">Atende (2)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="3">
-            <span class="rubric-chip-title">Superado ★</span>
-            <span class="rubric-chip-sub">Destaque! (3)</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- 5. Prêmio Fair Play (Jogo Limpo) -->
-      <section class="mobile-card" id="card-fair_play">
-        <div class="rubric-header">
-          <div class="rubric-title">
-            <span>🤝 5. Prêmio Fair Play (Jogo Limpo)</span>
-          </div>
-          <span id="badgeStatus-fair_play" class="rubric-badge-status">⏳ Pendente</span>
-        </div>
-        <p class="rubric-desc">
-          A equipe colaborou e ajudou outras equipes (com peças ou dicas), manteve atitude positiva e respeitou rigorosamente as regras?
-        </p>
-        <div class="rubric-segmented-grid" data-criterion="fair_play">
-          <button type="button" class="rubric-chip-btn" data-value="1">
-            <span class="rubric-chip-title">Em Desenvolvimento</span>
-            <span class="rubric-chip-sub">Básico (1)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="2">
-            <span class="rubric-chip-title">Desenvolvido</span>
-            <span class="rubric-chip-sub">Atende (2)</span>
-          </button>
-          <button type="button" class="rubric-chip-btn" data-value="3">
-            <span class="rubric-chip-title">Superado ★</span>
-            <span class="rubric-chip-sub">Destaque! (3)</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- 6. Observações Gerais -->
+      <!-- Observações Gerais -->
       <section class="mobile-card">
         <div class="mobile-card-title">
-          <span>📝 6. Observações Gerais</span>
+          <span id="labelObservacoesGerais">📝 Observações Gerais</span>
         </div>
         <textarea id="inputObservacoes" class="textarea-notes" placeholder="Observações, pontos fortes ou justificativas para a comissão julgadora..."></textarea>
       </section>
@@ -253,9 +123,10 @@
 
   </main>
 
-  <!-- Scripts com Versionamento Anti-Cache -->
-  <script src="../shared/js/cloud-api.js?v=20261026_oficial_v3"></script>
-  <script src="../shared/js/teams-data.js?v=20261026_oficial_v3"></script>
-  <script src="js/paddock.js?v=20261026_oficial_v3"></script>
+  <!-- Scripts com Configuração Centralizada (Single Source of Truth) -->
+  <script src="../config/regrasTorneio.js?v=20261106_ssot_v1"></script>
+  <script src="../shared/js/cloud-api.js?v=20261106_ssot_v1"></script>
+  <script src="../shared/js/teams-data.js?v=20261106_ssot_v1"></script>
+  <script src="js/paddock.js?v=20261106_ssot_v1"></script>
 </body>
 </html>

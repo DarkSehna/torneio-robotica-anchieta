@@ -178,14 +178,10 @@ class CloudflareTorneioAPI {
 
   async salvarAvaliacao(avaliacao) {
     try {
+      const regras = (typeof window !== 'undefined' && window.REGRAS_TORNEIO) ? window.REGRAS_TORNEIO : null;
       const payload = {
         equipe_id: avaliacao.equipe_id || avaliacao.id || "EQ-01",
         juiz_nome: avaliacao.juiz_nome || avaliacao.juiz || "Juiz Oficial",
-        caracterizacao: Number(avaliacao.caracterizacao ?? avaliacao.nota_caracterizacao ?? 0),
-        mecanica: Number(avaliacao.mecanica ?? avaliacao.nota_mecanica ?? 0),
-        superacao: Number(avaliacao.superacao ?? avaliacao.voto_superacao ?? 0),
-        torcida: Number(avaliacao.torcida ?? avaliacao.nota_torcida ?? 0),
-        fair_play: Number(avaliacao.fair_play ?? avaliacao.voto_fair_play ?? 0),
         observacoes: avaliacao.observacoes || "",
         timestamp: avaliacao.timestamp || new Date().toISOString(),
 
@@ -193,13 +189,39 @@ class CloudflareTorneioAPI {
         juiz: avaliacao.juiz_nome || avaliacao.juiz || "Juiz Oficial",
         equipe: avaliacao.equipe || avaliacao.equipe_nome || avaliacao.equipe_id || "Equipe",
         escola: avaliacao.escola || "",
-        categoria: avaliacao.categoria || "LEGO / Educacional",
-        nota_mecanica: Number(avaliacao.mecanica ?? avaliacao.nota_mecanica ?? 0),
-        nota_caracterizacao: Number(avaliacao.caracterizacao ?? avaliacao.nota_caracterizacao ?? 0),
-        voto_superacao: Number(avaliacao.superacao ?? avaliacao.voto_superacao ?? 0),
-        voto_fair_play: Number(avaliacao.fair_play ?? avaliacao.voto_fair_play ?? 0),
-        nota_torcida: Number(avaliacao.torcida ?? avaliacao.nota_torcida ?? 0)
+        categoria: avaliacao.categoria || "LEGO / Educacional"
       };
+
+      if (regras && Array.isArray(regras.criteriosPaddock)) {
+        // Parametrização e validação centralizada via config/regrasTorneio.js
+        for (const crit of regras.criteriosPaddock) {
+          const valorExtraido = regras.extrairNotaDeRegistro(avaliacao, crit.id);
+          const valorValidado = regras.validarNota(valorExtraido);
+          if (valorValidado === null) {
+            return {
+              ok: false,
+              error: `Nota inválida (${valorExtraido}) para o critério "${crit.premio}". Valores aceitos: ${regras.escalaNotas.map(n => n.valor).join(', ')}.`
+            };
+          }
+          payload[crit.id] = valorValidado;
+          if (crit.colunaLegadaDb) {
+            payload[crit.colunaLegadaDb] = valorValidado;
+          }
+        }
+      } else {
+        // Fallback caso regrasTorneio.js não esteja carregado na página
+        payload.caracterizacao = Number(avaliacao.caracterizacao ?? avaliacao.nota_caracterizacao ?? 0);
+        payload.mecanica = Number(avaliacao.mecanica ?? avaliacao.nota_mecanica ?? 0);
+        payload.superacao = Number(avaliacao.superacao ?? avaliacao.voto_superacao ?? 0);
+        payload.torcida = Number(avaliacao.torcida ?? avaliacao.nota_torcida ?? 0);
+        payload.fair_play = Number(avaliacao.fair_play ?? avaliacao.voto_fair_play ?? 0);
+
+        payload.nota_mecanica = payload.mecanica;
+        payload.nota_caracterizacao = payload.caracterizacao;
+        payload.voto_superacao = payload.superacao;
+        payload.voto_fair_play = payload.fair_play;
+        payload.nota_torcida = payload.torcida;
+      }
 
       const resp = await fetch(`${this.baseUrl}/api/avaliacoes`, {
         method: 'POST',
