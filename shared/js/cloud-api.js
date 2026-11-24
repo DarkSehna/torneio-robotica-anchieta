@@ -55,10 +55,35 @@ class CloudflareTorneioAPI {
       const payload = lista.map(item => ({
         equipe: item.equipe || item.name || item.nome,
         escola: item.escola || item.school || "",
-        categoria: item.categoria || item.category || "LEGO / Educacional"
+        categoria: item.categoria || item.category || "LEGO / Educacional",
+        professor: item.professor || item.tecnico || "",
+        integrantes: typeof item.integrantes === 'string' ? item.integrantes : (Array.isArray(item.integrantes) ? item.integrantes.join(', ') : ""),
+        checkin: item.checkin ? 1 : 0,
+        inspecao: item.inspecao ? 1 : 0
       }));
 
       const resp = await fetch(`${this.baseUrl}/api/equipes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return { ok: resp.ok, status: resp.status, data: await resp.json().catch(() => ({})) };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  // Atualizar Status de Credenciamento / Inspeção Técnica no D1 (POST /api/equipes/status)
+  async atualizarStatusEquipe(equipeOuId, { checkin, inspecao }) {
+    try {
+      const payload = {
+        equipe: typeof equipeOuId === 'string' ? equipeOuId : undefined,
+        id: typeof equipeOuId === 'number' ? equipeOuId : undefined,
+        checkin: checkin !== undefined ? !!checkin : undefined,
+        inspecao: inspecao !== undefined ? !!inspecao : undefined
+      };
+
+      const resp = await fetch(`${this.baseUrl}/api/equipes/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -195,6 +220,12 @@ class CloudflareTorneioAPI {
       if (regras && Array.isArray(regras.criteriosPaddock)) {
         // Parametrização e validação centralizada via config/regrasTorneio.js
         for (const crit of regras.criteriosPaddock) {
+          if (crit.ativo === false) {
+            // Critério inativo na edição atual: fallback neutro 2.0 para manter compatibilidade com D1
+            payload[crit.id] = 2.0;
+            if (crit.colunaLegadaDb) payload[crit.colunaLegadaDb] = 2.0;
+            continue;
+          }
           const valorExtraido = regras.extrairNotaDeRegistro(avaliacao, crit.id);
           const valorValidado = regras.validarNota(valorExtraido);
           if (valorValidado === null) {
@@ -211,6 +242,7 @@ class CloudflareTorneioAPI {
       } else {
         // Fallback caso regrasTorneio.js não esteja carregado na página
         payload.caracterizacao = Number(avaliacao.caracterizacao ?? avaliacao.nota_caracterizacao ?? 0);
+        payload.caracterizacao_equipe = Number(avaliacao.caracterizacao_equipe ?? avaliacao.nota_caracterizacao_equipe ?? 0);
         payload.mecanica = Number(avaliacao.mecanica ?? avaliacao.nota_mecanica ?? 0);
         payload.superacao = Number(avaliacao.superacao ?? avaliacao.voto_superacao ?? 0);
         payload.torcida = Number(avaliacao.torcida ?? avaliacao.nota_torcida ?? 0);
@@ -218,6 +250,7 @@ class CloudflareTorneioAPI {
 
         payload.nota_mecanica = payload.mecanica;
         payload.nota_caracterizacao = payload.caracterizacao;
+        payload.nota_caracterizacao_equipe = payload.caracterizacao_equipe;
         payload.voto_superacao = payload.superacao;
         payload.voto_fair_play = payload.fair_play;
         payload.nota_torcida = payload.torcida;
@@ -283,6 +316,47 @@ class CloudflareTorneioAPI {
         corridas: resCorridas,
         avaliacoes: resEvals
       };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  // ==========================================================================
+  // ESTADO DA ARENA & TRAVA DE CONFLITO COM A PISTA DE TESTE
+  // ==========================================================================
+
+  // Consultar Estado Atual da Arena (GET /api/arena/status)
+  async getArenaStatus() {
+    try {
+      const resp = await fetch(this._getNoCacheUrl('/api/arena/status'), {
+        method: 'GET'
+      });
+      if (resp.ok) {
+        return await resp.json();
+      }
+    } catch (e) {
+      // Fallback gracioso
+    }
+    return null;
+  }
+
+  // Publicar Estado da Arena (POST /api/arena/status)
+  async salvarArenaStatus({ equipeAtual, statusAtual, equipeProxima, rodada }) {
+    try {
+      const payload = {
+        equipe_atual: equipeAtual || '',
+        status_atual: statusAtual || 'READY',
+        equipe_proxima: equipeProxima || '',
+        rodada: Number(rodada || 1),
+        timestamp: new Date().toISOString()
+      };
+
+      const resp = await fetch(`${this.baseUrl}/api/arena/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return { ok: resp.ok, status: resp.status, data: await resp.json().catch(() => ({})) };
     } catch (e) {
       return { ok: false, error: e.message };
     }

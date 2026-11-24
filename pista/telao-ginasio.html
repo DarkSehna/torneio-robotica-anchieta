@@ -24,8 +24,11 @@
     <!-- Faixa Superior com Identidade Institucional e Badges -->
     <header class="telao-header-band">
       <div class="telao-brand">
-        <div class="telao-logo-pill">ANCHIETA</div>
-        <div class="telao-tournament-title">TORNEIO OFICIAL DE ROBÓTICA &bull; PISTA PRINCIPAL</div>
+        <div class="header-logo-container" style="display: flex; align-items: center;">
+          <img src="../shared/img/logo-anchieta.png" alt="Colégio Anchieta" class="header-logo-img" style="height: 38px; width: auto; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+          <div class="telao-logo-pill" style="display: none;">ANCHIETA</div>
+        </div>
+        <div class="telao-tournament-title">1º TORNEIO ESCOLAR DE ROBÓTICA &bull; ETAPA COLÉGIO ANCHIETA</div>
       </div>
 
       <div class="telao-badges-group">
@@ -84,8 +87,9 @@
   </div>
 
   <!-- Scripts com Versionamento Anti-Cache -->
-  <script src="js/audio-cues.js?v=20261026_oficial_v3"></script>
-  <script src="js/broadcast-bus.js?v=20261026_oficial_v3"></script>
-  <script src="js/telao-ginasio.js?v=20261026_oficial_v3"></script>
+  <script src="../config/regrasTorneio.js?v=20261123_v5"></script>
+  <script src="js/audio-cues.js?v=20261123_v5"></script>
+  <script src="js/broadcast-bus.js?v=20261123_v5"></script>
+  <script src="js/telao-ginasio.js?v=20261123_v5"></script>
 </body>
 </html>

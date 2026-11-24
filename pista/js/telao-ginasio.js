@@ -15,11 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const elFoulCircles = document.querySelectorAll('.telao-foul-circle');
   const btnFullscreen = document.getElementById('btnFullscreen');
 
+  const isCatUnica = !!window.REGRAS_TORNEIO?.categoriaUnica;
+  const nomeCatUnica = window.REGRAS_TORNEIO?.nomeCategoriaUnica || 'Categoria Única';
+
   // Estado local do telão
   const state = {
     teamName: 'Aguardando Equipe',
     schoolName: 'Colégio Anchieta',
-    category: 'LEGO / Educacional',
+    category: isCatUnica ? nomeCatUnica : 'LEGO / Educacional',
     round: 'Round 1',
     timeFormatted: '00:00.00',
     timeMs: 0,
@@ -31,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function render() {
     elTeamName.textContent = state.teamName;
     elSchoolName.textContent = state.schoolName;
-    elCategoryBadge.textContent = state.category;
+    elCategoryBadge.textContent = isCatUnica ? nomeCatUnica : state.category;
     elRoundBadge.textContent = state.round;
     elTimerDisplay.textContent = state.timeFormatted;
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Torneio de Robótica Anchieta 2026 — Central do Sistema</title>
+  <title>1º Torneio Escolar de Robótica – Etapa Colégio Anchieta</title>
   
   <!-- Anti-cache estrito -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -268,9 +268,12 @@
     
     <!-- Hero Header -->
     <header class="hub-hero">
-      <div class="hub-badge">Colégio Anchieta &bull; Torneio Oficial</div>
-      <h1>TORNEIO DE ROBÓTICA 2026</h1>
-      <p>Sistema Integrado de Cronometragem, Avaliação de Boxes e Apuração Oficial</p>
+      <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 16px;">
+        <img src="shared/img/logo-anchieta.png" alt="Colégio Anchieta" style="height: 64px; width: auto; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+        <div class="hub-badge" style="display: none;">Colégio Anchieta &bull; Torneio Oficial</div>
+      </div>
+      <h1>1º TORNEIO ESCOLAR DE ROBÓTICA</h1>
+      <p>Etapa Colégio Anchieta &bull; 05/12/2026 (14h às 18h) &bull; CIPARE - Edital V5</p>
       
       <!-- Status da Conexão com Cloudflare D1 -->
       <div id="cloudStatusBadge" class="cloud-pill-status">
@@ -279,23 +282,36 @@
       </div>
     </header>
 
-    <!-- Grid de Módulos do Sistema (6 Cards Simétricos 3x2) -->
+    <!-- Grid de Módulos do Sistema -->
     <div class="hub-grid">
       
       <!-- 1. Mesa da Pista -->
       <a href="pista/mesa-operador.html" class="module-card">
         <div>
           <div class="module-icon">⏱️</div>
-          <div class="module-tag">Módulo 1 &bull; Pista Física</div>
-          <h2 class="module-title">Mesa do Operador</h2>
+          <div class="module-tag">Módulo 1 &bull; Pista Principal</div>
+          <h2 class="module-title">Mesa da Arena Oficial</h2>
           <p class="module-desc">
-            Painel de controle para o notebook do juiz de mesa. Controle do cronômetro (trava aos 180s), gestão de infrações (DNF na 5ª falta) e registro oficial de voltas.
+            Painel do operador oficial. Cronômetro da arena (trava aos 180s), gestão de infrações, Fila Oficial (Rounds 1 e 2) e registro de voltas.
           </p>
         </div>
-        <div class="module-btn-link">Abrir Mesa da Pista ➔</div>
+        <div class="module-btn-link">Abrir Mesa da Arena ➔</div>
       </a>
 
-      <!-- 2. Telão do Ginásio -->
+      <!-- 2. Pista de Teste & Calibração -->
+      <a href="pista-teste/index.html" class="module-card" style="border-top-color: #0284C7;">
+        <div>
+          <div class="module-icon">🧪</div>
+          <div class="module-tag" style="color: #0284C7;">Operação Dedicada &bull; Aquecimento</div>
+          <h2 class="module-title">Pista de Teste Cronometrada</h2>
+          <p class="module-desc">
+            Controle de slots de teste (3 a 5 min) para calibração de sensores e código, com Trava de Conflito em tempo real integrada à Arena.
+          </p>
+        </div>
+        <div class="module-btn-link" style="color: #0284C7;">Abrir Pista de Teste 🧪 ➔</div>
+      </a>
+
+      <!-- 3. Telão do Ginásio -->
       <a href="pista/telao-ginasio.html" target="_blank" class="module-card accent-card">
         <div>
           <div class="module-icon">🖥️</div>
@@ -308,27 +324,40 @@
         <div class="module-btn-link">Projetar Telão ↗</div>
       </a>
 
-      <!-- 3. Juízes de Paddock (Mobile) -->
+      <!-- 4. Credenciamento & Recepção (NOVO MÓDULO SEPARADO) -->
+      <a href="credenciamento/index.html" class="module-card" style="border-top-color: #10B981;">
+        <div>
+          <div class="module-icon">📋</div>
+          <div class="module-tag" style="color: #15803D;">Mesa de Entrada &bull; Recepção</div>
+          <h2 class="module-title">Credenciamento &amp; Inspeção</h2>
+          <p class="module-desc">
+            Check-in de presença das equipes e validação do gabarito técnico do robô (25x25cm e ≤ 2,0 kg). Interface tátil sem risco de exclusão acidental.
+          </p>
+        </div>
+        <div class="module-btn-link" style="color: #166534;">Abrir Credenciamento 📋 ➔</div>
+      </a>
+
+      <!-- 5. Juízes de Paddock (Mobile) -->
       <a href="paddock/index.html" target="_blank" class="module-card green-card">
         <div>
           <div class="module-icon">📱</div>
           <div class="module-tag">Módulo 2 &bull; Mobile / 4G</div>
           <h2 class="module-title">Juízes de Paddock</h2>
           <p class="module-desc">
-            Ficha Oficial de Rubricas de 3 Níveis (Edital 08). Avaliação de bancadas nos boxes para os 5 prêmios oficiais: Mecânica, Caracterização, Superação, Torcida e Fair Play.
+            Ficha Oficial de Rubricas de 3 Níveis (Edital 08). Avaliação de bancadas nos boxes para os prêmios oficiais: Mecânica, Caracterização, Superação e Fair Play.
           </p>
         </div>
         <div class="module-btn-link">Abrir Formulário Mobile ➔</div>
       </a>
 
-      <!-- 4. Gestão e Admin -->
+      <!-- 6. Gestão e Admin -->
       <a href="admin/index.html" class="module-card">
         <div>
           <div class="module-icon">⚙️</div>
-          <div class="module-tag">Módulo 4 &bull; Gestão & Credenciamento &bull; 🔒 Senha</div>
-          <h2 class="module-title">Administração & Equipes</h2>
+          <div class="module-tag">Módulo 4 &bull; Gestão &bull; 🔒 Senha</div>
+          <h2 class="module-title">Administração Geral</h2>
           <p class="module-desc">
-            Cadastro e exclusão de equipes, importação/exportação de inscrições em JSON e sincronização bidirecional com o banco de dados Cloudflare D1.
+            Importação inteligente de Forms (CSV com LGPD), cadastro e exclusão de equipes, exportação de dados e sincronização Cloudflare D1.
           </p>
         </div>
         <div class="module-btn-link">Acessar Admin 🔒</div>
@@ -359,6 +388,7 @@
         </div>
         <div class="module-btn-link">Projetar Telão do Pódio ↗</div>
       </a>
+
 
       <!-- 7. Ranking Geral do Circuito Anual (Temporada Intercolegial) -->
       <a href="circuito/index.html" class="module-card green-card" style="grid-column: 1 / -1;">
@@ -409,7 +439,7 @@
     </section>
 
     <footer class="hub-footer">
-      <p>Desenvolvido para o Torneio Oficial de Robótica &bull; Colégio Anchieta &bull; 05/12/2026</p>
+      <p>Desenvolvido para o 1º Torneio Escolar de Robótica – Etapa Colégio Anchieta &bull; 05/12/2026 (14h às 18h)</p>
     </footer>
 
   </main>

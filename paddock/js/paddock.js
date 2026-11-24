@@ -32,13 +32,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Atualiza subtítulo da edição dinamicamente
   if (REGRAS && paddockSubtitleEdition) {
-    paddockSubtitleEdition.innerHTML = `Avaliação de Boxes &amp; Bancadas &bull; ${REGRAS.edicao} (${REGRAS.dataEvento})`;
+    paddockSubtitleEdition.innerHTML = `Avaliação de Boxes &amp; Bancadas &bull; ${REGRAS.edicao} &bull; ${REGRAS.dataEvento} (${REGRAS.horarioEvento || '14h às 18h'})`;
   }
 
-  // Lista ordenada dos critérios do formulário a partir da configuração central
-  const CRITERIOS_CONFIG = [...(REGRAS?.criteriosPaddock || [])].sort(
-    (a, b) => (a.ordemFormulario || 0) - (b.ordemFormulario || 0)
-  );
+  // Lista ordenada dos critérios do formulário a partir da configuração central (apenas ativos)
+  const CRITERIOS_CONFIG = [...(REGRAS?.criteriosPaddock || [])]
+    .filter(c => c.ativo !== false)
+    .sort((a, b) => (a.ordemFormulario || 0) - (b.ordemFormulario || 0));
   const ESCALA_NOTAS = REGRAS?.escalaNotas || [];
   const CRITERIA_KEYS = CRITERIOS_CONFIG.map(c => c.id);
 
@@ -238,7 +238,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isEval = evaluatedIds.has((t.id || '').toLowerCase()) || evaluatedIds.has((t.name || '').toLowerCase());
       const opt = document.createElement('option');
       opt.value = t.id || t.name;
-      opt.textContent = `${isEval ? '✅ ' : '⏳ '}[${t.id || 'EQ'}] ${t.name} (${t.category.includes('LEGO') ? 'LEGO' : 'MAKER'})`;
+      const catLabel = REGRAS?.categoriaUnica ? 'ÚNICA' : (t.category.includes('LEGO') ? 'LEGO' : 'MAKER');
+      opt.textContent = `${isEval ? '✅ ' : '⏳ '}[${t.id || 'EQ'}] ${t.name} (${catLabel})`;
       selectTeamPaddock.appendChild(opt);
     });
 
@@ -347,6 +348,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       payload[crit.id] = notaValidada;
       if (crit.colunaLegadaDb) {
         payload[crit.colunaLegadaDb] = notaValidada;
+      }
+    });
+
+    // Fallback neutro para critérios inativos (ex: Torcida = 2.0) para preservar compatibilidade com o banco D1
+    (REGRAS?.criteriosPaddock || []).filter(c => c.ativo === false).forEach(crit => {
+      payload[crit.id] = 2.0;
+      if (crit.colunaLegadaDb) {
+        payload[crit.colunaLegadaDb] = 2.0;
       }
     });
 

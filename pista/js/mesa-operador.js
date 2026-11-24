@@ -3,6 +3,16 @@
  * Regras Oficiais: Art. 7º (Trava aos 180s) e Art. 8º (Desclassificação na 5ª falta)
  */
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Inicializa equipes
   await window.teamsManager.load();
@@ -27,6 +37,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const elActiveSchoolName = document.getElementById('activeSchoolName');
   const elActiveCatBadge = document.getElementById('activeCatBadge');
   const elActiveRoundBadge = document.getElementById('activeRoundBadge');
+  const elActiveTeamProfessor = document.getElementById('activeTeamProfessor');
+  const elActiveTeamMembers = document.getElementById('activeTeamMembers');
+
+  // Elementos da Fila Oficial da Arena
+  const btnGenerateQueue = document.getElementById('btnGenerateQueue');
+  const btnNextInQueue = document.getElementById('btnNextInQueue');
+  const queueCurrentTeamText = document.getElementById('queueCurrentTeamText');
+  const queueNextTeamText = document.getElementById('queueNextTeamText');
+  const queueListContainer = document.getElementById('queueListContainer');
+  const queueAptitudeWarning = document.getElementById('queueAptitudeWarning');
+
+  // Canal de Sincronização da Arena em Tempo Real (Pista de Teste & Trava de Conflito)
+  const arenaStatusBus = ('BroadcastChannel' in window) ? new BroadcastChannel('torneio_arena_status') : null;
 
   // Elementos do DOM - Cronômetro
   const elOpStatusBanner = document.getElementById('opStatusBanner');
@@ -54,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     teamId: 'EQ-01',
     teamName: 'Anchieta1',
     schoolName: 'Colégio Anchieta',
-    category: 'LEGO / Educacional',
+    category: (window.REGRAS_TORNEIO?.categoriaUnica ? (window.REGRAS_TORNEIO.nomeCategoriaUnica || 'Categoria Única') : 'LEGO / Educacional'),
     round: 'Round 1',
     fouls: 0,
     status: 'READY', // 'READY' | 'RUNNING' | 'PAUSED' | 'FINISHED' | 'TIME_UP' | 'DNF'
@@ -116,6 +139,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     elActiveCatBadge.textContent = sessionState.category;
     elActiveRoundBadge.textContent = sessionState.round;
 
+    // Linha de Apoio (Professor e Integrantes - Discreto na Mesa do Operador)
+    const activeTeamObj = window.teamsManager.getById(sessionState.teamId) || 
+      window.teamsManager.getAll().find(t => (t.name || '').toLowerCase() === (sessionState.teamName || '').toLowerCase());
+
+    if (elActiveTeamProfessor && elActiveTeamMembers) {
+      if (activeTeamObj && (activeTeamObj.professor || activeTeamObj.integrantes)) {
+        elActiveTeamProfessor.innerHTML = activeTeamObj.professor 
+          ? `👨‍🏫 <strong>Prof:</strong> ${escapeHtml(activeTeamObj.professor)} ` 
+          : '';
+        elActiveTeamMembers.innerHTML = activeTeamObj.integrantes 
+          ? `${activeTeamObj.professor ? '&bull; ' : ''}👥 <strong>Alunos:</strong> ${escapeHtml(activeTeamObj.integrantes)}` 
+          : '';
+      } else {
+        elActiveTeamProfessor.innerHTML = '<span style="color: #94a3b8; font-style: italic;">(Professor / integrantes não vinculados)</span>';
+        elActiveTeamMembers.textContent = '';
+      }
+    }
+
     // Status Banner
     elOpStatusBanner.className = 'status-banner ' + sessionState.status.toLowerCase();
     switch (sessionState.status) {
@@ -165,12 +206,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Seletor de Categoria Pills
-    if (sessionState.category.includes('LEGO')) {
-      catBtnLego.classList.add('active');
-      catBtnMaker.classList.remove('active');
+    const isCatUnica = !!window.REGRAS_TORNEIO?.categoriaUnica;
+    if (isCatUnica) {
+      if (catBtnLego && catBtnMaker) {
+        catBtnLego.textContent = window.REGRAS_TORNEIO?.nomeCategoriaUnica || 'Categoria Única';
+        catBtnLego.classList.add('active');
+        catBtnLego.disabled = true;
+        catBtnMaker.style.display = 'none';
+        catBtnLego.style.width = '100%';
+      }
+      if (elActiveCatBadge) elActiveCatBadge.textContent = window.REGRAS_TORNEIO?.nomeCategoriaUnica || 'Categoria Única';
     } else {
-      catBtnMaker.classList.add('active');
-      catBtnLego.classList.remove('active');
+      if (catBtnLego && catBtnMaker) {
+        catBtnLego.textContent = 'LEGO';
+        catBtnMaker.style.display = '';
+        catBtnLego.style.width = '';
+        if (sessionState.category.includes('LEGO')) {
+          catBtnLego.classList.add('active');
+          catBtnMaker.classList.remove('active');
+        } else {
+          catBtnMaker.classList.add('active');
+          catBtnLego.classList.remove('active');
+        }
+      }
     }
 
     // Seletor de Rodada Pills
@@ -243,16 +301,332 @@ document.addEventListener('DOMContentLoaded', async () => {
     sessionState.teamId = team.id;
     sessionState.teamName = team.name;
     sessionState.schoolName = team.school;
-    sessionState.category = team.category;
+    sessionState.category = (window.REGRAS_TORNEIO?.categoriaUnica ? (window.REGRAS_TORNEIO.nomeCategoriaUnica || 'Categoria Única') : team.category);
     renderTeamList();
+    renderArenaQueueUI();
     updateUI();
     broadcastFullSync();
+    publishArenaStatus();
+  }
+
+  // ==========================================================================
+  // FILA OFICIAL DA ARENA (ROUNDS 1 & 2) & TRAVA DE CONFLITO
+  // ==========================================================================
+  let arenaQueueData = { round1: [], round2: [] };
+  try {
+    const savedQ = localStorage.getItem('torneio_arena_queue');
+    if (savedQ) arenaQueueData = JSON.parse(savedQ);
+  } catch (_) {}
+
+  function getActiveQueue() {
+    const isR2 = sessionState.round === 'Round 2';
+    return isR2 ? (arenaQueueData.round2 || []) : (arenaQueueData.round1 || []);
+  }
+
+  function saveArenaQueue() {
+    localStorage.setItem('torneio_arena_queue', JSON.stringify(arenaQueueData));
+    renderArenaQueueUI();
+    publishArenaStatus();
+  }
+
+  function generateOfficialQueue() {
+    const allTeams = window.teamsManager.getAll();
+    if (!allTeams || allTeams.length === 0) {
+      if (queueAptitudeWarning) {
+        queueAptitudeWarning.innerHTML = '❌ Nenhuma equipe cadastrada no sistema!';
+        queueAptitudeWarning.style.display = 'block';
+      }
+      return;
+    }
+
+    // Filtra equipes da categoria atual da mesa (ex: LEGO ou Maker), ou todas se for Categoria Única
+    const isCatUnica = !!window.REGRAS_TORNEIO?.categoriaUnica;
+    const teamsInCat = isCatUnica ? allTeams : allTeams.filter(t => !sessionState.category || t.category === sessionState.category);
+    const pool = teamsInCat.length > 0 ? teamsInCat : allTeams;
+
+    // Filtra as que estão com Check-in E Inspeção OK
+    const aptas = pool.filter(t => t.checkin && t.inspecao);
+    const isR2 = sessionState.round === 'Round 2';
+
+    let baseList = aptas;
+    let isProvisory = false;
+
+    if (aptas.length === 0) {
+      // Se nenhuma equipe da categoria tiver credenciamento completo, gera provisória para testes
+      baseList = pool;
+      isProvisory = true;
+      if (queueAptitudeWarning) {
+        queueAptitudeWarning.innerHTML = `⚠️ <strong>Fila de Teste Gerada:</strong> Nenhuma equipe com Check-in + Inspeção OK. Incluídas todas as ${pool.length} equipes de <em>${sessionState.category}</em>.`;
+        queueAptitudeWarning.style.display = 'block';
+        queueAptitudeWarning.style.background = '#FFFBEB';
+        queueAptitudeWarning.style.borderColor = '#FCD34D';
+        queueAptitudeWarning.style.color = '#B45309';
+      }
+    } else {
+      if (queueAptitudeWarning) {
+        queueAptitudeWarning.innerHTML = `✅ <strong>Fila Oficial Gerada:</strong> ${aptas.length} equipe(s) aptas (Check-in + Inspeção OK) para <em>${sessionState.category}</em>.`;
+        queueAptitudeWarning.style.display = 'block';
+        queueAptitudeWarning.style.background = '#F0FDF4';
+        queueAptitudeWarning.style.borderColor = '#86EFAC';
+        queueAptitudeWarning.style.color = '#166534';
+      }
+    }
+
+    if (!isR2) {
+      // Round 1: Embaralha com shuffle justo
+      const shuffled = [...baseList].sort(() => Math.random() - 0.5);
+      arenaQueueData.round1 = shuffled.map((t, idx) => ({
+        pos: idx + 1,
+        id: t.id,
+        name: t.name,
+        school: t.school,
+        category: t.category,
+        completed: false
+      }));
+    } else {
+      // Round 2: Ordem Invertida (Reverse Grid) do Round 1 para descanso uniforme
+      if (arenaQueueData.round1 && arenaQueueData.round1.length > 0) {
+        arenaQueueData.round2 = [...arenaQueueData.round1].reverse().map((t, idx) => ({
+          pos: idx + 1,
+          id: t.id,
+          name: t.name,
+          school: t.school,
+          category: t.category,
+          completed: false
+        }));
+      } else {
+        const shuffled = [...baseList].sort(() => Math.random() - 0.5);
+        arenaQueueData.round2 = shuffled.map((t, idx) => ({
+          pos: idx + 1,
+          id: t.id,
+          name: t.name,
+          school: t.school,
+          category: t.category,
+          completed: false
+        }));
+      }
+    }
+
+    saveArenaQueue();
+
+    // Seleciona automaticamente a primeira da fila para começar
+    const q = getActiveQueue();
+    if (q.length > 0) {
+      loadTeamFromQueue(q[0]);
+    }
+  }
+
+  function loadTeamFromQueue(teamItem) {
+    if (!teamItem) return;
+    const fullTeam = window.teamsManager.getAll().find(t => (t.name || '').toLowerCase() === (teamItem.name || '').toLowerCase()) || teamItem;
+    selectTeam(fullTeam);
+  }
+
+  function loadNextInQueue() {
+    const q = getActiveQueue();
+    if (!q || q.length === 0) {
+      generateOfficialQueue();
+      return;
+    }
+
+    const curName = (sessionState.teamName || '').toLowerCase();
+    const curIdx = q.findIndex(t => (t.name || '').toLowerCase() === curName);
+
+    // Marca a equipe atual como completada se já concluiu ou correu
+    if (curIdx !== -1 && (sessionState.status === 'FINISHED' || sessionState.status === 'TIME_UP' || sessionState.status === 'DNF')) {
+      q[curIdx].completed = true;
+      saveArenaQueue();
+    }
+
+    let next = null;
+    if (curIdx !== -1 && curIdx + 1 < q.length) {
+      next = q.slice(curIdx + 1).find(t => !t.completed);
+    }
+    if (!next) {
+      next = q.find(t => !t.completed && (t.name || '').toLowerCase() !== curName);
+    }
+
+    if (!next) {
+      if (queueAptitudeWarning) {
+        queueAptitudeWarning.innerHTML = `🏁 <strong>Fim da Fila:</strong> Todas as equipes de <em>${sessionState.round}</em> já correram!`;
+        queueAptitudeWarning.style.display = 'block';
+        queueAptitudeWarning.style.background = '#EFF6FF';
+        queueAptitudeWarning.style.borderColor = '#93C5FD';
+        queueAptitudeWarning.style.color = '#1D4ED8';
+      }
+      return;
+    }
+
+    loadTeamFromQueue(next);
+  }
+
+  function renderArenaQueueUI() {
+    if (!queueListContainer) return;
+    let q = getActiveQueue();
+    queueListContainer.innerHTML = '';
+
+    // Se a fila ainda não tiver sido gerada para esta rodada, gera uma inicial automática com as equipes cadastradas
+    if (!q || q.length === 0) {
+      generateOfficialQueue();
+      q = getActiveQueue();
+    }
+
+    if (!q || q.length === 0) {
+      queueListContainer.innerHTML = `
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 16px; line-height: 1.4;">
+          Nenhuma equipe encontrada para <strong>${escapeHtml(sessionState.category)}</strong>.<br>
+          <span style="font-size: 0.74rem;">Cadastre equipes no Admin ou realize o Credenciamento.</span>
+        </div>
+      `;
+      return;
+    }
+
+    const searchQuery = (teamSearchInput ? teamSearchInput.value : '').toLowerCase().trim();
+    let displayList = q;
+    if (searchQuery) {
+      displayList = q.filter(t => 
+        (t.name || '').toLowerCase().includes(searchQuery) || 
+        (t.school || '').toLowerCase().includes(searchQuery)
+      );
+    }
+
+    const curName = (sessionState.teamName || '').toLowerCase().trim();
+
+    if (displayList.length === 0) {
+      queueListContainer.innerHTML = `
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 12px;">
+          Nenhuma equipe corresponde à busca <em>"${escapeHtml(searchQuery)}"</em>
+        </div>
+      `;
+      return;
+    }
+
+    displayList.forEach((item, idx) => {
+      const itemName = (item.name || item.equipe || '').trim();
+      const isCurrent = itemName.toLowerCase() === curName;
+      const row = document.createElement('div');
+      row.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px;
+        border-radius: var(--radius-sm);
+        font-size: 0.82rem;
+        cursor: pointer;
+        background: ${isCurrent ? '#DCFCE7' : (item.completed ? '#F8FAFC' : '#FFFFFF')};
+        border: 1.5px solid ${isCurrent ? '#22C55E' : (item.completed ? '#CBD5E1' : 'var(--border-medium)')};
+        font-weight: ${isCurrent ? '800' : '600'};
+        transition: transform 0.1s, box-shadow 0.1s;
+      `;
+
+      const statusTag = isCurrent
+        ? '<span style="background: #16A34A; color: #fff; font-size: 0.65rem; padding: 2px 7px; border-radius: 3px; font-weight: 800;">EM PISTA</span>'
+        : (item.completed
+            ? '<span style="color: #64748B; font-size: 0.72rem; font-weight: 700;">✅ Feito</span>'
+            : `<span style="color: var(--color-primary); font-size: 0.74rem; font-weight: 800;">#${item.pos || idx + 1}</span>`);
+
+      row.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <span style="font-weight: 900; color: var(--color-primary); font-size: 0.78rem;">#${item.pos || idx + 1}</span>
+          <span style="color: var(--text-main); font-weight: 700;">${escapeHtml(itemName)}</span>
+          <span style="color: var(--text-muted); font-size: 0.72rem;">(${escapeHtml(item.school || '')})</span>
+        </div>
+        <div>${statusTag}</div>
+      `;
+
+      row.addEventListener('click', () => {
+        loadTeamFromQueue(item);
+      });
+
+      queueListContainer.appendChild(row);
+    });
+  }
+
+  function publishArenaStatus() {
+    const q = getActiveQueue();
+    const curName = (sessionState.teamName || '').trim();
+    const curIdx = q.findIndex(t => (t?.name || '').toLowerCase() === curName.toLowerCase());
+
+    let nextTeam = null;
+    if (curIdx !== -1 && curIdx + 1 < q.length) {
+      nextTeam = q.slice(curIdx + 1).find(t => !t.completed);
+    } else if (q.length > 0) {
+      nextTeam = q.find(t => !t.completed && (t?.name || '').toLowerCase() !== curName.toLowerCase());
+    }
+
+    const payload = {
+      equipe_atual: curName,
+      status_atual: sessionState.status || 'READY',
+      equipe_proxima: nextTeam ? nextTeam.name : '',
+      rodada: sessionState.round === 'Round 2' ? 2 : 1,
+      timestamp: Date.now()
+    };
+
+    if (queueCurrentTeamText) queueCurrentTeamText.textContent = payload.equipe_atual || '--';
+    if (queueNextTeamText) queueNextTeamText.textContent = payload.equipe_proxima || 'Fim da fila';
+
+    if (arenaStatusBus) {
+      arenaStatusBus.postMessage(payload);
+    }
+
+    if (window.cloudAPI) {
+      window.cloudAPI.salvarArenaStatus({
+        equipeAtual: payload.equipe_atual,
+        statusAtual: payload.status_atual,
+        equipeProxima: payload.equipe_proxima,
+        rodada: payload.rodada
+      }).catch(() => {});
+    }
+  }
+
+  // Listener para atualizações externas da Fila (ex: quando o Credenciamento gera a fila oficial)
+  if (arenaStatusBus) {
+    arenaStatusBus.onmessage = (e) => {
+      try {
+        const savedQ = localStorage.getItem('torneio_arena_queue');
+        if (savedQ) {
+          arenaQueueData = JSON.parse(savedQ);
+          renderArenaQueueUI();
+          const q = getActiveQueue();
+          if (q.length > 0 && sessionState.status === 'READY' && sessionState.timeMs === 0) {
+            loadTeamFromQueue(q[0]);
+          }
+        }
+      } catch (_) {}
+    };
+  }
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'torneio_arena_queue' && e.newValue) {
+      try {
+        arenaQueueData = JSON.parse(e.newValue);
+        renderArenaQueueUI();
+        const q = getActiveQueue();
+        if (q.length > 0 && sessionState.status === 'READY' && sessionState.timeMs === 0) {
+          loadTeamFromQueue(q[0]);
+        }
+      } catch (_) {}
+    }
+  });
+
+  if (btnGenerateQueue) {
+    btnGenerateQueue.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      generateOfficialQueue();
+    });
+  }
+  if (btnNextInQueue) {
+    btnNextInQueue.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      loadNextInQueue();
+    });
   }
 
   // Alternar Categoria
   catBtnLego.addEventListener('click', () => {
     sessionState.category = 'LEGO / Educacional';
     renderTeamList();
+    renderArenaQueueUI();
     updateUI();
     broadcastFullSync();
   });
@@ -260,6 +634,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   catBtnMaker.addEventListener('click', () => {
     sessionState.category = 'Aberta / Maker';
     renderTeamList();
+    renderArenaQueueUI();
     updateUI();
     broadcastFullSync();
   });
@@ -267,19 +642,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Alternar Rodada
   roundBtn1.addEventListener('click', () => {
     sessionState.round = 'Round 1';
+    renderArenaQueueUI();
     updateUI();
     broadcastFullSync();
+    publishArenaStatus();
   });
 
   roundBtn2.addEventListener('click', () => {
     sessionState.round = 'Round 2';
+    renderArenaQueueUI();
     updateUI();
     broadcastFullSync();
+    publishArenaStatus();
   });
 
   // Filtro de Busca de Equipes
   teamSearchInput.addEventListener('input', () => {
     renderTeamList();
+    renderArenaQueueUI();
   });
 
   // Controles do Cronômetro
@@ -300,6 +680,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.pistaBus.send('TIMER_START', {});
     }
     updateUI();
+    publishArenaStatus();
   }
 
   function handleFinish() {
@@ -312,6 +693,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       timeFormatted: sessionState.timeFormatted
     });
     updateUI();
+    publishArenaStatus();
   }
 
   function handleReset() {
@@ -328,6 +710,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     elOpTimerDigits.textContent = '00:00.00';
     window.pistaBus.send('TIMER_RESET', { timeFormatted: '00:00.00' });
     updateUI();
+    publishArenaStatus();
   }
 
   btnStartPause.addEventListener('click', handleStartPause);
@@ -435,6 +818,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     records.unshift(record);
     saveRecords(records);
+
+    // Marca como concluída na fila da Arena oficial
+    const q = getActiveQueue();
+    const curItem = q.find(t => t.name.toLowerCase() === sessionState.teamName.toLowerCase());
+    if (curItem) {
+      curItem.completed = true;
+      saveArenaQueue();
+    }
 
     // Tenta sincronizar imediatamente em segundo plano
     syncSingleRecordToCloud(record);
@@ -611,14 +1002,33 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicialização Assíncrona Resiliente
   async function initOperator() {
     await window.teamsManager.load();
+    
+    // Tenta carregar fila oficial salva
+    try {
+      const savedQ = localStorage.getItem('torneio_arena_queue');
+      if (savedQ) {
+        const parsed = JSON.parse(savedQ);
+        if (parsed && (parsed.round1 || parsed.round2)) {
+          arenaQueueData = parsed;
+        }
+      }
+    } catch (_) {}
+
+    const q = getActiveQueue();
     const allTeams = window.teamsManager.getAll();
-    if (allTeams.length > 0) {
+
+    if (q.length > 0) {
+      loadTeamFromQueue(q[0]);
+    } else if (allTeams.length > 0) {
       selectTeam(allTeams[0]);
     }
+
     renderTeamList();
+    renderArenaQueueUI();
     renderHistoryTable();
     updateUI();
     broadcastFullSync();
+    publishArenaStatus();
     checkCloudStatus();
   }
 

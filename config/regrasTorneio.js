@@ -37,11 +37,14 @@
  */
 
 const REGRAS_TORNEIO = {
-  // 1. Identificação da Edição Atual
-  edicao: "Torneio Anchieta 2026",
-  subtituloEdicao: "Edital Geral nº 08/2026",
+  // 1. Identificação da Edição Atual (Edital V5 - CIPARE)
+  edicao: "1º Torneio Escolar de Robótica – Etapa Colégio Anchieta",
+  subtituloEdicao: "Edital V5 (CIPARE) • 05/12/2026 (14h às 18h)",
   dataEvento: "05/12/2026",
+  horarioEvento: "14h às 18h",
   modalidade: "Seguidor de Linha",
+  categoriaUnica: true,          // [Edital V5] Quando true, unifica premiação/pódio e bloqueia divisão LEGO vs Maker
+  nomeCategoriaUnica: "Categoria Única",
 
   // 2. Regras Físicas de Pista (Art. 7º e Art. 8º)
   regrasPista: {
@@ -89,68 +92,86 @@ const REGRAS_TORNEIO = {
     }
   ],
 
-  // 4. Critérios Oficiais de Avaliação de Bancada (Paddock)
+  // 4. Critérios Oficiais de Avaliação de Bancada (Paddock - Art. 9º)
   // Nota: `id` e `colunaLegadaDb` preservam 100% de compatibilidade com o Cloudflare D1 existente.
   criteriosPaddock: [
     {
       id: "caracterizacao",
+      ativo: true,
       colunaLegadaDb: "nota_caracterizacao",
-      premio: "Melhor Caracterização",
-      nomeExibicao: "🎨 1. Melhor Caracterização",
-      icone: "🎨",
+      premio: "Melhor Caracterização do Robô (Carro)",
+      nomeExibicao: "🤖 1. Melhor Caracterização do Robô (Carro)",
+      icone: "🤖",
       peso: 1.0,
       ordemFormulario: 1,
       ordemCerimonia: 3,
-      resumoCurto: "Tema criativo, uniforme, mascote e animação.",
-      descricao: "A equipe está caracterizada com uma temática criativa (fantasia, mascote, uniforme) que combina com o robô e demonstra animação?"
+      resumoCurto: "Caracterização visual, estética temática e acabamento criativo do robô (Art. 9º, III).",
+      descricao: "O robô apresenta acabamento visual criativo, estética temática bem desenvolvida e cuidado no acabamento do protótipo/carro?"
+    },
+    {
+      id: "caracterizacao_equipe",
+      ativo: true,
+      colunaLegadaDb: "nota_caracterizacao_equipe",
+      premio: "Melhor Caracterização da Equipe",
+      nomeExibicao: "🎭 2. Melhor Caracterização da Equipe",
+      icone: "🎭",
+      peso: 1.0,
+      ordemFormulario: 2,
+      ordemCerimonia: 4,
+      resumoCurto: "Caracterização pessoal, fantasia ou temática criativa dos alunos (Art. 9º, II).",
+      descricao: "A equipe apresenta caracterização pessoal, fantasia, uniforme temático ou identidade criativa marcante entre seus integrantes?"
     },
     {
       id: "mecanica",
+      ativo: true,
       colunaLegadaDb: "nota_mecanica",
       premio: "Melhor Mecânica",
-      nomeExibicao: "⚙️ 2. Melhor Mecânica",
+      nomeExibicao: "⚙️ 3. Melhor Mecânica",
       icone: "⚙️",
       peso: 1.0,
-      ordemFormulario: 2,
+      ordemFormulario: 3,
       ordemCerimonia: 1,
-      resumoCurto: "Robô robusto, firme, sem peças soltas, com bom acabamento estético e montagem eficiente.",
-      descricao: "O robô é robusto, firme, não solta peças na pista, possui bom acabamento estético e montagem eficiente?"
+      resumoCurto: "Estrutura robusta, acabamento técnico e eficiência mecânica (Art. 9º, IV).",
+      descricao: "A equipe apresenta a melhor estrutura, acabamento técnico de montagem e eficiência no projeto mecânico do robô?"
     },
     {
       id: "superacao",
+      ativo: true,
       colunaLegadaDb: "voto_superacao",
       premio: "Prêmio Superação",
-      nomeExibicao: "🚀 3. Prêmio Superação",
+      nomeExibicao: "🚀 4. Prêmio Superação",
       icone: "🚀",
       peso: 1.0,
-      ordemFormulario: 3,
+      ordemFormulario: 4,
       ordemCerimonia: 2,
-      resumoCurto: "Resiliência técnica comprovada, contornando falhas técnicas com evolução evidente.",
-      descricao: "A equipe demonstrou resiliência, contornando problemas técnicos (mecânica ou código) com transparência e clara evolução?"
+      resumoCurto: "Resiliência e persistência diante de adversidades técnicas (Art. 9º, V).",
+      descricao: "A equipe demonstrou grande resiliência e persistência técnica, superando falhas e evoluindo durante a competição?"
     },
     {
       id: "torcida",
+      ativo: false, // [2026] Ocultado nesta edição conforme Art. 9º do Edital V5. Altere para true para reativar no futuro.
       colunaLegadaDb: "nota_torcida",
       premio: "Melhor Torcida",
-      nomeExibicao: "📣 4. Melhor Torcida",
+      nomeExibicao: "📣 5. Melhor Torcida",
       icone: "📣",
       peso: 1.0,
-      ordemFormulario: 4,
-      ordemCerimonia: 4,
+      ordemFormulario: 5,
+      ordemCerimonia: 5,
       resumoCurto: "Escola com torcida vibrante, barulhenta, com identidade visual própria e respeitosa.",
       descricao: "A escola levou uma torcida vibrante, barulhenta, com identidade visual própria e que respeitou as demais equipes?"
     },
     {
       id: "fair_play",
+      ativo: true,
       colunaLegadaDb: "voto_fair_play",
       premio: "Prêmio Fair Play",
-      nomeExibicao: "🤝 5. Prêmio Fair Play (Jogo Limpo)",
+      nomeExibicao: "🤝 6. Prêmio Fair Play (Jogo Limpo)",
       icone: "🤝",
       peso: 1.0,
-      ordemFormulario: 5,
-      ordemCerimonia: 5,
-      resumoCurto: "Postura colaborativa, auxílio a outras equipes, atitude positiva e respeito às regras.",
-      descricao: "A equipe colaborou e ajudou outras equipes (com peças ou dicas), manteve atitude positiva e respeitou rigorosamente as regras?"
+      ordemFormulario: 6,
+      ordemCerimonia: 6,
+      resumoCurto: "Postura colaborativa auxiliando equipes adversárias (Art. 9º, VI).",
+      descricao: "A equipe demonstrou postura colaborativa e espírito esportivo, auxiliando outras equipes na solução de problemas?"
     }
   ],
 
@@ -171,6 +192,10 @@ const REGRAS_TORNEIO = {
       ordem: ["MAIOR_DELTA_EVOLUCAO", "MENOR_FALTAS_R2", "VOTO_MINERVA"]
     },
     caracterizacao: {
+      descricaoRotulo: "1º Votos \"Destaque ★\" ➔ 2º Voto de Minerva",
+      ordem: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
+    },
+    caracterizacao_equipe: {
       descricaoRotulo: "1º Votos \"Destaque ★\" ➔ 2º Voto de Minerva",
       ordem: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
     },
@@ -196,6 +221,13 @@ const REGRAS_TORNEIO = {
   // ==========================================================================
   // FUNÇÕES UTILITÁRIAS COMPARTILHADAS (FRONTEND & BACKEND WORKER)
   // ==========================================================================
+
+  /**
+   * Retorna apenas os critérios oficiais que estão ativos na edição atual
+   */
+  getCriteriosAtivos() {
+    return (this.criteriosPaddock || []).filter(c => c.ativo !== false);
+  },
 
   /**
    * Retorna o maior valor numérico configurado na escala de notas (ex: 3.0)

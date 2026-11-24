@@ -81,7 +81,7 @@ function calcularRankingsOficiais(equipes, corridas, avaliacoes) {
     });
 
     const rubrics = {};
-    for (const crit of REGRAS_TORNEIO.criteriosPaddock) {
+    for (const crit of (REGRAS_TORNEIO.criteriosPaddock || []).filter(c => c.ativo !== false)) {
       rubrics[crit.id] = REGRAS_TORNEIO.calcularEstatisticaCriterio(evalsEquipe, crit.id);
     }
 
@@ -105,9 +105,9 @@ function calcularRankingsOficiais(equipes, corridas, avaliacoes) {
       voltaValida: item.track.hasValidRun
     }));
 
-  // Rankings por Rubrica de Paddock via `REGRAS_TORNEIO.compararCandidatosRubrica`
+  // Rankings por Rubrica de Paddock via `REGRAS_TORNEIO.compararCandidatosRubrica` (Apenas Critérios Ativos)
   const rankingsPaddock = {};
-  for (const crit of REGRAS_TORNEIO.criteriosPaddock) {
+  for (const crit of (REGRAS_TORNEIO.criteriosPaddock || []).filter(c => c.ativo !== false)) {
     const ordenados = [...candidatos].sort((a, b) => REGRAS_TORNEIO.compararCandidatosRubrica(crit.id, a, b));
     rankingsPaddock[crit.id] = {
       criterioId: crit.id,
@@ -171,12 +171,63 @@ export default {
           const nome = (item.equipe || item.name || '').trim();
           const escola = (item.escola || item.school || '').trim();
           const categoria = (item.categoria || item.category || 'LEGO / Educacional').trim();
+          const professor = (item.professor || item.tecnico || '').trim();
+          const integrantes = (typeof item.integrantes === 'string' 
+            ? item.integrantes 
+            : (Array.isArray(item.integrantes) ? item.integrantes.join(', ') : '')).trim();
+          const checkin = item.checkin ? 1 : 0;
+          const inspecao = item.inspecao ? 1 : 0;
           if (!nome) continue;
-          await env.DB.prepare(
-            'INSERT OR REPLACE INTO equipes (equipe, escola, categoria) VALUES (?, ?, ?)'
-          ).bind(nome, escola, categoria).run();
+
+          try {
+            // Tenta inserir/atualizar com as novas colunas de credenciamento
+            await env.DB.prepare(
+              `INSERT INTO equipes (equipe, escola, categoria, professor, integrantes, checkin, inspecao)
+               VALUES (?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT(equipe) DO UPDATE SET
+                 escola = excluded.escola,
+                 categoria = excluded.categoria,
+                 professor = CASE WHEN excluded.professor != '' THEN excluded.professor ELSE equipes.professor END,
+                 integrantes = CASE WHEN excluded.integrantes != '' THEN excluded.integrantes ELSE equipes.integrantes END,
+                 checkin = excluded.checkin,
+                 inspecao = excluded.inspecao`
+            ).bind(nome, escola, categoria, professor, integrantes, checkin, inspecao).run();
+          } catch (errDb) {
+            // Fallback resiliente caso as colunas novas ainda não tenham sido migradas no D1
+            await env.DB.prepare(
+              'INSERT OR REPLACE INTO equipes (equipe, escola, categoria) VALUES (?, ?, ?)'
+            ).bind(nome, escola, categoria).run();
+          }
         }
         return jsonResponse({ ok: true, count: lista.length });
+      }
+
+      // Rota rápida para alternar Check-in e Inspeção Técnica (POST ou PATCH)
+      if ((path === '/api/equipes/status' || path.startsWith('/api/equipes/status/')) && (request.method === 'POST' || request.method === 'PATCH')) {
+        const body = await request.json();
+        const equipe = (body.equipe || body.name || '').trim();
+        const id = body.id || null;
+        const checkin = body.checkin !== undefined ? (body.checkin ? 1 : 0) : null;
+        const inspecao = body.inspecao !== undefined ? (body.inspecao ? 1 : 0) : null;
+
+        try {
+          if (checkin !== null && inspecao !== null) {
+            await env.DB.prepare(
+              'UPDATE equipes SET checkin = ?, inspecao = ? WHERE id = ? OR equipe = ?'
+            ).bind(checkin, inspecao, id, equipe).run();
+          } else if (checkin !== null) {
+            await env.DB.prepare(
+              'UPDATE equipes SET checkin = ? WHERE id = ? OR equipe = ?'
+            ).bind(checkin, id, equipe).run();
+          } else if (inspecao !== null) {
+            await env.DB.prepare(
+              'UPDATE equipes SET inspecao = ? WHERE id = ? OR equipe = ?'
+            ).bind(inspecao, id, equipe).run();
+          }
+          return jsonResponse({ ok: true, checkin, inspecao });
+        } catch (errStatus) {
+          return jsonResponse({ ok: false, error: errStatus.message }, 500);
+        }
       }
 
       if (path === '/api/equipes/limpar' && request.method === 'POST') {
@@ -188,6 +239,56 @@ export default {
         const param = decodeURIComponent(path.replace('/api/equipes/', ''));
         await env.DB.prepare('DELETE FROM equipes WHERE id = ? OR equipe = ?').bind(param, param).run();
         return jsonResponse({ ok: true });
+      }
+
+      // ======================================================================
+      // ESTADO DA ARENA & TRAVA DE CONFLITO COM PISTA DE TESTE (/api/arena/status)
+      // ======================================================================
+      if (path === '/api/arena/status' && request.method === 'GET') {
+        try {
+          const row = await env.DB.prepare('SELECT * FROM arena_status WHERE id = 1').first();
+          if (row) {
+            return jsonResponse({
+              ok: true,
+              equipe_atual: row.equipe_atual || '',
+              status_atual: row.status_atual || 'READY',
+              equipe_proxima: row.equipe_proxima || '',
+              rodada: row.rodada || 1,
+              updated_at: row.updated_at
+            });
+          }
+        } catch (_) {}
+        return jsonResponse({
+          ok: true,
+          equipe_atual: '',
+          status_atual: 'READY',
+          equipe_proxima: '',
+          rodada: 1
+        });
+      }
+
+      if (path === '/api/arena/status' && request.method === 'POST') {
+        const body = await request.json();
+        const equipeAtual = (body.equipe_atual || body.equipeAtual || '').trim();
+        const statusAtual = (body.status_atual || body.statusAtual || 'READY').trim();
+        const equipeProxima = (body.equipe_proxima || body.equipeProxima || '').trim();
+        const rodada = Number(body.rodada || 1);
+
+        try {
+          await env.DB.prepare(
+            `INSERT INTO arena_status (id, equipe_atual, status_atual, equipe_proxima, rodada, updated_at)
+             VALUES (1, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+             ON CONFLICT(id) DO UPDATE SET
+               equipe_atual = excluded.equipe_atual,
+               status_atual = excluded.status_atual,
+               equipe_proxima = excluded.equipe_proxima,
+               rodada = excluded.rodada,
+               updated_at = CURRENT_TIMESTAMP`
+          ).bind(equipeAtual, statusAtual, equipeProxima, rodada).run();
+          return jsonResponse({ ok: true, equipe_atual: equipeAtual, status_atual: statusAtual, equipe_proxima: equipeProxima, rodada });
+        } catch (errDb) {
+          return jsonResponse({ ok: true, fallback: true, equipe_atual: equipeAtual, status_atual: statusAtual });
+        }
       }
 
       // ======================================================================
@@ -240,6 +341,11 @@ export default {
         const notasValidadas = {};
 
         for (const crit of REGRAS_TORNEIO.criteriosPaddock) {
+          if (crit.ativo === false) {
+            // Critério inativo nesta edição: fallback 2.0 para manter integridade das colunas D1
+            notasValidadas[crit.id] = 2.0;
+            continue;
+          }
           const bruto = REGRAS_TORNEIO.extrairNotaDeRegistro(body, crit.id);
           const validada = REGRAS_TORNEIO.validarNota(bruto);
           if (validada === null) {
@@ -259,10 +365,10 @@ export default {
         await env.DB.prepare(
           `INSERT INTO avaliacoes (
             equipe_id, equipe, escola, categoria, juiz_nome, juiz,
-            caracterizacao, mecanica, superacao, torcida, fair_play,
-            nota_caracterizacao, nota_mecanica, voto_superacao, nota_torcida, voto_fair_play,
+            caracterizacao, caracterizacao_equipe, mecanica, superacao, torcida, fair_play,
+            nota_caracterizacao, nota_caracterizacao_equipe, nota_mecanica, voto_superacao, nota_torcida, voto_fair_play,
             observacoes, timestamp
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           body.equipe_id || 'EQ-01',
           equipeNome,
@@ -271,11 +377,13 @@ export default {
           juizNome,
           juizNome,
           notasValidadas.caracterizacao,
+          notasValidadas.caracterizacao_equipe || 2.0,
           notasValidadas.mecanica,
           notasValidadas.superacao,
           notasValidadas.torcida,
           notasValidadas.fair_play,
           notasValidadas.caracterizacao,
+          notasValidadas.caracterizacao_equipe || 2.0,
           notasValidadas.mecanica,
           notasValidadas.superacao,
           notasValidadas.torcida,

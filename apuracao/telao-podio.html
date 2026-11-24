@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telão do Pódio — Cerimônia de Premiação Anchieta 2026</title>
+  <title>Telão do Pódio — 1º Torneio Escolar de Robótica (Anchieta)</title>
 
   <!-- Anti-cache estrito -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -32,8 +32,11 @@
     <!-- Cabeçalho Limpo de Projeção -->
     <header class="tp-header">
       <div class="tp-brand">
-        <div class="tp-logo-pill">ANCHIETA</div>
-        <div class="tp-event-title">TORNEIO OFICIAL DE ROBÓTICA 2026 &bull; CERIMÔNIA DE PREMIAÇÃO</div>
+        <div class="header-logo-container" style="display: flex; align-items: center;">
+          <img src="../shared/img/logo-anchieta.png" alt="Colégio Anchieta" class="header-logo-img" style="height: 38px; width: auto; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+          <div class="tp-logo-pill" style="display: none;">ANCHIETA</div>
+        </div>
+        <div class="tp-event-title">1º TORNEIO ESCOLAR DE ROBÓTICA &bull; ETAPA COLÉGIO ANCHIETA</div>
       </div>
 
       <div id="tpHeaderBadge" class="tp-category-badge">
@@ -43,9 +46,9 @@
 
     <!-- Título Principal Dinâmico do Prêmio Atual -->
     <section class="tp-hero-banner">
-      <div id="tpSubtitleTag" class="tp-subtitle-tag">EDITAL GERAL Nº 08/2026</div>
+      <div id="tpSubtitleTag" class="tp-subtitle-tag">EDITAL V5 (CIPARE) • 05/12/2026</div>
       <h1 id="tpMainTitle" class="tp-main-title">CERIMÔNIA DE PREMIAÇÃO</h1>
-      <p id="tpCriteriaDesc" class="tp-criteria-desc">Colégio Anchieta &bull; 05 de Dezembro de 2026</p>
+      <p id="tpCriteriaDesc" class="tp-criteria-desc">Colégio Anchieta &bull; 05 de Dezembro de 2026 (14h às 18h)</p>
     </section>
 
     <!-- PALCO PRINCIPAL (Alterna entre Espera, Troféu Único de Box e Pódio Triplo de Pista) -->
@@ -60,10 +63,10 @@
           <div class="standby-pills">
             <span>⚙️ Melhor Mecânica</span>
             <span>🚀 Superação</span>
-            <span>🎨 Caracterização</span>
-            <span>📣 Melhor Torcida</span>
+            <span>🤖 Caracterização do Robô</span>
+            <span>🎭 Caracterização da Equipe</span>
             <span>🤝 Fair Play</span>
-            <span>🏎️ Pódio Top 3 Pista</span>
+            <span>🏎️ Pódio Geral da Pista</span>
           </div>
         </div>
       </div>
@@ -189,7 +192,8 @@
 
   </div>
 
-  <script src="js/telao-podio.js?v=20261028_podio_v1"></script>
+  <script src="../config/regrasTorneio.js?v=20261123_v5"></script>
+  <script src="js/telao-podio.js?v=20261123_v5"></script>
 </body>
 </html>
 

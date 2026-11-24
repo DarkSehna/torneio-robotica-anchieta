@@ -1,0 +1,414 @@
+/**
+ * Torneio de Robótica Anchieta - CSS Dedicado de Credenciamento & Inspeção
+ * Otimizado para tablets, touch e alto contraste na recepção do evento
+ */
+
+.cred-container {
+  max-width: 1200px;
+  margin: 20px auto 60px;
+  padding: 0 20px;
+}
+
+/* Header & Logo */
+.cred-header {
+  background: #FFFFFF;
+  border-bottom: 2px solid var(--border-light);
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.cred-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-logo-img {
+  height: 42px;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+.cred-title-text h1 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.cred-title-text p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+
+/* Top Stats Cards */
+.cred-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .cred-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+.cred-stat-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.cred-stat-card.highlight-green {
+  border-left: 4px solid #10B981;
+}
+
+.cred-stat-card.highlight-blue {
+  border-left: 4px solid #3B82F6;
+}
+
+.cred-stat-card.highlight-orange {
+  border-left: 4px solid #F59E0B;
+}
+
+.cred-stat-card.highlight-purple {
+  border-left: 4px solid #8B5CF6;
+}
+
+.cred-stat-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cred-stat-number {
+  font-size: 2.1rem;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1.1;
+  margin: 8px 0 4px;
+}
+
+.cred-stat-subtext {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Search & Filter Bar */
+.cred-search-bar {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cred-search-input-wrapper {
+  flex: 1;
+  min-width: 260px;
+  position: relative;
+}
+
+.cred-search-input {
+  width: 100%;
+  padding: 12px 16px 12px 42px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-medium);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background: var(--bg-muted);
+  transition: all 0.2s;
+}
+
+.cred-search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(0, 43, 73, 0.12);
+}
+
+.cred-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.cred-filter-pills {
+  display: flex;
+  gap: 8px;
+}
+
+.cred-pill-btn {
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-medium);
+  background: #FFFFFF;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cred-pill-btn.active {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border-color: var(--color-primary);
+}
+
+/* Tabela e Cards */
+.cred-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.cred-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.cred-table th {
+  background: var(--bg-muted);
+  padding: 14px 16px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--border-light);
+}
+
+.cred-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+
+.cred-table tr:hover {
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.team-badge-id {
+  background: rgba(0, 43, 73, 0.08);
+  color: var(--color-primary);
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  display: inline-block;
+}
+
+.team-name-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.team-meta-info {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.team-meta-info strong {
+  color: var(--text-main);
+}
+
+/* Toggles Táteis de Alta Precisão */
+.tactile-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 2px solid transparent;
+  min-width: 140px;
+  text-align: center;
+}
+
+.tactile-toggle-btn:active {
+  transform: scale(0.96);
+}
+
+.toggle-checkin-ok {
+  background: #DCFCE7;
+  color: #166534;
+  border-color: #22C55E;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.2);
+}
+
+.toggle-checkin-pending {
+  background: #F3F4F6;
+  color: #6B7280;
+  border-color: #D1D5DB;
+  border-style: dashed;
+}
+
+.toggle-inspecao-ok {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border-color: #3B82F6;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+}
+
+.toggle-inspecao-pending {
+  background: #FFFBEB;
+  color: #B45309;
+  border-color: #F59E0B;
+  border-style: dashed;
+}
+
+/* Badge de Aptidão Geral */
+.status-apto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.status-apto {
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #86EFAC;
+}
+
+.status-inapto {
+  background: #FEE2E2;
+  color: #B91C1C;
+  border: 1px solid #FCA5A5;
+}
+
+/* Toast de Confirmação Rápida */
+.cred-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #002B49;
+  color: #FFFFFF;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 99999;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cred-toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Modal de Fila Oficial */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 43, 73, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+}
+
+.modal-card {
+  background: #FFFFFF;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Folha Oficial de Impressão A4 para Murais do Ginásio */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .anchieta-topbar,
+  .cred-header,
+  .cred-stats-grid,
+  .cred-search-bar,
+  .cred-card:not(#credQueueConferenceSection),
+  .modal-backdrop,
+  .btn-action,
+  .cred-toast {
+    display: none !important;
+  }
+  #credQueueConferenceSection {
+    display: block !important;
+    border: 2px solid #002B49 !important;
+    box-shadow: none !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    max-height: none !important;
+  }
+  #confQueueGrid {
+    max-height: none !important;
+    overflow: visible !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+}

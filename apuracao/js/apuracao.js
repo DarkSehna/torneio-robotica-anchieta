@@ -72,12 +72,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   let avaliacoes = [];
   let minervaVotes = JSON.parse(localStorage.getItem('torneio_minerva_votos') || '{}');
 
-  // Critérios de Paddock ordenados pela sequência oficial da Cerimônia (config/regrasTorneio.js)
-  const sortedCeremonyCriteria = [...(REGRAS?.criteriosPaddock || [])].sort(
-    (a, b) => (a.ordemCerimonia || 99) - (b.ordemCerimonia || 99)
-  );
+  // Critérios de Paddock ordenados pela sequência oficial da Cerimônia (config/regrasTorneio.js) - apenas ativos
+  const sortedCeremonyCriteria = [...(REGRAS?.criteriosPaddock || [])]
+    .filter(c => c.ativo !== false)
+    .sort((a, b) => (a.ordemCerimonia || 99) - (b.ordemCerimonia || 99));
 
   // Construção Dinâmica do Roteiro Completo da Cerimônia a partir de REGRAS_TORNEIO
+  const isCatUnica = !!REGRAS?.categoriaUnica;
+  const trackRoutineItems = isCatUnica
+    ? [
+        {
+          step: sortedCeremonyCriteria.length + 1,
+          key: 'VELOCIDADE_GERAL',
+          type: 'TRACK_PODIUM',
+          category: REGRAS?.nomeCategoriaUnica || 'Categoria Única',
+          title: `${sortedCeremonyCriteria.length + 1}. Pódio Oficial de Pista — Classificação Geral`,
+          subtitle: 'Top 3 Geral de Velocidade na Pista (3º Lugar ➔ Vice-Campeão ➔ Grande Campeão).'
+        }
+      ]
+    : [
+        {
+          step: sortedCeremonyCriteria.length + 1,
+          key: 'VELOCIDADE_LEGO',
+          type: 'TRACK_PODIUM',
+          category: 'LEGO / Educacional',
+          title: `${sortedCeremonyCriteria.length + 1}. Pódio Oficial de Pista — Categoria LEGO`,
+          subtitle: 'Top 3 de Velocidade (3º Lugar ➔ Vice-Campeão ➔ Grande Campeão).'
+        },
+        {
+          step: sortedCeremonyCriteria.length + 2,
+          key: 'VELOCIDADE_MAKER',
+          type: 'TRACK_PODIUM',
+          category: 'Aberta / Maker',
+          title: `${sortedCeremonyCriteria.length + 2}. Pódio Oficial de Pista — Categoria Maker`,
+          subtitle: 'Top 3 de Velocidade Aberta / Maker.'
+        }
+      ];
+
   const CEREMONY_ROUTINE = [
     { step: 0, key: 'STANDBY', type: 'STANDBY', title: '0. Tela de Abertura / Espera', subtitle: 'Boas-vindas no telão antes do início dos anúncios.' },
     ...sortedCeremonyCriteria.map((crit, idx) => ({
@@ -89,22 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       title: `${idx + 1}. Troféu: ${crit.premio}`,
       subtitle: crit.resumoCurto || crit.descricao
     })),
-    {
-      step: sortedCeremonyCriteria.length + 1,
-      key: 'VELOCIDADE_LEGO',
-      type: 'TRACK_PODIUM',
-      category: 'LEGO / Educacional',
-      title: `${sortedCeremonyCriteria.length + 1}. Pódio Oficial de Pista — Categoria LEGO`,
-      subtitle: 'Top 3 de Velocidade (3º Lugar ➔ Vice-Campeão ➔ Grande Campeão).'
-    },
-    {
-      step: sortedCeremonyCriteria.length + 2,
-      key: 'VELOCIDADE_MAKER',
-      type: 'TRACK_PODIUM',
-      category: 'Aberta / Maker',
-      title: `${sortedCeremonyCriteria.length + 2}. Pódio Oficial de Pista — Categoria Maker`,
-      subtitle: 'Top 3 de Velocidade Aberta / Maker.'
-    }
+    ...trackRoutineItems
   ];
 
   // Renderiza dinamicamente os botões de etapas da cerimônia conforme REGRAS_TORNEIO
@@ -116,7 +132,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (item.type === 'SINGLE_AWARD') {
         return `<button type="button" class="cop-step-btn" data-step="${item.step}">${item.step}. ${item.icon} ${item.shortLabel}</button>`;
       }
-      const catLabel = item.key === 'VELOCIDADE_MAKER' ? 'Pódio Pista (Maker)' : 'Pódio Pista (LEGO)';
+      const catLabel = item.key === 'VELOCIDADE_GERAL' 
+        ? 'Pódio Pista (Geral)' 
+        : (item.key === 'VELOCIDADE_MAKER' ? 'Pódio Pista (Maker)' : 'Pódio Pista (LEGO)');
       return `<button type="button" class="cop-step-btn track-step" data-step="${item.step}">${item.step}. 🏎️ ${catLabel}</button>`;
     }).join('');
     copStepBtns = copStepperList.querySelectorAll('.cop-step-btn');
@@ -277,7 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       observations: teamEvals.map(ev => ({ juiz: ev.juiz_nome || ev.juiz, texto: ev.observacoes })).filter(o => o.texto)
     };
 
-    const criteriaList = REGRAS?.criteriosPaddock || [];
+    const criteriaList = (REGRAS?.criteriosPaddock || []).filter(c => c.ativo !== false);
     criteriaList.forEach(crit => {
       if (REGRAS && typeof REGRAS.calcularEstatisticaCriterio === 'function') {
         result[crit.id] = REGRAS.calcularEstatisticaCriterio(teamEvals, crit.id);
@@ -310,9 +328,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Retorna lista ordenada para o Pódio de Pista de uma Categoria
   function getSortedTrackCandidates(categoryFilter = 'LEGO') {
-    const filtered = teams.filter(t =>
-      t.category.toLowerCase().includes(categoryFilter.toLowerCase().includes('maker') ? 'maker' : 'lego')
-    );
+    const isCatUnica = !!REGRAS?.categoriaUnica;
+    let filtered = teams;
+    if (!isCatUnica && categoryFilter && categoryFilter !== 'ALL' && categoryFilter !== 'TODAS' && categoryFilter !== 'GERAL') {
+      const matchMaker = categoryFilter.toLowerCase().includes('maker');
+      filtered = teams.filter(t =>
+        t.category.toLowerCase().includes(matchMaker ? 'maker' : 'lego')
+      );
+    }
 
     const list = filtered.map(team => ({
       team,
@@ -332,8 +355,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const awardedTeamsMap = new Map();
 
     if (exclusivityRuleActive) {
-      // 1. Identifica os vencedores do Top 3 da Pista (LEGO e Maker) que têm volta válida
-      ['LEGO', 'Maker'].forEach(cat => {
+      // 1. Identifica os vencedores do Top 3 da Pista que têm volta válida
+      const isCatUnica = !!REGRAS?.categoriaUnica;
+      const catsToCheck = isCatUnica ? ['GERAL'] : ['LEGO', 'Maker'];
+      catsToCheck.forEach(cat => {
         const trackList = getSortedTrackCandidates(cat);
         const labels = ['🥇 1º Lugar Pista', '🥈 2º Lugar Pista', '🥉 3º Lugar Pista'];
         for (let i = 0; i < 3; i++) {
@@ -702,9 +727,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
     }
 
-    // MODO 6..7: PÓDIO TRIPLO DE VELOCIDADE
+    // MODO: PÓDIO TRIPLO DE VELOCIDADE
+    const isCatUnica = !!REGRAS?.categoriaUnica;
+    const isGeral = routine.key === 'VELOCIDADE_GERAL' || isCatUnica;
     const isMaker = routine.key === 'VELOCIDADE_MAKER';
-    const candidates = getSortedTrackCandidates(isMaker ? 'Maker' : 'LEGO');
+    const candidates = isGeral 
+      ? getSortedTrackCandidates('GERAL')
+      : getSortedTrackCandidates(isMaker ? 'Maker' : 'LEGO');
 
     const formatCandidate = (cand) => {
       if (!cand) {
@@ -725,9 +754,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return {
       mode: 'TRACK_PODIUM',
       stepKey: routine.key,
-      headerBadge: isMaker ? '🟠 Categoria Aberta / Maker' : '🔵 Categoria LEGO / Educacional',
+      headerBadge: isGeral ? '🏆 Classificação Geral' : (isMaker ? '🟠 Categoria Aberta / Maker' : '🔵 Categoria LEGO / Educacional'),
       subtitleTag: 'GRANDE FINAL DE VELOCIDADE NA PISTA',
-      mainTitle: isMaker ? 'PÓDIO DE PISTA — ABERTA / MAKER' : 'PÓDIO OFICIAL DE PISTA — LEGO',
+      mainTitle: isGeral ? 'PÓDIO OFICIAL DE PISTA — CLASSIFICAÇÃO GERAL' : (isMaker ? 'PÓDIO DE PISTA — ABERTA / MAKER' : 'PÓDIO OFICIAL DE PISTA — LEGO'),
       criteriaDesc: 'Classificação Oficial: Menor Tempo Líquido (Art. 7º e Art. 8º)',
       trackRevealed: { ...trackRevealedState },
       podium: {
@@ -1212,15 +1241,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(updateTelaoBadgeStatus, 2500);
   }
 
-  // Filtros de Categoria da Tabela
-  categoryTabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      categoryTabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeCategory = btn.dataset.category;
-      renderAll();
+  // Filtros de Categoria da Tabela (com suporte a Categoria Única do Edital V5)
+  if (REGRAS?.categoriaUnica) {
+    activeCategory = 'TODAS';
+    const filterContainer = document.querySelector('.category-tabs');
+    if (filterContainer) {
+      filterContainer.innerHTML = `
+        <button type="button" class="category-tab-btn active" data-category="TODAS" style="font-weight: 800;">
+          🏆 Categoria Única (Classificação Geral)
+        </button>
+      `;
+    }
+  } else {
+    categoryTabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        categoryTabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeCategory = btn.dataset.category;
+        renderAll();
+      });
     });
-  });
+  }
 
   if (btnRefreshData) {
     btnRefreshData.addEventListener('click', async () => {

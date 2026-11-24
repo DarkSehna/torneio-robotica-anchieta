@@ -1,68 +1,162 @@
 [
   {
+    "id": "EQ-105",
+    "name": "RoboTitans",
+    "school": "Colégio Exemplo Sul",
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Carlos Eduardo",
+    "integrantes": "Lucas Souza, Pedro Henrique, Mariana Silva",
+    "checkin": true,
+    "inspecao": true
+  },
+  {
+    "id": "EQ-106",
+    "name": "CyberFalcões",
+    "school": "Instituto Norte",
+    "category": "LEGO / Educacional",
+    "professor": "Profª. Vanessa Lima",
+    "integrantes": "Gabriel Mendes, Beatriz Alves, Arthur Santos",
+    "checkin": true,
+    "inspecao": true
+  },
+  {
+    "id": "EQ-107",
+    "name": "LinhaVeloz",
+    "school": "Colégio Horizonte",
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Rodrigo Santos",
+    "integrantes": "Enzo Pereira, Rafael Costa, Matheus Duarte",
+    "checkin": true,
+    "inspecao": true
+  },
+  {
+    "id": "EQ-108",
+    "name": "Engrenagem X",
+    "school": "Escola Modelo",
+    "category": "LEGO / Educacional",
+    "professor": "Profª. Juliana Silva",
+    "integrantes": "Sofia Ramos, Laura Becker, Alice Vieira",
+    "checkin": true,
+    "inspecao": true
+  },
+  {
+    "id": "EQ-109",
+    "name": "TurboPID",
+    "school": "Colégio Anchieta (Teste)",
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Fernando Rocha",
+    "integrantes": "Davi Lucca, Luiza Farias, Henrique Luz",
+    "checkin": true,
+    "inspecao": true
+  },
+  {
     "id": "EQ-01",
     "name": "Anchieta1",
     "school": "Colégio Anchieta",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Marcos Silva",
+    "integrantes": "Lucas Pereira, Sofia Ramos, Pedro Henrique",
+    "checkin": true,
+    "inspecao": true
   },
   {
     "id": "EQ-02",
     "name": "Anchieta 2",
     "school": "Colégio Anchieta",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Marcos Silva",
+    "integrantes": "Gabriel Souza, Beatriz Lima, Enzo Alves",
+    "checkin": true,
+    "inspecao": true
   },
   {
     "id": "EQ-03",
     "name": "Anchieta 3",
     "school": "Colégio Anchieta",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Profª. Carla Mendes",
+    "integrantes": "Mariana Costa, Felipe Duarte, Laura Santos",
+    "checkin": true,
+    "inspecao": false
   },
   {
     "id": "EQ-04",
     "name": "Anchieta 4",
     "school": "Colégio Anchieta",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Profª. Carla Mendes",
+    "integrantes": "Thiago Martins, Rafaela Nunes",
+    "checkin": false,
+    "inspecao": false
   },
   {
     "id": "EQ-05",
     "name": "Anchieta5",
     "school": "Colégio Anchieta",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Roberto Dias",
+    "integrantes": "Gustavo Pires, Alice Vieira, Matheus Rocha",
+    "checkin": true,
+    "inspecao": true
   },
   {
     "id": "EQ-06",
     "name": "Anchieta6",
     "school": "Colégio Anchieta",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Roberto Dias",
+    "integrantes": "Isabela Ramos, Davi Lucca, Luiza Farias",
+    "checkin": false,
+    "inspecao": false
   },
   {
     "id": "EQ-07",
     "name": "Farroupilha 1",
     "school": "Colégio Farroupilha",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Profª. Fernanda Prado",
+    "integrantes": "Bernardo Silva, Carolina Becker, Henrique Luz",
+    "checkin": true,
+    "inspecao": true
   },
   {
     "id": "EQ-08",
     "name": "Farroupilha 2",
     "school": "Colégio Farroupilha",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Profª. Fernanda Prado",
+    "integrantes": "Rodrigo Paz, Manuela Fontes, Bruno Campos",
+    "checkin": true,
+    "inspecao": true
   },
   {
     "id": "EQ-09",
     "name": "Província 1",
     "school": "Colégio Província",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Eduardo Schmidt",
+    "integrantes": "Arthur Silveira, Julia Dornelles, Clara Neves",
+    "checkin": true,
+    "inspecao": true
   },
   {
     "id": "EQ-10",
     "name": "Província 2",
     "school": "Colégio Província",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Eduardo Schmidt",
+    "integrantes": "Vinicius Leal, Helena Borges",
+    "checkin": false,
+    "inspecao": false
   },
   {
     "id": "EQ-11",
     "name": "Província 3",
     "school": "Colégio Província",
-    "category": "LEGO / Educacional"
+    "category": "LEGO / Educacional",
+    "professor": "Prof. Eduardo Schmidt",
+    "integrantes": "Daniel Vargas, Samuel Ortiz, Cecília Maia",
+    "checkin": true,
+    "inspecao": true
   }
 ]

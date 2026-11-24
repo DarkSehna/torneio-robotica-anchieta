@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin & Gestão de Equipes — Torneio de Robótica Anchieta</title>
+  <title>Admin &amp; Gestão de Equipes — 1º Torneio Escolar de Robótica (Anchieta)</title>
   
   <!-- Anti-cache estrito -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -110,9 +110,15 @@
 
     .stats-card-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       margin-bottom: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .stats-card-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     .stat-box {
@@ -154,6 +160,127 @@
     .btn-del-team:hover {
       background: #FECACA;
     }
+
+    /* Toggles Táteis de Credenciamento e Inspeção */
+    .tactile-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1.5px solid transparent;
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .tactile-toggle-btn:active {
+      transform: scale(0.96);
+    }
+
+    .toggle-checkin-ok {
+      background: #ECFDF5;
+      color: #065F46;
+      border-color: #10B981;
+      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
+    }
+
+    .toggle-checkin-pending {
+      background: #F3F4F6;
+      color: #6B7280;
+      border-color: #D1D5DB;
+      border-style: dashed;
+    }
+
+    .toggle-inspecao-ok {
+      background: #EFF6FF;
+      color: #1E40AF;
+      border-color: #3B82F6;
+      box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .toggle-inspecao-pending {
+      background: #FFFBEB;
+      color: #B45309;
+      border-color: #F59E0B;
+      border-style: dashed;
+    }
+
+    /* Modal de Importação CSV */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 20, 35, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-xl);
+      max-width: 780px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: var(--bg-muted);
+    }
+
+    .lgpd-banner {
+      background: #F0FDF4;
+      border: 1.5px solid #86EFAC;
+      color: #166534;
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
   </style>
 </head>
 <body class="operator-layout">
@@ -164,10 +291,13 @@
   <!-- Header Superior -->
   <header class="op-header">
     <div class="op-brand">
-      <div class="op-logo-badge">ANCHIETA</div>
+      <div class="header-logo-container" style="display: flex; align-items: center;">
+        <img src="../shared/img/logo-anchieta.png" alt="Colégio Anchieta" class="header-logo-img" style="height: 38px; width: auto; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+        <div class="op-logo-badge" style="display: none;">ANCHIETA</div>
+      </div>
       <div class="op-title-text">
         <h1>GESTÃO DE EQUIPES & BANCO DE DADOS</h1>
-        <p>Configuração e Manutenção de Torneios &bull; Colégio Anchieta</p>
+        <p>1º Torneio Escolar de Robótica – Etapa Colégio Anchieta &bull; 05/12/2026 (14h às 18h)</p>
       </div>
     </div>
 
@@ -183,39 +313,33 @@
         <span id="cloudStatusText">Nuvem Conectando...</span>
       </div>
 
-      <!-- Voltar para a Mesa da Pista -->
-      <a href="../pista/mesa-operador.html" class="btn-open-telao" style="background-color: var(--color-primary); border: 1px solid rgba(255,255,255,0.25);">
-        ⏱️ Mesa da Pista
-      </a>
-
-      <!-- Paddock Mobile -->
-      <a href="../paddock/index.html" target="_blank" class="btn-header-admin">
-        📱 Paddock
-      </a>
-
-      <!-- Abrir Telão -->
-      <a href="../pista/telao-ginasio.html" target="_blank" class="btn-open-telao">
-        🖥️ Abrir Telão ↗
-      </a>
+      <!-- Botão Trancar / Logout -->
+      <button type="button" id="btnAdminLogout" class="btn-action" style="background: #FFF1F2; border: 1.5px solid #F43F5E; color: #BE123C; font-weight: 800; padding: 7px 14px; border-radius: var(--radius-md); cursor: pointer;" onclick="if(window.sessionStorage){sessionStorage.removeItem('torneio_auth_authenticated');location.href='../index.html';}">
+        🔒 Trancar
+      </button>
     </div>
   </header>
 
   <!-- Container Principal -->
   <main class="admin-container">
 
-    <!-- Indicadores de Resumo -->
+    <!-- Indicadores de Resumo da Base de Dados -->
     <div class="stats-card-row">
       <div class="stat-box">
         <div id="statTotalTeams" class="stat-number tabular-nums">0</div>
-        <div class="stat-label">Equipes Cadastradas</div>
+        <div class="stat-label">Total de Equipes</div>
       </div>
       <div class="stat-box">
-        <div id="statTotalRounds" class="stat-number tabular-nums">0</div>
-        <div class="stat-label">Voltas Realizadas</div>
+        <div id="statLegoCount" class="stat-number tabular-nums" style="color: var(--color-accent);">0</div>
+        <div class="stat-label">LEGO / Educacional</div>
       </div>
       <div class="stat-box">
-        <div id="statSyncedRounds" class="stat-number tabular-nums">0</div>
-        <div class="stat-label">Sincronizadas na Nuvem</div>
+        <div id="statMakerCount" class="stat-number tabular-nums" style="color: var(--color-primary);">0</div>
+        <div class="stat-label">Aberta / Maker</div>
+      </div>
+      <div class="stat-box">
+        <div id="statTotalRounds" class="stat-number tabular-nums" style="color: #059669;">0</div>
+        <div class="stat-label">Voltas na Arena</div>
       </div>
     </div>
 
@@ -252,6 +376,16 @@
                 <option value="LEGO / Educacional">LEGO / Educacional</option>
                 <option value="Aberta / Maker">Aberta / Maker</option>
               </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Professor / Orientador (Opcional)</label>
+              <input type="text" id="inputTeamProfessor" class="form-control" placeholder="Ex: Prof. Marcos Silva">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Integrantes / Alunos (Opcional, 2 a 4)</label>
+              <input type="text" id="inputTeamMembers" class="form-control" placeholder="Ex: Lucas, Sofia, Pedro">
             </div>
 
             <button type="submit" class="btn-submit-team">
@@ -291,9 +425,13 @@
       <div class="admin-card">
         
         <div class="admin-card-title">
-          <span>📋 Equipes Participantes (<span id="teamCountBadge">0</span>)</span>
+          <span>📋 Equipes (<span id="teamCountBadge">0</span>)</span>
           
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <label class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; background: #059669; color: #fff; border: none; cursor: pointer; margin: 0; font-weight: 800; box-shadow: 0 1px 3px rgba(5,150,105,0.25);" title="Importar lista gerada no Google Forms ou Microsoft Forms">
+              📄 Importar CSV (Forms)
+              <input type="file" id="inputFileImportCSV" accept=".csv,text/csv" style="display: none;">
+            </label>
             <button type="button" id="btnFetchCloudTeams" class="btn-action" style="padding: 6px 12px; font-size: 0.8rem; background: var(--color-primary); color: #fff; border: none;" title="Buscar equipes salvas no Cloudflare D1">
               🔄 Puxar da Nuvem
             </button>
@@ -312,19 +450,19 @@
 
         <!-- Filtro Rápido -->
         <div style="margin-bottom: 16px;">
-          <input type="text" id="adminTeamSearch" class="form-control" placeholder="Filtrar equipes pelo nome ou escola...">
+          <input type="text" id="adminTeamSearch" class="form-control" placeholder="Filtrar equipes pelo nome, escola ou integrantes...">
         </div>
 
-        <!-- Tabela de Equipes -->
+        <!-- Tabela de Equipes (Gestão de Dados) -->
         <div class="history-table-wrapper">
           <table class="history-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Nome da Equipe</th>
+                <th style="width: 70px;">ID</th>
+                <th>Equipe &amp; Integrantes</th>
                 <th>Escola</th>
                 <th>Categoria</th>
-                <th style="text-align: right;">Ações</th>
+                <th style="text-align: right; width: 140px;">Ações</th>
               </tr>
             </thead>
             <tbody id="adminTeamsTableBody">
@@ -339,9 +477,153 @@
 
   </main>
 
+  <!-- Modal de Prévia e Importação de CSV (Google / Microsoft Forms) -->
+  <div id="modalCsvPreview" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary); margin: 0;">
+          📄 Importação de Formulário de Inscrição (CSV)
+        </h3>
+        <button type="button" id="btnModalCloseCsv" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="lgpd-banner">
+          <span style="font-size: 1.4rem;">🛡️</span>
+          <div>
+            <strong>Proteção de Privacidade &amp; LGPD Ativa:</strong>
+            <p style="margin: 4px 0 0 0; font-size: 0.82rem; opacity: 0.95;">
+              Colunas de CPF, RG, documentos pessoais, telefones e e-mails foram <strong>automaticamente identificadas e descartadas da memória</strong>. Apenas os nomes públicos das equipes, escolas, professores e alunos serão processados.
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px; font-size: 0.9rem; color: var(--text-main);">
+          Foram encontradas <strong id="csvTotalFoundCount">0</strong> equipes prontas para importação:
+        </div>
+
+        <div class="history-table-wrapper" style="max-height: 280px; overflow-y: auto;">
+          <table class="history-table" style="font-size: 0.85rem;">
+            <thead>
+              <tr>
+                <th>Equipe</th>
+                <th>Escola</th>
+                <th>Categoria</th>
+                <th>Professor</th>
+                <th>Integrantes</th>
+              </tr>
+            </thead>
+            <tbody id="csvPreviewTableBody">
+              <!-- Linhas de prévia geradas dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="radio" name="csvImportMode" value="merge" checked>
+            <span>Mesclar com as equipes existentes (não apaga as já cadastradas)</span>
+          </label>
+          <label style="font-size: 0.85rem; font-weight: 700; color: var(--color-danger); display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="radio" name="csvImportMode" value="replace">
+            <span>Substituir todas as equipes existentes por esta nova lista</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnModalCancelCsv" class="btn-action" style="background: var(--bg-muted); border: 1px solid var(--border-medium); color: var(--text-main);">
+          Cancelar
+        </button>
+        <button type="button" id="btnModalConfirmCsv" class="btn-action" style="background: #059669; color: #FFFFFF; border: none; font-weight: 800; padding: 10px 20px;">
+          ✅ Confirmar e Importar Equipes
+        </button>
+      </div>
+    </div>
+  </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Modal de Edição Completa da Equipe (Admin) -->
+  <div id="modalAdminEditTeam" class="modal-backdrop" style="display: none;">
+    <div class="modal-card" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 900; color: var(--color-primary); display: flex; align-items: center; gap: 8px;">
+          <span>✏️</span> Editar Cadastro da Equipe
+        </h3>
+        <button type="button" id="btnModalCloseAdminEdit" style="background: transparent; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+      </div>
+      <form id="formAdminEditTeam">
+        <div class="modal-body" style="padding: 20px;">
+          <input type="hidden" id="adminEditTeamId">
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Nome da Equipe *</label>
+            <input type="text" id="adminEditTeamName" class="form-control" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Escola / Instituição *</label>
+            <input type="text" id="adminEditTeamSchool" class="form-control" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Categoria de Disputa</label>
+            <select id="adminEditTeamCategory" class="form-control">
+              <option value="LEGO / Educacional">LEGO / Educacional</option>
+              <option value="Aberta / Maker">Aberta / Maker</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Professor / Orientador</label>
+            <input type="text" id="adminEditTeamProfessor" class="form-control" placeholder="Ex: Prof. Carlos Eduardo">
+          </div>
+
+          <!-- Alunos / Integrantes Distintos (Art. 2º, § 2º: 2 a 4 Alunos) -->
+          <div style="margin-bottom: 12px; background: var(--bg-muted); padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border-medium);">
+            <label class="form-label" style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+              <span>👥 Integrantes da Equipe (2 a 4 alunos)</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">Regulamento: Art. 2º, § 2º</span>
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Aluno 1 *</label>
+                <input type="text" id="adminEditStudent1" class="form-control" placeholder="Nome completo do Aluno 1" required style="font-size: 0.85rem; padding: 6px 10px;">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Aluno 2 *</label>
+                <input type="text" id="adminEditStudent2" class="form-control" placeholder="Nome completo do Aluno 2" required style="font-size: 0.85rem; padding: 6px 10px;">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Aluno 3 (opcional)</label>
+                <input type="text" id="adminEditStudent3" class="form-control" placeholder="Aluno 3 (se houver)" style="font-size: 0.85rem; padding: 6px 10px;">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">Aluno 4 (opcional)</label>
+                <input type="text" id="adminEditStudent4" class="form-control" placeholder="Aluno 4 (se houver)" style="font-size: 0.85rem; padding: 6px 10px;">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btnModalCancelAdminEdit" class="btn-action" style="background: var(--bg-muted); border: 1px solid var(--border-medium); color: var(--text-main);">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-action" style="background: var(--color-primary); color: #FFFFFF; border: none; font-weight: 800; padding: 10px 20px;">
+            💾 Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Scripts com Versionamento Anti-Cache -->
-  <script src="../shared/js/cloud-api.js?v=20261028_auth_v1"></script>
-  <script src="../shared/js/teams-data.js?v=20261028_auth_v1"></script>
-  <script src="js/admin.js?v=20261028_auth_v1"></script>
+  <script src="../config/regrasTorneio.js?v=20261124_v6"></script>
+  <script src="../shared/js/cloud-api.js?v=20261124_v6"></script>
+  <script src="../shared/js/teams-data.js?v=20261124_v6"></script>
+  <script src="js/admin.js?v=20261124_v6"></script>
 </body>
 </html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credenciamento &amp; Inspeção Técnica — 1º Torneio Escolar de Robótica (Anchieta)</title>
+  
+  <!-- Anti-cache estrito -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- CSS Compartilhado e Específico -->
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261118_cred_v1">
+  <link rel="stylesheet" href="../pista/css/mesa-operador.css?v=20261118_cred_v1">
+  <link rel="stylesheet" href="css/credenciamento.css?v=20261118_cred_v1">
+</head>
+<body class="operator-layout">
+
+  <!-- Faixa de Destaque Superior de 6px (Laranja Anchieta #F26522) -->
+  <div class="anchieta-topbar"></div>
+
+  <!-- Header Superior com Logotipo Oficial -->
+  <header class="cred-header">
+    <div class="cred-brand">
+      <div class="header-logo-container" style="display: flex; align-items: center;">
+        <img src="../shared/img/logo-anchieta.png" alt="Colégio Anchieta" class="header-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+        <div class="op-logo-badge" style="display: none;">ANCHIETA</div>
+      </div>
+      <div class="cred-title-text">
+        <h1>CREDENCIAMENTO & INSPEÇÃO TÉCNICA</h1>
+        <p>1º Torneio Escolar de Robótica – Etapa Colégio Anchieta &bull; 05/12/2026 (14h às 18h)</p>
+      </div>
+    </div>
+
+    <!-- Status de Nuvem & Ações Rápidas -->
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <div id="cloudStatusBadge" class="badge-status cloud-offline">
+        <span class="status-dot"></span>
+        <span id="cloudStatusText">Verificando Nuvem...</span>
+      </div>
+
+      <button type="button" id="btnCredGenerateQueue" class="btn-action" style="padding: 7px 16px; font-size: 0.85rem; background: var(--color-accent); color: #FFFFFF; border: none; font-weight: 800; border-radius: var(--radius-md); box-shadow: 0 2px 6px rgba(242,101,34,0.3); cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Gera a Fila Oficial de Largada com as equipes aptas e envia para a Mesa da Arena">
+        <span>🏁</span> Gerar Fila Oficial da Arena
+      </button>
+
+      <button type="button" id="btnSyncCloud" class="btn-action" style="padding: 6px 14px; font-size: 0.82rem; background: var(--bg-muted); border: 1px solid var(--border-medium); color: var(--text-main); font-weight: 700;">
+        🔄 Atualizar
+      </button>
+      <a href="../index.html" class="btn-action" style="padding: 6px 14px; font-size: 0.82rem; background: var(--color-primary); color: #FFFFFF; text-decoration: none; font-weight: 700; border-radius: var(--radius-md);">
+        🏠 Início
+      </a>
+    </div>
+  </header>
+
+  <!-- Container Principal -->
+  <main class="cred-container">
+    
+    <!-- 4 Cards de Métricas de Entrada -->
+    <div class="cred-stats-grid">
+      <div class="cred-stat-card highlight-blue">
+        <div class="cred-stat-title">
+          <span>Total Inscritas</span>
+          <span>📋</span>
+        </div>
+        <div id="statTotal" class="cred-stat-number">--</div>
+        <div class="cred-stat-subtext">Equipes no regulamento</div>
+      </div>
+
+      <div class="cred-stat-card highlight-green">
+        <div class="cred-stat-title">
+          <span>Check-in Realizado</span>
+          <span>✅</span>
+        </div>
+        <div id="statCheckin" class="cred-stat-number">--</div>
+        <div class="cred-stat-subtext">Presentes no ginásio</div>
+      </div>
+
+      <div class="cred-stat-card highlight-purple">
+        <div class="cred-stat-title">
+          <span>Inspeção Técnica</span>
+          <span>🤖</span>
+        </div>
+        <div id="statInspecao" class="cred-stat-number">--</div>
+        <div class="cred-stat-subtext">Robô ≤2kg e 25x25cm OK</div>
+      </div>
+
+      <div class="cred-stat-card highlight-orange">
+        <div class="cred-stat-title">
+          <span>Aptas para a Arena</span>
+          <span>🏁</span>
+        </div>
+        <div id="statAptas" class="cred-stat-number">--</div>
+        <div class="cred-stat-subtext">Prontas para a largada</div>
+      </div>
+    </div>
+
+    <!-- Seção Fixa de Conferência da Ordem Oficial de Largada (Mural do Ginásio) -->
+    <div id="credQueueConferenceSection" class="cred-card" style="margin-bottom: 24px; border-left: 5px solid var(--color-accent); display: none;">
+      <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.3rem;">🏁</span>
+          <div>
+            <h2 style="font-size: 1.05rem; font-weight: 900; color: var(--color-primary); margin: 0;">
+              Ordem Oficial de Largada da Arena (Conferência Geral)
+            </h2>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 2px 0 0;">
+              Ordem sincronizada em tempo real com a Mesa da Arena e Nuvem D1.
+            </p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="display: flex; gap: 4px; background: var(--bg-muted); padding: 3px; border-radius: var(--radius-md);">
+            <button type="button" id="confTabRound1" class="cred-pill-btn active" style="padding: 6px 12px; font-size: 0.78rem;">Round 1</button>
+            <button type="button" id="confTabRound2" class="cred-pill-btn" style="padding: 6px 12px; font-size: 0.78rem;">Round 2 (Invertido)</button>
+          </div>
+          <button type="button" id="btnPrintQueue" class="btn-action" style="padding: 6px 14px; font-size: 0.8rem; background: var(--color-primary); color: #fff; font-weight: 700; border: none; border-radius: var(--radius-md); cursor: pointer;" title="Imprimir lista para colar na parede do ginásio ou nos boxes">
+            🖨️ Imprimir Ordem (A4)
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid de Baterias para Conferência -->
+      <div id="confQueueGrid" style="padding: 16px 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; max-height: 260px; overflow-y: auto;">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+
+    <!-- Barra de Busca Instantânea & Filtros de Categoria -->
+    <div class="cred-search-bar">
+      <div class="cred-search-input-wrapper">
+        <span class="cred-search-icon">🔍</span>
+        <input type="text" id="credSearchInput" class="cred-search-input" placeholder="Buscar por equipe, colégio, professor ou aluno..." autocomplete="off">
+      </div>
+
+      <div class="cred-filter-pills">
+        <button type="button" class="cred-pill-btn active" data-cat="ALL">Todas as Categorias</button>
+        <button type="button" class="cred-pill-btn" data-cat="LEGO">LEGO / Educacional</button>
+        <button type="button" class="cred-pill-btn" data-cat="MAKER">Aberta / Maker</button>
+      </div>
+    </div>
+
+    <!-- Card com Tabela de Credenciamento -->
+    <div class="cred-card">
+      <table class="cred-table">
+        <thead>
+          <tr>
+            <th style="width: 80px; text-align: center;">ID</th>
+            <th>Equipe & Integrantes</th>
+            <th>Escola / Categoria</th>
+            <th style="width: 170px; text-align: center;">Presença</th>
+            <th style="width: 190px; text-align: center;">Inspeção Gabarito</th>
+            <th style="width: 160px; text-align: center;">Status Arena</th>
+          </tr>
+        </thead>
+        <tbody id="credTableBody">
+          <!-- Renderizado via JS -->
+        </tbody>
+      </table>
+
+      <!-- Estado Vazio -->
+      <div id="credEmptyState" style="display: none; padding: 48px 24px; text-align: center; color: var(--text-muted);">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">🔍</div>
+        <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-main);">Nenhuma equipe encontrada</div>
+        <p style="font-size: 0.85rem; margin-top: 4px;">Tente alterar os termos da busca ou selecione outra categoria.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal da Fila Oficial da Arena -->
+  <div id="modalQueuePreview" class="modal-backdrop" style="display: none;">
+    <div class="modal-card" style="max-width: 650px; width: 100%;">
+      <div class="modal-header">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 900; color: var(--color-primary); display: flex; align-items: center; gap: 8px;">
+          <span>🏁</span> Fila Oficial da Arena (Ordem de Largada)
+        </h3>
+        <button type="button" id="btnModalCloseQueue" style="background: transparent; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div id="queueModalNotice" style="background: #F0FDF4; border: 1.5px solid #86EFAC; color: #166534; padding: 10px 14px; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 600; margin-bottom: 16px;">
+          <!-- Mensagem dinâmica -->
+        </div>
+
+        <!-- Seletor de Rodadas no Modal -->
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <button type="button" id="modalTabRound1" class="cred-pill-btn active" style="flex: 1;">Round 1 (Embaralhado)</button>
+          <button type="button" id="modalTabRound2" class="cred-pill-btn" style="flex: 1;">Round 2 (Ordem Invertida)</button>
+        </div>
+
+        <!-- Lista de Baterias do Modal -->
+        <div id="modalQueueList" style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 8px; background: var(--bg-muted); display: flex; flex-direction: column; gap: 6px;">
+          <!-- Itens da fila gerados via JS -->
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-muted); padding: 12px 20px; border-top: 1px solid var(--border-light);">
+        <span style="font-size: 0.78rem; color: var(--text-muted);">Sincronizado automaticamente com a Mesa da Arena e Nuvem</span>
+        <button type="button" id="btnModalConfirmQueue" class="btn-action" style="padding: 8px 18px; font-size: 0.85rem; background: var(--color-primary); color: #fff; font-weight: 800; border: none; border-radius: var(--radius-md); cursor: pointer;">
+          Entendido, Fechar ✓
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts do Sistema -->
+  <script src="../shared/js/cloud-api.js?v=20261118_cred_v1"></script>
+  <script src="../shared/js/teams-data.js?v=20261118_cred_v1"></script>
+  <script src="js/credenciamento.js?v=20261118_cred_v1"></script>
+</body>
+</html>

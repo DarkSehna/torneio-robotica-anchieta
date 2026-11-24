@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pista de Teste &amp; Calibração — 1º Torneio Escolar de Robótica (Anchieta)</title>
+  
+  <!-- Anti-cache estrito -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- CSS Compartilhado e Específico -->
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261124_v6">
+  <link rel="stylesheet" href="../pista/css/mesa-operador.css?v=20261124_v6">
+  <link rel="stylesheet" href="css/pista-teste.css?v=20261124_v6">
+</head>
+<body class="test-track-layout">
+
+  <!-- Faixa de Destaque Superior de 6px (Laranja Anchieta #F26522) -->
+  <div class="anchieta-topbar"></div>
+
+  <!-- Header Superior -->
+  <header class="op-header">
+    <div class="op-brand">
+      <div class="header-logo-container" style="display: flex; align-items: center; gap: 10px;">
+        <img src="../shared/img/logo-anchieta.png" alt="Colégio Anchieta" class="header-logo-img" style="height: 38px; width: auto; object-fit: contain;" onerror="this.style.display='none';">
+        <div class="op-logo-badge" style="background: #0284C7;">PISTA DE TESTE</div>
+      </div>
+      <div class="op-title-text">
+        <h1>CALIBRAÇÃO DE SENSORES &amp; AQUECIMENTO</h1>
+        <p>1º Torneio Escolar de Robótica – Etapa Colégio Anchieta &bull; 05/12/2026 (14h às 18h)</p>
+      </div>
+    </div>
+
+    <div class="op-header-actions">
+      <!-- Botão Voltar ao Hub Central -->
+      <a href="../index.html" class="btn-hub-nav" title="Voltar à Central do Torneio" style="display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF; border: 1px solid var(--border-medium); color: var(--text-main); padding: 7px 14px; border-radius: var(--radius-md); text-decoration: none; font-size: 0.85rem; font-weight: 700; box-shadow: var(--shadow-sm); transition: all 0.2s;">
+        <span>🏠 Início</span>
+      </a>
+
+      <!-- Status da Nuvem -->
+      <div id="cloudStatusBadge" class="badge-status cloud-offline">
+        <span class="status-dot"></span>
+        <span id="cloudStatusText">Nuvem Conectando...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Container Principal -->
+  <main class="test-container">
+
+    <!-- Monitor da Arena Principal em Tempo Real (Trava de Conflito) -->
+    <div class="arena-monitor-banner">
+      <div class="arena-monitor-item">
+        <span style="font-size: 1.3rem;">🏟️</span>
+        <div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Arena Principal (Em Pista Agora):</div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+            <strong id="liveArenaCurrentTeam" style="font-size: 1.05rem; color: var(--color-primary);">--</strong>
+            <span id="liveArenaStatusBadge" class="arena-tag-badge tag-free">LIVRE</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arena-monitor-item">
+        <span style="font-size: 1.3rem;">⏳</span>
+        <div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Próxima na Fila da Arena:</div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+            <strong id="liveArenaNextTeam" style="font-size: 1.05rem; color: #1E40AF;">--</strong>
+            <span class="arena-tag-badge tag-next">PRÉ-ALINHAMENTO</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
+        🔄 Sincronizado via <code>torneio-api</code> &bull; Atualizado a cada 10s
+      </div>
+    </div>
+
+    <!-- Grid de Controle -->
+    <div class="test-grid">
+
+      <!-- Coluna 1: Controle do Robô no Box de Teste -->
+      <div>
+
+        <div class="admin-card">
+          <div class="admin-card-title">
+            <span>🤖 Robô no Box de Teste</span>
+          </div>
+
+          <!-- Banners de Bloqueio da Trava de Conflito -->
+          <div id="conflictDangerBanner" class="conflict-alert-box conflict-danger">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <span style="font-size: 1.4rem;">⛔</span>
+              <span style="font-size: 0.95rem; font-weight: 900; text-transform: uppercase;">Bloqueio de Conflito Crítico</span>
+            </div>
+            <p style="margin: 0; font-size: 0.85rem;">
+              A equipe <strong id="dangerTeamName">--</strong> está <strong>competindo na Arena Principal agora</strong>! É terminantemente proibido colocar o robô na pista de teste durante a bateria oficial.
+            </p>
+          </div>
+
+          <div id="conflictWarningBanner" class="conflict-alert-box conflict-warning">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <span style="font-size: 1.4rem;">⚠️</span>
+              <span style="font-size: 0.95rem; font-weight: 900; text-transform: uppercase;">Alerta de Chamada Iminente</span>
+            </div>
+            <p style="margin: 0; font-size: 0.85rem;">
+              A equipe <strong id="warningTeamName">--</strong> é a <strong>PRÓXIMA DA FILA</strong> na Arena Principal! Ela deve se dirigir imediatamente ao pré-alinhamento da arena.
+            </p>
+          </div>
+
+          <!-- Seleção de Duração do Slot -->
+          <div class="form-group">
+            <label class="form-label">Duração do Slot de Teste</label>
+            <div class="slot-duration-selector">
+              <button type="button" class="slot-duration-btn active" data-duration="180">⏱️ 3 Minutos</button>
+              <button type="button" class="slot-duration-btn" data-duration="300">⏱️ 5 Minutos</button>
+              <button type="button" class="slot-duration-btn" data-duration="0">⏱️ Livre</button>
+            </div>
+          </div>
+
+          <!-- Seleção da Equipe -->
+          <div class="form-group">
+            <label class="form-label">Equipe para Teste</label>
+            <input type="text" id="testTeamSearch" class="form-control" placeholder="Buscar equipe ou escola...">
+            <div id="testTeamSelectList" class="team-select-list" style="max-height: 180px;">
+              <!-- Gerado via JavaScript -->
+            </div>
+          </div>
+
+          <!-- Display Regressivo do Cronômetro -->
+          <div class="test-timer-hero">
+            <div id="testTimerStatusText" style="font-size: 0.78rem; font-weight: 800; letter-spacing: 0.05em; color: #94A3B8; text-transform: uppercase;">
+              PISTA LIVRE — AGUARDANDO ROBÔ
+            </div>
+            <div id="testTimerDigits" class="test-timer-digits tabular-nums">03:00.00</div>
+            <div id="activeTestTeamInfo" style="font-size: 0.9rem; font-weight: 700; color: #F26522; min-height: 22px;">
+              Nenhuma equipe na pista de teste
+            </div>
+          </div>
+
+          <!-- Botões de Ação Táteis -->
+          <div class="test-actions-grid">
+            <button type="button" id="btnTestStart" class="btn-test-action btn-test-start">
+              ▶ INICIAR TESTE
+            </button>
+            <button type="button" id="btnTestPause" class="btn-test-action btn-test-pause">
+              ⏸ PAUSAR
+            </button>
+            <button type="button" id="btnTestReset" class="btn-test-action btn-test-reset">
+              🔄 REINICIAR
+            </button>
+            <button type="button" id="btnTestRelease" class="btn-test-action btn-test-release" style="grid-column: 1 / -1;">
+              🏁 LIBERAR PISTA (REGISTRAR SESSÃO)
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Coluna 2: Tabela de Sessões da Pista de Teste -->
+      <div>
+
+        <div class="admin-card">
+          <div class="admin-card-title">
+            <span>📋 Sessões Realizadas na Pista de Teste (<span id="testSessionCount">0</span>)</span>
+            <button type="button" id="btnClearTestHistory" class="btn-action" style="padding: 4px 10px; font-size: 0.78rem; background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5;">
+              🗑️ Limpar Sessões
+            </button>
+          </div>
+
+          <div class="history-table-wrapper" style="max-height: 520px; overflow-y: auto;">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Horário</th>
+                  <th>Equipe</th>
+                  <th>Escola</th>
+                  <th>Categoria</th>
+                  <th>Duração</th>
+                </tr>
+              </thead>
+              <tbody id="testHistoryTableBody">
+                <!-- Preenchido via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="../shared/js/cloud-api.js?v=20261124_v6"></script>
+  <script src="../shared/js/teams-data.js?v=20261124_v6"></script>
+  <script src="../pista/js/audio-cues.js?v=20261124_v6"></script>
+  <script src="js/pista-teste.js?v=20261124_v6"></script>
+</body>
+</html>

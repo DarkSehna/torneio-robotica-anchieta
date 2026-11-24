@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return (evName && evName === tName) || (evId && evId === tId);
     });
 
-    const criteriaList = REGRAS?.criteriosPaddock || [];
+    const criteriaList = (REGRAS?.criteriosPaddock || []).filter(c => c.ativo !== false);
     const result = { evalCount: teamEvals.length, sumAvgs: 0 };
 
     criteriaList.forEach(crit => {
@@ -201,9 +201,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // 3.2 Identifica vencedores dos Troféus de Paddock (para o Bônus de +5 pts) consumindo REGRAS_TORNEIO
-    const sortedCriteria = [...(REGRAS?.criteriosPaddock || [])].sort(
-      (a, b) => (a.ordemCerimonia || 99) - (b.ordemCerimonia || 99)
-    );
+    const sortedCriteria = [...(REGRAS?.criteriosPaddock || [])]
+      .filter(c => c.ativo !== false)
+      .sort((a, b) => (a.ordemCerimonia || 99) - (b.ordemCerimonia || 99));
 
     sortedCriteria.forEach(crit => {
       const sorted = [...enriched].sort((a, b) => {

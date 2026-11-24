@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mesa do Operador — Torneio de Robótica Anchieta</title>
+  <title>Mesa do Operador — 1º Torneio Escolar de Robótica (Anchieta)</title>
   
   <!-- Anti-cache estrito -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -22,10 +22,13 @@
   <!-- Header Superior da Mesa -->
   <header class="op-header">
     <div class="op-brand">
-      <div class="op-logo-badge">ANCHIETA</div>
+      <div class="header-logo-container" style="display: flex; align-items: center;">
+        <img src="../shared/img/logo-anchieta.png" alt="Colégio Anchieta" class="header-logo-img" style="height: 38px; width: auto; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+        <div class="op-logo-badge" style="display: none;">ANCHIETA</div>
+      </div>
       <div class="op-title-text">
-        <h1>MESA DA PISTA — PAINEL DO OPERADOR</h1>
-        <p>Sistema Oficial de Cronometragem e Apuração &bull; 05/12/2026</p>
+        <h1>MESA DA ARENA — PAINEL DO OPERADOR</h1>
+        <p>1º Torneio Escolar de Robótica – Etapa Colégio Anchieta &bull; 05/12/2026 (14h às 18h)</p>
       </div>
     </div>
 
@@ -53,16 +56,6 @@
         <span>Fila Local: <strong id="pendingCount">0</strong></span>
       </div>
 
-      <!-- Painel Admin / Gestão de Equipes -->
-      <a href="../admin/index.html" class="btn-header-admin" title="Adicionar ou remover equipes e gerenciar dados">
-        ⚙️ Admin / Equipes
-      </a>
-
-      <!-- Painel Mobile Paddock -->
-      <a href="../paddock/index.html" target="_blank" class="btn-header-admin" title="Abrir interface mobile dos Juízes de Paddock">
-        📱 Paddock
-      </a>
-
       <!-- Botão para Projetar no HDMI -->
       <a href="telao-ginasio.html" target="_blank" class="btn-open-telao" title="Abre o telão em uma nova janela para arrastar ao projetor HDMI">
         🖥️ Abrir Telão do Ginásio ↗
@@ -83,12 +76,19 @@
   <!-- Grid Principal -->
   <main class="op-main">
     
-    <!-- Coluna 1: Configuração e Seleção de Equipe -->
+    <!-- Coluna 1: Ordem Oficial da Arena e Chamada de Bateria -->
     <div class="op-col-config">
       
-      <div id="partidaConfigSection" class="card-section">
-        <div class="card-title">
-          <h2>1. Seleção de Partida</h2>
+      <div id="arenaQueueSection" class="card-section" style="border-top: 3px solid var(--color-accent); display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- Cabeçalho do Card com Título e Botão de Apoio -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="font-size: 1.05rem; display: flex; align-items: center; gap: 6px; margin: 0; color: var(--color-primary);">
+            <span>🏁</span> ORDEM OFICIAL DA ARENA
+          </h2>
+          <button type="button" id="btnGenerateQueue" class="btn-action" style="padding: 5px 10px; font-size: 0.76rem; background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-medium); font-weight: 700; border-radius: var(--radius-sm);" title="Reembaralhar fila de equipes aptas">
+            🎲 Reembaralhar
+          </button>
         </div>
 
         <!-- Banner de Proteção Operacional contra Cliques Acidentais -->
@@ -97,45 +97,83 @@
           <span>BATERIA EM ANDAMENTO — Controles de equipe bloqueados para evitar acidentes.</span>
         </div>
 
-        <!-- Seletor de Categoria -->
-        <div class="form-group">
-          <label class="form-label">Categoria de Disputa</label>
-          <div class="pill-selector">
-            <button type="button" id="catBtnLego" class="pill-btn active">LEGO / Educacional</button>
-            <button type="button" id="catBtnMaker" class="pill-btn">Aberta / Maker</button>
+        <!-- Seletores de Categoria e Rodada Lado a Lado -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label class="form-label" style="font-size: 0.72rem; margin-bottom: 4px;">Categoria</label>
+            <div class="pill-selector">
+              <button type="button" id="catBtnLego" class="pill-btn active" style="padding: 6px 4px; font-size: 0.78rem;">LEGO</button>
+              <button type="button" id="catBtnMaker" class="pill-btn" style="padding: 6px 4px; font-size: 0.78rem;">Maker</button>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.72rem; margin-bottom: 4px;">Rodada</label>
+            <div class="pill-selector">
+              <button type="button" id="roundBtn1" class="pill-btn active" style="padding: 6px 4px; font-size: 0.78rem;">Round 1</button>
+              <button type="button" id="roundBtn2" class="pill-btn" style="padding: 6px 4px; font-size: 0.78rem;">Round 2</button>
+            </div>
           </div>
         </div>
 
-        <!-- Seletor de Rodada -->
-        <div class="form-group">
-          <label class="form-label">Rodada da Pista</label>
-          <div class="pill-selector">
-            <button type="button" id="roundBtn1" class="pill-btn active">Round 1</button>
-            <button type="button" id="roundBtn2" class="pill-btn">Round 2</button>
+        <!-- Card Unificado: EM PISTA AGORA -->
+        <div style="background: #F0FDF4; border: 2px solid #86EFAC; border-radius: var(--radius-md); padding: 12px; box-shadow: 0 2px 6px rgba(22,101,52,0.08);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-size: 0.72rem; font-weight: 900; color: #166534; text-transform: uppercase; letter-spacing: 0.04em;">⚡ EM PISTA AGORA</span>
+            <div class="preview-badge-row" style="margin: 0; gap: 4px;">
+              <span id="activeCatBadge" class="badge-pill-light" style="font-size: 0.68rem; padding: 2px 6px;">LEGO / Educacional</span>
+              <span id="activeRoundBadge" class="badge-pill-orange" style="font-size: 0.68rem; padding: 2px 6px;">Round 1</span>
+            </div>
+          </div>
+          <div id="activeTeamName" style="font-size: 1.35rem; font-weight: 900; color: #065F46; line-height: 1.2;">--</div>
+          <div id="activeSchoolName" style="font-size: 0.88rem; color: #15803D; font-weight: 600; margin-top: 2px;">--</div>
+          <!-- Linha de Apoio (Professor e Integrantes) -->
+          <div id="activeTeamDetails" style="margin-top: 8px; font-size: 0.76rem; color: #166534; line-height: 1.35; padding-top: 6px; border-top: 1px dashed #86EFAC;">
+            <div id="activeTeamProfessor"></div>
+            <div id="activeTeamMembers"></div>
+          </div>
+          <!-- Elemento mantido oculto para retrocompatibilidade com referências JS -->
+          <div id="queueCurrentTeamText" style="display: none;"></div>
+        </div>
+
+        <!-- Card: NA ESPERA (PRÓXIMO ROBÔ) -->
+        <div style="background: #EFF6FF; border: 1.5px solid #93C5FD; border-radius: var(--radius-md); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.68rem; font-weight: 800; color: #1E40AF; text-transform: uppercase; letter-spacing: 0.04em;">⏳ Na Espera (Próximo Robô)</div>
+            <div id="queueNextTeamText" style="font-size: 1.05rem; font-weight: 900; color: #1D4ED8; margin-top: 2px;">--</div>
           </div>
         </div>
 
-        <!-- Busca e Seleção de Equipes -->
-        <div class="form-group">
-          <label class="form-label">Equipe e Escola</label>
-          <div class="search-input-wrapper">
+        <!-- Botão Principal de Chamada da Fila -->
+        <button type="button" id="btnNextInQueue" class="btn-action" style="width: 100%; padding: 12px 14px; font-size: 1rem; font-weight: 900; background: linear-gradient(135deg, #F26522, #D9531E); color: #fff; border: none; border-radius: var(--radius-md); box-shadow: 0 4px 10px rgba(242,101,34,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s, filter 0.1s;" title="Carrega a próxima equipe apta no cronômetro">
+          <span>⏩</span> CHAMAR PRÓXIMO DA FILA
+        </button>
+
+        <!-- Ordem das Baterias e Troca Rápida -->
+        <div style="margin-top: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 0.78rem; font-weight: 800; color: var(--text-main);">Ordem das Baterias (Clique para trocar)</span>
+          </div>
+
+          <!-- Indicador de Aptidão -->
+          <div id="queueAptitudeWarning" style="display: none; background: #FFFBEB; border: 1px solid #FCD34D; color: #B45309; padding: 6px 10px; border-radius: var(--radius-sm); font-size: 0.75rem; margin-bottom: 8px; font-weight: 600;">
+            ⚠️ Apenas equipes com <strong>Check-in + Inspeção OK</strong> entram na fila.
+          </div>
+
+          <!-- Busca Rápida de Equipe -->
+          <div class="search-input-wrapper" style="margin-bottom: 8px;">
             <span class="search-icon">🔍</span>
-            <input type="text" id="teamSearchInput" class="search-input" placeholder="Buscar por equipe ou escola...">
+            <input type="text" id="teamSearchInput" class="search-input" placeholder="Buscar equipe para troca rápida..." style="font-size: 0.82rem; padding: 7px 10px 7px 32px;">
           </div>
-          <div id="teamSelectList" class="team-select-list">
-            <!-- Gerado via JavaScript -->
-          </div>
-        </div>
-      </div>
 
-      <!-- Preview da Equipe em Pista -->
-      <div class="active-team-preview">
-        <div class="preview-badge-row">
-          <span id="activeCatBadge" class="badge-pill-light">LEGO / Educacional</span>
-          <span id="activeRoundBadge" class="badge-pill-orange">Round 1</span>
+          <!-- Lista Unificada de Baterias da Fila -->
+          <div id="queueListContainer" style="min-height: 140px; max-height: 240px; overflow-y: auto; border: 1.5px solid var(--border-light); border-radius: var(--radius-md); padding: 6px; background: var(--bg-muted); display: flex; flex-direction: column; gap: 5px;">
+            <!-- Itens da fila gerados via JS -->
+          </div>
+
+          <!-- Elemento oculto para retrocompatibilidade com referências do JS -->
+          <div id="teamSelectList" style="display: none;"></div>
         </div>
-        <div id="activeTeamName" class="preview-team-name">Anchieta1</div>
-        <div id="activeSchoolName" class="preview-school-name">Colégio Anchieta</div>
+
       </div>
 
     </div>
