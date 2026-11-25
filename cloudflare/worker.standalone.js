@@ -116,34 +116,45 @@ const REGRAS_TORNEIO = {
     }
   ],
 
+  // 5. Matriz Oficial de Desempate por Categoria (Padronizada - Edital V5 / Opção A)
+  // TODAS as categorias de Paddock agora seguem a regra padronizada:
+  // 1º Menor Tempo de Pista ➔ 2º Menor Faltas na Melhor Volta ➔ 3º Voto de Minerva
   regrasDesempate: {
+    // Velocidade na Pista Principal
     pista: {
       descricaoRotulo: "1º Menor Tempo Líquido ➔ 2º Menor Faltas ➔ 3º Segunda Volta",
       ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "MENOR_SEGUNDO_TEMPO_PISTA"]
     },
+    // Rubricas de Paddock — Regra Única Padronizada
     mecanica: {
-      descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Faltas",
+      descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
       ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
+      // Histórico de opções anteriores: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
     },
     superacao: {
-      descricaoRotulo: "1º Maior Δevolução ➔ 2º Faltas no R2",
-      ordem: ["MAIOR_DELTA_EVOLUCAO", "MENOR_FALTAS_R2", "VOTO_MINERVA"]
+      descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
+      ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
+      // Histórico de opções anteriores: ["MAIOR_DELTA_EVOLUCAO", "MENOR_FALTAS_R2", "VOTO_MINERVA"]
     },
     caracterizacao: {
-      descricaoRotulo: "1º Votos \"Destaque ★\" ➔ 2º Voto de Minerva",
-      ordem: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
+      descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
+      ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
+      // Histórico de opções anteriores: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
     },
     caracterizacao_equipe: {
-      descricaoRotulo: "1º Votos \"Destaque ★\" ➔ 2º Voto de Minerva",
-      ordem: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
+      descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
+      ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
+      // Histórico de opções anteriores: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
     },
     torcida: {
-      descricaoRotulo: "1º Votos \"Destaque ★\" ➔ 2º Voto de Minerva",
-      ordem: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
+      descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
+      ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
+      // Histórico de opções anteriores: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
     },
     fair_play: {
-      descricaoRotulo: "1º Menor total acumulado de faltas ➔ 2º Voto de Minerva",
-      ordem: ["MENOR_TOTAL_FALTAS", "VOTO_MINERVA"]
+      descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
+      ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
+      // Histórico de opções anteriores: ["MENOR_TOTAL_FALTAS", "VOTO_MINERVA"]
     }
   },
 
