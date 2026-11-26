@@ -37,13 +37,13 @@
  */
 
 const REGRAS_TORNEIO = {
-  // 1. Identificação da Edição Atual (Edital V5 - CIPARE)
+  // 1. Identificação da Edição Atual (Edital V7)
   edicao: "1º Torneio Escolar de Robótica – Etapa Colégio Anchieta",
-  subtituloEdicao: "Edital V5 (CIPARE) • 05/12/2026 (14h às 18h)",
+  subtituloEdicao: "Edital V7 • 05/12/2026 (14h às 18h)",
   dataEvento: "05/12/2026",
   horarioEvento: "14h às 18h",
   modalidade: "Seguidor de Linha",
-  categoriaUnica: true,          // [Edital V5] Quando true, unifica premiação/pódio e bloqueia divisão LEGO vs Maker
+  categoriaUnica: true,          // [Edital V7] Quando true, unifica premiação/pódio e bloqueia divisão LEGO vs Maker
   nomeCategoriaUnica: "Categoria Única",
 
   // 2. Regras Físicas de Pista (Art. 7º e Art. 8º)
@@ -94,13 +94,14 @@ const REGRAS_TORNEIO = {
 
   // 4. Critérios Oficiais de Avaliação de Bancada (Paddock - Art. 9º)
   // Nota: `id` e `colunaLegadaDb` preservam 100% de compatibilidade com o Cloudflare D1 existente.
+  // A numeração de 1 a N é atribuída dinamicamente no formulário apenas para os critérios com `ativo !== false`.
   criteriosPaddock: [
     {
       id: "caracterizacao",
       ativo: true,
       colunaLegadaDb: "nota_caracterizacao",
       premio: "Melhor Caracterização do Robô (Carro)",
-      nomeExibicao: "🤖 1. Melhor Caracterização do Robô (Carro)",
+      nomeExibicao: "🤖 Melhor Caracterização do Robô (Carro)",
       icone: "🤖",
       peso: 1.0,
       ordemFormulario: 1,
@@ -113,7 +114,7 @@ const REGRAS_TORNEIO = {
       ativo: true,
       colunaLegadaDb: "nota_caracterizacao_equipe",
       premio: "Melhor Caracterização da Equipe",
-      nomeExibicao: "🎭 2. Melhor Caracterização da Equipe",
+      nomeExibicao: "🎭 Melhor Caracterização da Equipe",
       icone: "🎭",
       peso: 1.0,
       ordemFormulario: 2,
@@ -126,7 +127,7 @@ const REGRAS_TORNEIO = {
       ativo: true,
       colunaLegadaDb: "nota_mecanica",
       premio: "Melhor Mecânica",
-      nomeExibicao: "⚙️ 3. Melhor Mecânica",
+      nomeExibicao: "⚙️ Melhor Mecânica",
       icone: "⚙️",
       peso: 1.0,
       ordemFormulario: 3,
@@ -139,7 +140,7 @@ const REGRAS_TORNEIO = {
       ativo: true,
       colunaLegadaDb: "voto_superacao",
       premio: "Prêmio Superação",
-      nomeExibicao: "🚀 4. Prêmio Superação",
+      nomeExibicao: "🚀 Prêmio Superação",
       icone: "🚀",
       peso: 1.0,
       ordemFormulario: 4,
@@ -149,10 +150,10 @@ const REGRAS_TORNEIO = {
     },
     {
       id: "torcida",
-      ativo: false, // [2026] Ocultado nesta edição conforme Art. 9º do Edital V5. Altere para true para reativar no futuro.
+      ativo: false, // [2026] Ocultado nesta edição conforme Art. 9º do Edital V7. Altere para true para reativar no futuro.
       colunaLegadaDb: "nota_torcida",
       premio: "Melhor Torcida",
-      nomeExibicao: "📣 5. Melhor Torcida",
+      nomeExibicao: "📣 Melhor Torcida",
       icone: "📣",
       peso: 1.0,
       ordemFormulario: 5,
@@ -165,24 +166,29 @@ const REGRAS_TORNEIO = {
       ativo: true,
       colunaLegadaDb: "voto_fair_play",
       premio: "Prêmio Fair Play",
-      nomeExibicao: "🤝 6. Prêmio Fair Play (Jogo Limpo)",
+      nomeExibicao: "🤝 Prêmio Fair Play (Jogo Limpo)",
       icone: "🤝",
       peso: 1.0,
       ordemFormulario: 6,
-      ordemCerimonia: 6,
+      ordemCerimonia: 5,
       resumoCurto: "Postura colaborativa auxiliando equipes adversárias (Art. 9º, VI).",
       descricao: "A equipe demonstrou postura colaborativa e espírito esportivo, auxiliando outras equipes na solução de problemas?"
     }
   ],
 
-  // 5. Matriz Oficial de Desempate por Categoria (Padronizada - Edital V5 / Opção A)
+  // 5. Matriz Oficial de Desempate por Categoria (Padronizada - Edital V7 / Opção A)
   // TODAS as categorias de Paddock agora seguem a regra padronizada:
   // 1º Menor Tempo de Pista ➔ 2º Menor Faltas na Melhor Volta ➔ 3º Voto de Minerva
   regrasDesempate: {
     // Velocidade na Pista Principal
     pista: {
-      descricaoRotulo: "1º Menor Tempo Líquido ➔ 2º Menor Faltas ➔ 3º Segunda Volta",
-      ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "MENOR_SEGUNDO_TEMPO_PISTA"]
+      descricaoRotulo: "1º Menor Tempo Líquido ➔ 2º Menor Faltas (Melhor Volta) ➔ 3º Segunda Volta ➔ 4º Menor Faltas (2ª Volta)",
+      ordem: [
+        "MENOR_TEMPO_PISTA",
+        "MENOR_FALTAS_MELHOR_VOLTA",
+        "MENOR_SEGUNDO_TEMPO_PISTA",
+        "MENOR_FALTAS_SEGUNDA_VOLTA"
+      ]
     },
     // Rubricas de Paddock — Regra Única Padronizada
     mecanica: {
@@ -224,6 +230,40 @@ const REGRAS_TORNEIO = {
     pontosPistaParticipacaoDNF: 5,
     multiplicadorSomaRubricasPaddock: 3.0, // Soma das 5 médias (máx 15.0) * 3.0 = 45.0 pts
     bonusTrofeuEtapa: 5.0
+  },
+
+  // 7. Votação Oficial por QR Code para o Nome do Torneio
+  votacaoNome: {
+    titulo: "Escolha o Nome Oficial do Torneio de Robótica",
+    subtitulo: "Vote em um dos nomes candidatos da Comissão Organizadora ou envie uma sugestão criativa da sua equipe!",
+    permitirSugestao: true,
+    opcoesComissao: [
+      {
+        id: "ANCHIETA_ROBOTICS_CUP",
+        nome: "Anchieta Robotics Cup",
+        descricao: "Identidade moderna inspirada nas grandes copas estudantis de robótica e tecnologia."
+      },
+      {
+        id: "COPA_ANCHIETA_ROBOTICA",
+        nome: "Copa Anchieta de Robótica Escolar (CARE)",
+        descricao: "Destaca a tradição do Colégio Anchieta e o protagonismo das equipes escolares."
+      },
+      {
+        id: "CIRCUITO_INTERCOLEGIAL_ROBOTICA",
+        nome: "Circuito Intercolegial de Robótica Educacional",
+        descricao: "Valoriza a integração entre diferentes escolas e o formato de etapas anuais."
+      },
+      {
+        id: "DESAFIO_AUTONOMO_ANCHIETA",
+        nome: "Desafio Anchieta de Robôs Autônomos (DARA)",
+        descricao: "Foco no desafio de engenharia, sensores e programação autônoma na arena."
+      },
+      {
+        id: "TORNEIO_TECH_ANCHIETA",
+        nome: "Torneio Anchieta de Inovação & Robótica",
+        descricao: "Conecta a competição de pista com a criatividade e inovação tecnológica dos alunos."
+      }
+    ]
   },
 
   // ==========================================================================
@@ -304,12 +344,22 @@ const REGRAS_TORNEIO = {
   /**
    * Executa a comparação determinística entre dois candidatos de Pista (`a` e `b`)
    * consumindo a sequência parametrizada em `regrasDesempate.pista.ordem`.
+   * Trata explicitamente `hasValidRun` e valores `Infinity` para nunca gerar `NaN`.
    */
   compararCandidatosPista(a, b) {
+    const aValid = Boolean(a?.track?.hasValidRun && Number.isFinite(a?.track?.bestTimeMs));
+    const bValid = Boolean(b?.track?.hasValidRun && Number.isFinite(b?.track?.bestTimeMs));
+
+    // Equipe com volta válida sempre precede equipe sem volta válida (2 DNFs / sem tempo)
+    if (aValid && !bValid) return -1;
+    if (!aValid && bValid) return 1;
+    if (!aValid && !bValid) return 0;
+
     const ordem = this.regrasDesempate.pista?.ordem || [
       "MENOR_TEMPO_PISTA",
       "MENOR_FALTAS_MELHOR_VOLTA",
-      "MENOR_SEGUNDO_TEMPO_PISTA"
+      "MENOR_SEGUNDO_TEMPO_PISTA",
+      "MENOR_FALTAS_SEGUNDA_VOLTA"
     ];
 
     for (const regra of ordem) {
@@ -318,12 +368,28 @@ const REGRAS_TORNEIO = {
           return a.track.bestTimeMs - b.track.bestTimeMs;
         }
       } else if (regra === "MENOR_FALTAS_MELHOR_VOLTA") {
-        if (a.track.bestTimeFouls !== b.track.bestTimeFouls) {
-          return a.track.bestTimeFouls - b.track.bestTimeFouls;
+        const fA = Number.isFinite(a.track.bestTimeFouls) ? a.track.bestTimeFouls : 99;
+        const fB = Number.isFinite(b.track.bestTimeFouls) ? b.track.bestTimeFouls : 99;
+        if (fA !== fB) {
+          return fA - fB;
         }
       } else if (regra === "MENOR_SEGUNDO_TEMPO_PISTA") {
-        if (a.track.secondTimeMs !== b.track.secondTimeMs) {
+        const aHasSecond = Number.isFinite(a.track.secondTimeMs);
+        const bHasSecond = Number.isFinite(b.track.secondTimeMs);
+        if (aHasSecond && !bHasSecond) return -1;
+        if (!aHasSecond && bHasSecond) return 1;
+        if (aHasSecond && bHasSecond && a.track.secondTimeMs !== b.track.secondTimeMs) {
           return a.track.secondTimeMs - b.track.secondTimeMs;
+        }
+      } else if (regra === "MENOR_FALTAS_SEGUNDA_VOLTA" || regra === "MENOR_FALTAS_R2") {
+        const f2A = Number.isFinite(a.track.secondTimeFouls)
+          ? a.track.secondTimeFouls
+          : (Number.isFinite(a.track.r2Fouls) ? a.track.r2Fouls : 99);
+        const f2B = Number.isFinite(b.track.secondTimeFouls)
+          ? b.track.secondTimeFouls
+          : (Number.isFinite(b.track.r2Fouls) ? b.track.r2Fouls : 99);
+        if (f2A !== f2B) {
+          return f2A - f2B;
         }
       }
     }
@@ -332,7 +398,8 @@ const REGRAS_TORNEIO = {
 
   /**
    * Executa a comparação determinística entre dois candidatos (`a` e `b`) para um critério de Paddock
-   * Retorna < 0 se `a` vence, > 0 se `b` vence, ou 0 se houver empate técnico residual (Voto de Minerva)
+   * Retorna < 0 se `a` vence, > 0 se `b` vence, ou 0 se houver empate técnico residual (Voto de Minerva).
+   * Trata explicitamente `hasValidRun` para evitar `Infinity - Infinity = NaN` caso ambas tenham 2 DNFs.
    */
   compararCandidatosRubrica(criterioId, a, b) {
     const statA = a.rubrics?.[criterioId] || { avg: 0, count3: 0 };
@@ -347,26 +414,49 @@ const REGRAS_TORNEIO = {
     const configDesempate = this.regrasDesempate[criterioId];
     const ordem = configDesempate?.ordem || [];
 
+    const aValid = Boolean(a?.track?.hasValidRun && Number.isFinite(a?.track?.bestTimeMs));
+    const bValid = Boolean(b?.track?.hasValidRun && Number.isFinite(b?.track?.bestTimeMs));
+
     for (const regra of ordem) {
       if (regra === "MENOR_TEMPO_PISTA") {
-        if (a.track.bestTimeMs !== b.track.bestTimeMs) {
+        if (aValid && !bValid) return -1;
+        if (!aValid && bValid) return 1;
+        if (aValid && bValid && a.track.bestTimeMs !== b.track.bestTimeMs) {
           return a.track.bestTimeMs - b.track.bestTimeMs;
         }
       } else if (regra === "MENOR_FALTAS_MELHOR_VOLTA") {
-        if (a.track.bestTimeFouls !== b.track.bestTimeFouls) {
-          return a.track.bestTimeFouls - b.track.bestTimeFouls;
+        if (aValid && !bValid) return -1;
+        if (!aValid && bValid) return 1;
+        if (aValid && bValid) {
+          const fA = Number.isFinite(a.track.bestTimeFouls) ? a.track.bestTimeFouls : 99;
+          const fB = Number.isFinite(b.track.bestTimeFouls) ? b.track.bestTimeFouls : 99;
+          if (fA !== fB) {
+            return fA - fB;
+          }
         }
       } else if (regra === "MENOR_SEGUNDO_TEMPO_PISTA") {
-        if (a.track.secondTimeMs !== b.track.secondTimeMs) {
+        const aHasSecond = Number.isFinite(a?.track?.secondTimeMs);
+        const bHasSecond = Number.isFinite(b?.track?.secondTimeMs);
+        if (aHasSecond && !bHasSecond) return -1;
+        if (!aHasSecond && bHasSecond) return 1;
+        if (aHasSecond && bHasSecond && a.track.secondTimeMs !== b.track.secondTimeMs) {
           return a.track.secondTimeMs - b.track.secondTimeMs;
         }
-      } else if (regra === "MAIOR_DELTA_EVOLUCAO") {
-        if (b.track.deltaEvolucao !== a.track.deltaEvolucao) {
-          return b.track.deltaEvolucao - a.track.deltaEvolucao;
+      } else if (regra === "MENOR_FALTAS_SEGUNDA_VOLTA" || regra === "MENOR_FALTAS_R2") {
+        const f2A = Number.isFinite(a?.track?.secondTimeFouls)
+          ? a.track.secondTimeFouls
+          : (Number.isFinite(a?.track?.r2Fouls) ? a.track.r2Fouls : 99);
+        const f2B = Number.isFinite(b?.track?.secondTimeFouls)
+          ? b.track.secondTimeFouls
+          : (Number.isFinite(b?.track?.r2Fouls) ? b.track.r2Fouls : 99);
+        if (f2A !== f2B) {
+          return f2A - f2B;
         }
-      } else if (regra === "MENOR_FALTAS_R2") {
-        if (a.track.r2Fouls !== b.track.r2Fouls) {
-          return a.track.r2Fouls - b.track.r2Fouls;
+      } else if (regra === "MAIOR_DELTA_EVOLUCAO") {
+        const dA = Number(a?.track?.deltaEvolucao || 0);
+        const dB = Number(b?.track?.deltaEvolucao || 0);
+        if (dB !== dA) {
+          return dB - dA;
         }
       } else if (regra === "MAIOR_CONTAGEM_DESTAQUE") {
         const cA = statA.countMax ?? statA.count3 ?? 0;
@@ -375,8 +465,10 @@ const REGRAS_TORNEIO = {
           return cB - cA;
         }
       } else if (regra === "MENOR_TOTAL_FALTAS") {
-        if (a.track.totalFaltas !== b.track.totalFaltas) {
-          return a.track.totalFaltas - b.track.totalFaltas;
+        const tfA = Number.isFinite(a?.track?.totalFaltas) ? a.track.totalFaltas : 99;
+        const tfB = Number.isFinite(b?.track?.totalFaltas) ? b.track.totalFaltas : 99;
+        if (tfA !== tfB) {
+          return tfA - tfB;
         }
       } else if (regra === "VOTO_MINERVA") {
         return 0;

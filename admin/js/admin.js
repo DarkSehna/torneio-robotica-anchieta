@@ -845,20 +845,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Trava de Categoria Única (Edital V5)
+  // Trava de Categoria Única (Edital V7)
   function applyCategoryLock() {
     const isCatUnica = !!window.REGRAS_TORNEIO?.categoriaUnica;
     const nomeCat = window.REGRAS_TORNEIO?.nomeCategoriaUnica || 'Categoria Única';
     if (isCatUnica) {
       if (selectTeamCategory) {
-        selectTeamCategory.innerHTML = `<option value="${nomeCat}" selected>🏆 ${nomeCat} (Edital V5)</option>`;
+        selectTeamCategory.innerHTML = `<option value="${nomeCat}" selected>🏆 ${nomeCat} (Edital V7)</option>`;
         selectTeamCategory.disabled = true;
-        selectTeamCategory.title = 'Categoria Única bloqueada pelo Edital V5';
+        selectTeamCategory.title = 'Categoria Única bloqueada pelo Edital V7';
       }
       if (adminEditTeamCategory) {
-        adminEditTeamCategory.innerHTML = `<option value="${nomeCat}" selected>🏆 ${nomeCat} (Edital V5)</option>`;
+        adminEditTeamCategory.innerHTML = `<option value="${nomeCat}" selected>🏆 ${nomeCat} (Edital V7)</option>`;
         adminEditTeamCategory.disabled = true;
-        adminEditTeamCategory.title = 'Categoria Única bloqueada pelo Edital V5';
+        adminEditTeamCategory.title = 'Categoria Única bloqueada pelo Edital V7';
       }
     }
   }

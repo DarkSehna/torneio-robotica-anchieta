@@ -376,6 +376,58 @@ class CloudflareTorneioAPI {
     }
     return null;
   }
+
+  // ==========================================================================
+  // VOTAÇÃO DO NOME OFICIAL DO TORNEIO (/api/votos-nome)
+  // ==========================================================================
+
+  // Obter Votos e Sugestões de Nome do Torneio (GET /api/votos-nome)
+  // Retorna { ok: true, total, contagem, sugestoes }
+  async getVotosNome() {
+    try {
+      const resp = await fetch(this._getNoCacheUrl('/api/votos-nome'), {
+        method: 'GET'
+      });
+      const data = await resp.json().catch(() => null);
+      if (resp.ok && data && data.ok === true) {
+        return data;
+      }
+      return {
+        ok: false,
+        error: data?.error || data?.message || `Erro HTTP ${resp.status}`
+      };
+    } catch (e) {
+      console.warn('Falha ao obter votos do nome do torneio:', e);
+      return { ok: false, error: e.message || 'Falha de conexão com o Worker.' };
+    }
+  }
+
+  // Registrar Voto ou Sugestão de Nome do Torneio (POST /api/votos-nome)
+  // Contrato estrito: { nome_escolhido: "...", sugestao_nova: "..." }
+  async salvarVotoNome({ nome_escolhido = '', sugestao_nova = '' }) {
+    try {
+      const payload = {
+        nome_escolhido: String(nome_escolhido || '').trim(),
+        sugestao_nova: String(sugestao_nova || '').trim()
+      };
+
+      const resp = await fetch(`${this.baseUrl}/api/votos-nome`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json().catch(() => ({}));
+      const isSuccess = Boolean(resp.ok && data && data.ok === true);
+      return {
+        ok: isSuccess,
+        status: resp.status,
+        data,
+        error: isSuccess ? null : (data?.error || data?.message || `Erro ao registrar voto (HTTP ${resp.status}).`)
+      };
+    } catch (e) {
+      return { ok: false, error: e.message || 'Não foi possível conectar ao servidor de votação.' };
+    }
+  }
 }
 
 window.cloudAPI = new CloudflareTorneioAPI();

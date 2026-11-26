@@ -1,5 +1,5 @@
 # Guia Oficial de Pontuações, Paddock, Circuito e Desempates
-### 1º Torneio Escolar de Robótica – Etapa Colégio Anchieta (Edital V5 / CIPARE)
+### 1º Torneio Escolar de Robótica – Etapa Colégio Anchieta (Edital V7)
 
 > **Para quem é este guia?**  
 > Este manual foi escrito para professores, alunos, juízes, pais e operadores da mesa. Ele explica em português simples como funcionam as pontuações do sistema (arquivo `regrasTorneio.js`), como os robôs pontuam na pista de corrida, como os juízes avaliam nos boxes (Paddock), como funciona o ranking geral de 100 pontos e como desempatamos as equipes.
@@ -36,7 +36,7 @@ Em cada categoria avaliada, o juiz clica em uma das 3 opções no celular ou tab
 * **Atende (Nota 2.0) - "Desenvolvido":** A equipe atendeu a todos os requisitos esperados para a idade e nível da competição.
 * **Destaque! (Nota 3.0) - "Superado ★":** Trabalho fora de série! A equipe surpreendeu os juízes pela criatividade, técnica ou postura.
 
-### 2.2 Os 5 Prêmios Oficiais de Paddock (Art. 9º do Edital V5)
+### 2.2 Os 5 Prêmios Oficiais de Paddock (Art. 9º do Edital V7)
 
 1. 🤖 **Melhor Caracterização do Robô (Carro):**  
    Avalia exclusivamente o acabamento visual do carrinho, pintura, carenagem temática, criatividade na estrutura mecânica externa e cuidado nos detalhes estéticos do protótipo.
@@ -49,22 +49,24 @@ Em cada categoria avaliada, o juiz clica em uma das 3 opções no celular ou tab
 5. 🤝 **Prêmio Fair Play (Jogo Limpo):**  
    Reconhece a postura esportiva, honestidade e espírito colaborativo nos boxes — especialmente alunos que ajudaram outras equipes emprestando ferramentas, peças ou dando apoio técnico solidário.
 
-*(Nota: a rubrica de "Melhor Torcida" está cadastrada no sistema com status inativo, atendendo à estrutura do Edital V5).*
+*(Nota: a rubrica de "Melhor Torcida" está cadastrada no sistema com status inativo, atendendo à estrutura do Edital V7).*
 
 ### 2.3 Como Chegamos na Nota Final de Cada Troféu?
 Se mais de um juiz avaliar a mesma equipe, o sistema calcula a **média aritmética** das notas atribuídas. A maior nota possível em cada critério é **3.0 pontos**.
 
 ---
 
-## 3. Regra Padronizada e Única de Desempate (Edital V5)
+## 3. Regra Padronizada e Única de Desempate (Edital V7)
 
 Para garantir máxima transparência, rapidez na cerimônia e critérios objetivos de fácil conferência pelos professores, o sistema utiliza uma **regra padrão unificada para TODOS os prêmios do torneio**:
 
-### 3.1 Desempate no Pódio de Pista (Velocidade)
+### 3.1 Desempate no Pódio de Pista (Velocidade em Milésimos `.000`)
 Se duas ou mais equipes registrarem o mesmo tempo na melhor volta:
-1. **1º Critério:** Menor tempo líquido na melhor volta válida.
+1. **1º Critério:** Menor tempo líquido na melhor volta válida (com precisão de milésimos de segundo `.000`).
 2. **2º Critério:** Menor número de faltas (infrações) nessa melhor volta.
-3. **3º Critério:** Menor tempo na segunda volta oficial (Round 2).
+3. **3º Critério:** Menor tempo líquido na segunda volta oficial.
+4. **4º Critério:** Menor número de faltas na segunda volta oficial.
+*(Caso persista empate exato após os 4 critérios no Top 3, o painel exibe um alerta de Empate Técnico na Pista para deliberação da Comissão).*
 
 ---
 

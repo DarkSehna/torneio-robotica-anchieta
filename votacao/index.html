@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Votação Oficial: Nome do Torneio — 1º Torneio Escolar de Robótica – Etapa Colégio Anchieta</title>
+
+  <!-- Anti-cache estrito para navegadores móveis -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- CSS Compartilhado (Design Tokens Anchieta) -->
+  <link rel="stylesheet" href="../shared/css/design-tokens.css?v=20261126_v7">
+
+  <style>
+    body.votacao-body {
+      background: var(--bg-app);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding-bottom: 48px;
+    }
+
+    .votacao-header {
+      background: var(--color-primary);
+      color: #FFFFFF;
+      padding: 16px 18px 20px;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .votacao-header-top {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .votacao-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .votacao-title h1 {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #FFFFFF;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+
+    .votacao-title p {
+      font-size: 0.76rem;
+      color: #CBD5E1;
+      margin-top: 2px;
+    }
+
+    .votacao-container {
+      max-width: 640px;
+      margin: 20px auto 0;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .vote-card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 20px 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .vote-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-accent-subtle);
+      color: var(--color-accent);
+      font-weight: 800;
+      font-size: 0.74rem;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .vote-card-title {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--color-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+    }
+
+    .vote-card-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Lista de Opções Candidatas */
+    .candidate-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .candidate-option-card {
+      border: 2px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #FFFFFF;
+      user-select: none;
+    }
+
+    .candidate-option-card:hover {
+      border-color: var(--color-primary);
+      background: #F8FAFC;
+    }
+
+    .candidate-option-card.selected {
+      border-color: var(--color-accent);
+      background: #FFF7ED;
+      box-shadow: 0 4px 12px rgba(242, 101, 34, 0.14);
+    }
+
+    .candidate-radio {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+      background: #FFFFFF;
+      transition: all 0.15s ease;
+    }
+
+    .candidate-option-card.selected .candidate-radio {
+      border-color: var(--color-accent);
+      background: var(--color-accent);
+    }
+
+    .candidate-option-card.selected .candidate-radio::after {
+      content: "✓";
+      color: #FFFFFF;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .candidate-info {
+      flex: 1;
+    }
+
+    .candidate-name {
+      font-size: 1rem;
+      font-weight: 900;
+      color: var(--color-primary);
+      line-height: 1.25;
+    }
+
+    .candidate-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    /* Campo de Sugestão Livre */
+    .custom-suggestion-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #FFFBEB;
+      border: 1.5px solid #FCD34D;
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .form-field-label {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--color-primary);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-family: var(--font-sans);
+      color: var(--text-main);
+      background: #FFFFFF;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(242, 101, 34, 0.15);
+    }
+
+    .btn-submit-vote {
+      width: 100%;
+      padding: 15px 18px;
+      border: none;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--color-accent) 0%, #D9531E 100%);
+      color: #FFFFFF;
+      font-size: 1.02rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(242, 101, 34, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.12s, filter 0.15s;
+      margin-top: 4px;
+    }
+
+    .btn-submit-vote:active {
+      transform: scale(0.98);
+    }
+
+    .btn-submit-vote:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    /* Parcial de Votos em Tempo Real */
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .result-bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .result-bar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+      gap: 8px;
+    }
+
+    .result-bar-track {
+      width: 100%;
+      height: 10px;
+      background: var(--bg-muted);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+    }
+
+    .result-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+      border-radius: var(--radius-full);
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .suggestions-wall {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .suggestion-pill {
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      color: var(--color-primary);
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .vote-confirmation-banner {
+      display: none;
+      background: #F0FDF4;
+      border: 2px solid #22C55E;
+      border-radius: var(--radius-lg);
+      padding: 18px 16px;
+      text-align: center;
+      color: #166534;
+    }
+
+    .vote-confirmation-banner.visible {
+      display: block;
+    }
+
+    .vote-error-banner {
+      display: none;
+      background: #FEF2F2;
+      border: 2px solid #EF4444;
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      color: #991B1B;
+      font-size: 0.86rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .vote-error-banner.visible {
+      display: block;
+    }
+  </style>
+</head>
+<body class="votacao-body">
+
+  <!-- Barra Superior Laranja Anchieta -->
+  <div class="anchieta-topbar"></div>
+
+  <!-- Header Mobile-First -->
+  <header class="votacao-header">
+    <div class="votacao-header-top">
+      <div class="votacao-brand">
+        <img src="../shared/img/logo-anchieta.png" alt="Colégio Anchieta" style="height: 34px; width: auto; object-fit: contain;" onerror="this.style.display='none';">
+        <div class="votacao-title">
+          <h1>VOTAÇÃO OFICIAL • NOME DO TORNEIO</h1>
+          <p id="votacaoSubtitleEdition">1º Torneio Escolar de Robótica – Etapa Colégio Anchieta • Edital V7</p>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <a href="../index.html" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; padding: 5px 10px; font-size: 0.78rem; font-weight: 700; text-decoration: none;">
+          🏠 Início
+        </a>
+        <div id="cloudStatusBadge" class="badge-status cloud-offline" style="padding: 4px 10px; font-size: 0.74rem;">
+          <span class="status-dot"></span>
+          <span id="cloudStatusText">Nuvem...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="votacao-container">
+
+    <!-- Card 1: Cabeçalho Explicativo -->
+    <section class="vote-card">
+      <div class="vote-hero-badge">
+        <span>🗳️ Participação Estudantil • QR Code</span>
+      </div>
+      <h2 id="voteMainTitle" class="vote-card-title">Escolha o Nome Oficial do Torneio de Robótica</h2>
+      <p id="voteMainSubtitle" class="vote-card-desc">
+        Vote em um dos nomes candidatos da Comissão Organizadora ou envie uma sugestão criativa da sua equipe!
+      </p>
+    </section>
+
+    <!-- Card 2: Formulário de Votação / Sugestão -->
+    <section class="vote-card">
+
+      <!-- Banner de Erro Real (exibido apenas se o POST falhar ou data.ok !== true) -->
+      <div id="voteErrorBanner" class="vote-error-banner"></div>
+
+      <!-- Banner de Confirmação Pós-Voto (exibido somente se response.ok && data.ok === true) -->
+      <div id="voteConfirmationBanner" class="vote-confirmation-banner">
+        <div style="font-size: 1.9rem; margin-bottom: 4px;">🎉</div>
+        <h3 style="font-size: 1.1rem; font-weight: 900; margin-bottom: 4px;">Voto Registrado na Nuvem com Sucesso!</h3>
+        <p id="voteConfirmationText" style="font-size: 0.88rem; margin-bottom: 14px;">
+          Obrigado por participar da escolha do nome oficial do torneio!
+        </p>
+        <button type="button" id="btnVoteAgain" style="background: #16A34A; color: #FFFFFF; border: none; padding: 10px 18px; border-radius: var(--radius-md); font-weight: 800; font-size: 0.86rem; cursor: pointer;">
+          🔄 Enviar Outro Voto / Nova Sugestão
+        </button>
+      </div>
+
+      <form id="formVotacaoNome">
+        <div style="font-size: 0.84rem; font-weight: 800; color: var(--color-primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <span>🏆 1. Escolha um nome da lista (ou clique novamente para desmarcar):</span>
+        </div>
+
+        <!-- Lista de Nomes Candidatos da Comissão -->
+        <div id="candidateOptionsList" class="candidate-options-list">
+          <!-- Renderizado dinamicamente via JS -->
+        </div>
+
+        <!-- Campo para Sugerir um Nome Novo -->
+        <div id="customSuggestionSection" class="custom-suggestion-box">
+          <label class="form-field-label" for="inputCustomName" style="color: #92400E;">
+            💡 2. Ou envie uma sugestão de nome novo (opcional se já escolheu acima):
+          </label>
+          <input
+            type="text"
+            id="inputCustomName"
+            class="form-input"
+            maxlength="80"
+            placeholder="Digite aqui sua sugestão criativa de nome..."
+          >
+          <span style="font-size: 0.75rem; color: #B45309;">
+            Você pode votar em uma opção da lista, enviar apenas uma sugestão nova, ou ambos!
+          </span>
+        </div>
+
+        <button type="submit" id="btnSubmitVote" class="btn-submit-vote">
+          <span>🗳️ ENVIAR VOTO OFICIAL</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Card 3: Parcial de Votos e Sugestões da Comunidade -->
+    <section class="vote-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <h3 style="font-size: 1.05rem; font-weight: 900; color: var(--color-primary);">
+          📊 Parcial de Votos (<span id="totalVotesCount">0</span>)
+        </h3>
+        <button type="button" id="btnRefreshVotes" style="background: var(--bg-muted); border: 1px solid var(--border-medium); color: var(--color-primary); padding: 5px 10px; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 800; cursor: pointer;">
+          🔄 Atualizar
+        </button>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-muted);">
+        Contagem oficial em tempo real sincronizada com o Cloudflare D1:
+      </p>
+
+      <div id="resultsListContainer" class="results-list">
+        <!-- Preenchido via JS -->
+      </div>
+
+      <div id="suggestionsWallWrapper" style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border-medium); display: none;">
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--color-primary);">
+          💡 Sugestões Enviadas pelos Alunos:
+        </div>
+        <div id="suggestionsWall" class="suggestions-wall"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Scripts com Cache-Busting v7 -->
+  <script src="../config/regrasTorneio.js?v=20261126_v7"></script>
+  <script src="../shared/js/cloud-api.js?v=20261126_v7"></script>
+  <script>
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const REGRAS = window.REGRAS_TORNEIO;
+      const votacaoCfg = REGRAS?.votacaoNome || {};
+
+      // Elementos do DOM
+      const elCloudBadge = document.getElementById('cloudStatusBadge');
+      const elCloudText = document.getElementById('cloudStatusText');
+      const elSubtitle = document.getElementById('votacaoSubtitleEdition');
+      const elMainTitle = document.getElementById('voteMainTitle');
+      const elMainSubtitle = document.getElementById('voteMainSubtitle');
+
+      const candidateOptionsList = document.getElementById('candidateOptionsList');
+      const inputCustomName = document.getElementById('inputCustomName');
+      const formVotacaoNome = document.getElementById('formVotacaoNome');
+      const btnSubmitVote = document.getElementById('btnSubmitVote');
+
+      const voteErrorBanner = document.getElementById('voteErrorBanner');
+      const voteConfirmationBanner = document.getElementById('voteConfirmationBanner');
+      const voteConfirmationText = document.getElementById('voteConfirmationText');
+      const btnVoteAgain = document.getElementById('btnVoteAgain');
+
+      const totalVotesCount = document.getElementById('totalVotesCount');
+      const resultsListContainer = document.getElementById('resultsListContainer');
+      const suggestionsWallWrapper = document.getElementById('suggestionsWallWrapper');
+      const suggestionsWall = document.getElementById('suggestionsWall');
+      const btnRefreshVotes = document.getElementById('btnRefreshVotes');
+
+      if (REGRAS && elSubtitle) {
+        elSubtitle.textContent = `${REGRAS.edicao} • ${REGRAS.subtituloEdicao}`;
+      }
+      if (votacaoCfg.titulo && elMainTitle) elMainTitle.textContent = votacaoCfg.titulo;
+      if (votacaoCfg.subtitulo && elMainSubtitle) elMainSubtitle.textContent = votacaoCfg.subtitulo;
+
+      // Lista de opções oficiais da comissão
+      const officialCandidates = Array.isArray(votacaoCfg.opcoesComissao) && votacaoCfg.opcoesComissao.length > 0
+        ? [...votacaoCfg.opcoesComissao]
+        : [
+            { id: 'ANCHIETA_ROBOTICS_CUP', nome: 'Anchieta Robotics Cup', descricao: 'Identidade moderna inspirada nas grandes copas estudantis.' },
+            { id: 'COPA_ANCHIETA_ROBOTICA', nome: 'Copa Anchieta de Robótica Escolar (CARE)', descricao: 'Destaca a tradição do Colégio Anchieta e o protagonismo estudantil.' },
+            { id: 'CIRCUITO_INTERCOLEGIAL', nome: 'Circuito Intercolegial de Robótica Educacional', descricao: 'Valoriza a integração entre escolas em etapas anuais.' },
+            { id: 'DESAFIO_AUTONOMO', nome: 'Desafio Anchieta de Robôs Autônomos (DARA)', descricao: 'Foco em engenharia, sensores e programação autônoma.' }
+          ];
+
+      // Inicia sem nenhuma opção pré-selecionada
+      let selectedCandidateName = '';
+
+      function showError(msg) {
+        if (!voteErrorBanner) return;
+        voteErrorBanner.textContent = `⚠️ ${msg}`;
+        voteErrorBanner.classList.add('visible');
+      }
+
+      function clearError() {
+        if (!voteErrorBanner) return;
+        voteErrorBanner.textContent = '';
+        voteErrorBanner.classList.remove('visible');
+      }
+
+      // Limpa completamente a seleção anterior (desmarca todos os cards/radios e limpa campos de texto)
+      function resetVoteFormSelection() {
+        selectedCandidateName = '';
+        if (formVotacaoNome) formVotacaoNome.reset();
+        if (inputCustomName) inputCustomName.value = '';
+        clearError();
+        renderCandidateOptions();
+      }
+
+      // Renderiza cards de candidatos da comissão
+      function renderCandidateOptions() {
+        candidateOptionsList.innerHTML = '';
+        officialCandidates.forEach((cand) => {
+          const isSelected = cand.nome === selectedCandidateName;
+          const card = document.createElement('div');
+          card.className = 'candidate-option-card' + (isSelected ? ' selected' : '');
+          card.setAttribute('role', 'radio');
+          card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+          card.innerHTML = `
+            <div class="candidate-radio"></div>
+            <div class="candidate-info">
+              <div class="candidate-name">${escapeHtml(cand.nome)}</div>
+              ${cand.descricao ? `<div class="candidate-desc">${escapeHtml(cand.descricao)}</div>` : ''}
+            </div>
+          `;
+          card.addEventListener('click', () => {
+            // Permite selecionar ou desmarcar ao tocar novamente
+            selectedCandidateName = (selectedCandidateName === cand.nome) ? '' : cand.nome;
+            clearError();
+            if (navigator.vibrate) navigator.vibrate(15);
+            renderCandidateOptions();
+          });
+          candidateOptionsList.appendChild(card);
+        });
+      }
+
+      renderCandidateOptions();
+
+      // Carrega e renderiza parcial de votos usando estritamente { ok: true, total, contagem, sugestoes }
+      async function loadAndRenderResults() {
+        let data = null;
+        if (window.cloudAPI) {
+          data = await window.cloudAPI.getVotosNome();
+        }
+
+        const isOnline = Boolean(data && data.ok === true);
+
+        if (elCloudBadge && elCloudText) {
+          elCloudBadge.className = 'badge-status ' + (isOnline ? 'cloud-online' : 'cloud-offline');
+          elCloudText.textContent = isOnline ? '🟢 Online' : '🔴 Offline';
+        }
+
+        const contagemObj = (isOnline && data.contagem && typeof data.contagem === 'object') ? data.contagem : {};
+        const totalOficial = (isOnline && typeof data.total === 'number')
+          ? data.total
+          : Object.values(contagemObj).reduce((acc, v) => acc + (Number(v) || 0), 0);
+
+        if (totalVotesCount) {
+          totalVotesCount.textContent = totalOficial;
+        }
+
+        // Consolida candidatos oficiais + quaisquer nomes presentes em data.contagem
+        const entriesMap = new Map();
+        officialCandidates.forEach(c => {
+          entriesMap.set(c.nome, Number(contagemObj[c.nome] || 0));
+        });
+        Object.entries(contagemObj).forEach(([nomeKey, qtd]) => {
+          if (nomeKey && nomeKey.trim()) {
+            entriesMap.set(nomeKey, Number(qtd) || 0);
+          }
+        });
+
+        const sortedResults = Array.from(entriesMap.entries())
+          .map(([nome, count]) => ({ nome, count }))
+          .sort((a, b) => b.count - a.count);
+
+        resultsListContainer.innerHTML = '';
+        sortedResults.forEach((res, idx) => {
+          const pct = totalOficial > 0 ? Math.round((res.count / totalOficial) * 100) : 0;
+          const div = document.createElement('div');
+          div.className = 'result-bar-item';
+          div.innerHTML = `
+            <div class="result-bar-header">
+              <span>${idx === 0 && res.count > 0 ? '🥇 ' : ''}${escapeHtml(res.nome)}</span>
+              <span style="color: var(--color-primary); white-space: nowrap;">${res.count} voto(s) (${pct}%)</span>
+            </div>
+            <div class="result-bar-track">
+              <div class="result-bar-fill" style="width: ${pct}%;"></div>
+            </div>
+          `;
+          resultsListContainer.appendChild(div);
+        });
+
+        // Renderiza sugestões retornadas em data.sugestoes
+        const rawSugestoes = (isOnline && Array.isArray(data.sugestoes)) ? data.sugestoes : [];
+        const cleanSugestoes = rawSugestoes
+          .map(s => typeof s === 'string' ? s.trim() : String(s?.sugestao_nova || s?.sugestao || s?.nome || '').trim())
+          .filter(Boolean);
+
+        if (cleanSugestoes.length > 0) {
+          suggestionsWallWrapper.style.display = 'block';
+          suggestionsWall.innerHTML = cleanSugestoes.map(sug => `
+            <span class="suggestion-pill">✨ ${escapeHtml(sug)}</span>
+          `).join('');
+        } else {
+          suggestionsWallWrapper.style.display = 'none';
+          suggestionsWall.innerHTML = '';
+        }
+      }
+
+      // Envio do voto: POST /api/votos-nome com { nome_escolhido: "...", sugestao_nova: "..." }
+      formVotacaoNome.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearError();
+
+        const nomeEscolhido = (selectedCandidateName || '').trim();
+        const sugestaoNova = (inputCustomName.value || '').trim();
+
+        if (!nomeEscolhido && !sugestaoNova) {
+          showError('Selecione um nome candidato da lista ou digite uma sugestão de nome novo antes de enviar.');
+          return;
+        }
+
+        const originalBtnHtml = btnSubmitVote.innerHTML;
+        btnSubmitVote.disabled = true;
+        btnSubmitVote.innerHTML = '<span>⏳ ENVIANDO VOTO...</span>';
+
+        const res = await window.cloudAPI.salvarVotoNome({
+          nome_escolhido: nomeEscolhido,
+          sugestao_nova: sugestaoNova
+        });
+
+        btnSubmitVote.disabled = false;
+        btnSubmitVote.innerHTML = originalBtnHtml;
+
+        // Só exibe a tela de sucesso se response.ok e data.ok === true
+        if (!res || !res.ok || !res.data || res.data.ok !== true) {
+          const errMsg = res?.error || res?.data?.error || res?.data?.message || 'Erro ao registrar voto no servidor. Tente novamente.';
+          showError(errMsg);
+          return;
+        }
+
+        if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+
+        const resumoParts = [];
+        if (nomeEscolhido) resumoParts.push(`Voto: <strong>"${escapeHtml(nomeEscolhido)}"</strong>`);
+        if (sugestaoNova) resumoParts.push(`Sugestão: <strong>"${escapeHtml(sugestaoNova)}"</strong>`);
+
+        formVotacaoNome.style.display = 'none';
+        voteConfirmationText.innerHTML = resumoParts.join(' &bull; ');
+        voteConfirmationBanner.classList.add('visible');
+
+        // Atualiza a parcial imediatamente após votar
+        await loadAndRenderResults();
+      });
+
+      // Botão para enviar outro voto / nova sugestão: limpa completamente a seleção anterior e campos
+      btnVoteAgain.addEventListener('click', () => {
+        resetVoteFormSelection();
+        voteConfirmationBanner.classList.remove('visible');
+        formVotacaoNome.style.display = 'block';
+      });
+
+      btnRefreshVotes.addEventListener('click', () => {
+        loadAndRenderResults();
+      });
+
+      await loadAndRenderResults();
+      setInterval(loadAndRenderResults, 15000);
+    });
+  </script>
+</body>
+</html>

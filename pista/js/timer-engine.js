@@ -30,7 +30,7 @@ class PrecisionTimer {
     const loop = (now) => {
       if (this.status !== 'RUNNING') return;
 
-      this.elapsedMs = Math.min(now - this.startTime, this.maxTimeMs);
+      this.elapsedMs = Math.floor(Math.min(now - this.startTime, this.maxTimeMs));
 
       // Alerta de 30s restantes (150s decorridos)
       if (this.elapsedMs >= 150000 && !this.warning30sFired) {
@@ -85,14 +85,14 @@ class PrecisionTimer {
   }
 
   format(ms = this.elapsedMs) {
-    const totalCentis = Math.floor(ms / 10);
-    const centis = totalCentis % 100;
-    const totalSeconds = Math.floor(ms / 1000);
+    const safeMs = Math.max(0, Math.floor(Number(ms) || 0));
+    const millis = safeMs % 1000;
+    const totalSeconds = Math.floor(safeMs / 1000);
     const seconds = totalSeconds % 60;
     const minutes = Math.floor(totalSeconds / 60);
 
     const pad = (num, digits = 2) => String(num).padStart(digits, '0');
-    return `${pad(minutes)}:${pad(seconds)}.${pad(centis)}`;
+    return `${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(millis, 3)}`;
   }
 }
 

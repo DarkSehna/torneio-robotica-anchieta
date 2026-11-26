@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       bestTimeMs: bestRun ? Number(bestRun.tempo_ms) : Infinity,
       bestTimeFouls: bestRun ? Number(bestRun.infracoes || 0) : 99,
       secondTimeMs: otherRun ? Number(otherRun.tempo_ms) : Infinity,
+      secondTimeFouls: otherRun ? Number(otherRun.infracoes || 0) : 99,
       deltaEvolucao,
       r2Fouls: r2 ? Number(r2.infracoes || 0) : 99,
       totalFaltas
@@ -289,12 +290,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
     });
 
-    // Ordena Equipes pelo Total da Temporada -> Pontos Pista -> Pontos Paddock -> Menor Tempo
+    // Ordena Equipes pelo Total da Temporada -> Pontos Pista -> Pontos Paddock -> Menor Tempo (Blindado contra Infinity - Infinity)
     seasonRows.sort((a, b) => {
       if (b.seasonTotal !== a.seasonTotal) return b.seasonTotal - a.seasonTotal;
       if (b.trackPoints !== a.trackPoints) return b.trackPoints - a.trackPoints;
       if (b.paddockPoints !== a.paddockPoints) return b.paddockPoints - a.paddockPoints;
-      return a.track.bestTimeMs - b.track.bestTimeMs;
+      return REGRAS.compararCandidatosPista(a, b);
     });
 
     renderSchoolsCup(seasonRows);

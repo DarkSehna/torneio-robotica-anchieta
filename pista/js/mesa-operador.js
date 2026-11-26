@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     fouls: 0,
     status: 'READY', // 'READY' | 'RUNNING' | 'PAUSED' | 'FINISHED' | 'TIME_UP' | 'DNF'
     timeMs: 0,
-    timeFormatted: '00:00.00'
+    timeFormatted: '00:00.000'
   };
 
   let telaoConnected = false;
@@ -110,9 +110,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     onTimeUp: () => {
       sessionState.status = 'TIME_UP';
       sessionState.timeMs = MAX_TRACK_TIME_MS;
-      sessionState.timeFormatted = '03:00.00';
+      sessionState.timeFormatted = '03:00.000';
       window.audioCues.playFinishAlarm(false);
-      window.pistaBus.send('TIMER_TIME_UP', { timeMs: 180000, timeFormatted: '03:00.00' });
+      window.pistaBus.send('TIMER_TIME_UP', { timeMs: 180000, timeFormatted: '03:00.000' });
       updateUI();
     }
   });
@@ -706,9 +706,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     sessionState.status = 'READY';
     sessionState.fouls = 0;
     sessionState.timeMs = 0;
-    sessionState.timeFormatted = '00:00.00';
-    elOpTimerDigits.textContent = '00:00.00';
-    window.pistaBus.send('TIMER_RESET', { timeFormatted: '00:00.00' });
+    sessionState.timeFormatted = '00:00.000';
+    elOpTimerDigits.textContent = '00:00.000';
+    window.pistaBus.send('TIMER_RESET', { timeFormatted: '00:00.000' });
     updateUI();
     publishArenaStatus();
   }
@@ -898,6 +898,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnSyncCloud.addEventListener('click', syncAllPendingToCloud);
   }
 
+  // Garante formatação em milésimos (.000) mesmo para registros antigos do cache local
+  function formatRecordMillis(rec) {
+    if (typeof rec.timeMs === 'number' && Number.isFinite(rec.timeMs)) {
+      return timer.format(rec.timeMs);
+    }
+    if (rec.timeFormatted && /^\d{2}:\d{2}\.\d{2}$/.test(rec.timeFormatted)) {
+      return rec.timeFormatted + '0';
+    }
+    return rec.timeFormatted || '00:00.000';
+  }
+
   // Renderizar Tabela de Histórico
   function renderHistoryTable() {
     const records = getRecords();
@@ -927,13 +938,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? '<span style="color: #16A34A; font-weight: 800;">🟢 Nuvem</span>'
         : '<span style="color: #F26522; font-weight: 800;">🟡 Local</span>';
 
+      const formattedTime = formatRecordMillis(rec);
+
       tr.innerHTML = `
         <td><strong>${rec.recordedAt}</strong></td>
         <td><strong>${rec.teamName}</strong></td>
         <td>${rec.schoolName}</td>
         <td>${rec.category}</td>
         <td><strong>${rec.round}</strong></td>
-        <td class="tabular-nums" style="font-weight: 800; font-size: 1rem; color: var(--color-primary);">${rec.timeFormatted}</td>
+        <td class="tabular-nums" style="font-weight: 800; font-size: 1rem; color: var(--color-primary);">${formattedTime}</td>
         <td style="font-weight: 700; color: ${rec.fouls >= 5 ? 'var(--color-danger)' : 'inherit'};">${rec.fouls}</td>
         <td>${statusBadge}</td>
         <td>${syncBadge}</td>
@@ -949,7 +962,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let csv = 'ID;Horário;Equipe;Escola;Categoria;Rodada;Tempo_Formatado;Tempo_MS;Infrações;Status;Sincronizado\n';
     records.forEach(r => {
-      csv += `${r.id};${r.recordedAt};${r.teamName};${r.schoolName};${r.category};${r.round};${r.timeFormatted};${r.timeMs};${r.fouls};${r.status};${r.synced ? 'SIM' : 'NÃO'}\n`;
+      const formattedTime = formatRecordMillis(r);
+      csv += `${r.id};${r.recordedAt};${r.teamName};${r.schoolName};${r.category};${r.round};${formattedTime};${r.timeMs};${r.fouls};${r.status};${r.synced ? 'SIM' : 'NÃO'}\n`;
     });
 
     const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });

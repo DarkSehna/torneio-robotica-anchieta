@@ -1,19 +1,21 @@
 /**
  * ============================================================================
  * CLOUDFLARE WORKER API (STANDALONE / ZERO-DEPENDENCY BUNDLE)
- * Torneio de Robótica Colégio Anchieta — Edital 08/2026
+ * 1º Torneio Escolar de Robótica – Etapa Colégio Anchieta (Edital V7)
  * Endpoint: https://torneio-api.gabrielsehna.workers.dev
  * ============================================================================
- * Esta versão já embute o objeto `REGRAS_TORNEIO` internamente, dispensando
- * qualquer arquivo externo. É 100% compatível tanto com o botão "Edit code"
- * no navegador do Cloudflare Dashboard quanto com deploy via Wrangler CLI.
+ * Compatível 100% com as tabelas reais do Cloudflare D1 (`torneio-db`):
+ *   - equipes
+ *   - corridas_pista
+ *   - avaliacoes_juizes (+ nota_caracterizacao_equipe)
+ *   - arena_status (atualizado_em)
+ *   - votos_nome (Votação QR Code)
  * ============================================================================
  */
 
-// 1. CONFIGURAÇÃO OFICIAL CENTRALIZADA (SINGLE SOURCE OF TRUTH)
 const REGRAS_TORNEIO = {
   edicao: "1º Torneio Escolar de Robótica – Etapa Colégio Anchieta",
-  subtituloEdicao: "Edital V5 (CIPARE) • 05/12/2026 (14h às 18h)",
+  subtituloEdicao: "Edital V7 • 05/12/2026 (14h às 18h)",
   dataEvento: "05/12/2026",
   horarioEvento: "14h às 18h",
   modalidade: "Seguidor de Linha",
@@ -34,127 +36,99 @@ const REGRAS_TORNEIO = {
     { nivel: "Destaque", rotulo: "Superado ★", valor: 3.0, destaqueMaximo: true }
   ],
 
-  // Catálogo Oficial de Critérios com flag 'ativo'
   criteriosPaddock: [
     {
       id: "caracterizacao",
       ativo: true,
-      colunaLegadaDb: "nota_caracterizacao",
+      colunaDb: "nota_caracterizacao",
       premio: "Melhor Caracterização do Robô (Carro)",
       nomeExibicao: "🤖 1. Melhor Caracterização do Robô (Carro)",
       icone: "🤖",
       peso: 1.0,
       ordemFormulario: 1,
-      ordemCerimonia: 3,
-      resumoCurto: "Caracterização visual, estética temática e acabamento criativo do robô (Art. 9º, III).",
-      descricao: "O robô apresenta acabamento visual criativo, estética temática bem desenvolvida e cuidado no acabamento do protótipo/carro?"
+      ordemCerimonia: 3
     },
     {
       id: "caracterizacao_equipe",
       ativo: true,
-      colunaLegadaDb: "nota_caracterizacao_equipe",
+      colunaDb: "nota_caracterizacao_equipe",
       premio: "Melhor Caracterização da Equipe",
       nomeExibicao: "🎭 2. Melhor Caracterização da Equipe",
       icone: "🎭",
       peso: 1.0,
       ordemFormulario: 2,
-      ordemCerimonia: 4,
-      resumoCurto: "Caracterização pessoal, fantasia ou temática criativa dos alunos (Art. 9º, II).",
-      descricao: "A equipe apresenta caracterização pessoal, fantasia, uniforme temático ou identidade criativa marcante entre seus integrantes?"
+      ordemCerimonia: 4
     },
     {
       id: "mecanica",
       ativo: true,
-      colunaLegadaDb: "nota_mecanica",
+      colunaDb: "nota_mecanica",
       premio: "Melhor Mecânica",
       nomeExibicao: "⚙️ 3. Melhor Mecânica",
       icone: "⚙️",
       peso: 1.0,
       ordemFormulario: 3,
-      ordemCerimonia: 1,
-      resumoCurto: "Estrutura robusta, acabamento técnico e eficiência mecânica (Art. 9º, IV).",
-      descricao: "A equipe apresenta a melhor estrutura, acabamento técnico de montagem e eficiência no projeto mecânico do robô?"
+      ordemCerimonia: 1
     },
     {
       id: "superacao",
       ativo: true,
-      colunaLegadaDb: "voto_superacao",
+      colunaDb: "voto_superacao",
       premio: "Prêmio Superação",
       nomeExibicao: "🚀 4. Prêmio Superação",
       icone: "🚀",
       peso: 1.0,
       ordemFormulario: 4,
-      ordemCerimonia: 2,
-      resumoCurto: "Resiliência e persistência diante de adversidades técnicas (Art. 9º, V).",
-      descricao: "A equipe demonstrou grande resiliência e persistência técnica, superando falhas e evoluindo durante a competição?"
+      ordemCerimonia: 2
     },
     {
       id: "torcida",
-      ativo: false, // [2026] Ocultado nesta edição conforme Art. 9º do Edital V5. Altere para true para reativar no futuro.
-      colunaLegadaDb: "nota_torcida",
+      ativo: false,
+      colunaDb: "nota_torcida",
       premio: "Melhor Torcida",
-      nomeExibicao: "📣 5. Melhor Torcida",
+      nomeExibicao: "📣 Melhor Torcida",
       icone: "📣",
       peso: 1.0,
-      ordemFormulario: 5,
-      ordemCerimonia: 5,
-      resumoCurto: "Escola com torcida vibrante, barulhenta, com identidade visual própria e respeitosa.",
-      descricao: "A escola levou uma torcida vibrante, barulhenta, com identidade visual própria e que respeitou as demais equipes?"
+      ordemFormulario: 99,
+      ordemCerimonia: 99
     },
     {
       id: "fair_play",
       ativo: true,
-      colunaLegadaDb: "voto_fair_play",
+      colunaDb: "voto_fair_play",
       premio: "Prêmio Fair Play",
-      nomeExibicao: "🤝 6. Prêmio Fair Play (Jogo Limpo)",
+      nomeExibicao: "🤝 5. Prêmio Fair Play (Jogo Limpo)",
       icone: "🤝",
       peso: 1.0,
-      ordemFormulario: 6,
-      ordemCerimonia: 6,
-      resumoCurto: "Postura colaborativa auxiliando equipes adversárias (Art. 9º, VI).",
-      descricao: "A equipe demonstrou postura colaborativa e espírito esportivo, auxiliando outras equipes na solução de problemas?"
+      ordemFormulario: 5,
+      ordemCerimonia: 5
     }
   ],
 
-  // 5. Matriz Oficial de Desempate por Categoria (Padronizada - Edital V5 / Opção A)
-  // TODAS as categorias de Paddock agora seguem a regra padronizada:
-  // 1º Menor Tempo de Pista ➔ 2º Menor Faltas na Melhor Volta ➔ 3º Voto de Minerva
   regrasDesempate: {
-    // Velocidade na Pista Principal
     pista: {
-      descricaoRotulo: "1º Menor Tempo Líquido ➔ 2º Menor Faltas ➔ 3º Segunda Volta",
-      ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "MENOR_SEGUNDO_TEMPO_PISTA"]
+      descricaoRotulo: "1º Menor Tempo Líquido ➔ 2º Menor Faltas ➔ 3º Segunda Volta ➔ 4º Faltas 2ª Volta",
+      ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "MENOR_SEGUNDO_TEMPO_PISTA", "MENOR_FALTAS_SEGUNDA_VOLTA"]
     },
-    // Rubricas de Paddock — Regra Única Padronizada
     mecanica: {
       descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
       ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
-      // Histórico de opções anteriores: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
     },
     superacao: {
       descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
       ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
-      // Histórico de opções anteriores: ["MAIOR_DELTA_EVOLUCAO", "MENOR_FALTAS_R2", "VOTO_MINERVA"]
     },
     caracterizacao: {
       descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
       ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
-      // Histórico de opções anteriores: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
     },
     caracterizacao_equipe: {
       descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
       ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
-      // Histórico de opções anteriores: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
-    },
-    torcida: {
-      descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
-      ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
-      // Histórico de opções anteriores: ["MAIOR_CONTAGEM_DESTAQUE", "VOTO_MINERVA"]
     },
     fair_play: {
       descricaoRotulo: "1º Menor Tempo de Pista ➔ 2º Menor Faltas ➔ 3º Voto de Minerva",
       ordem: ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"]
-      // Histórico de opções anteriores: ["MENOR_TOTAL_FALTAS", "VOTO_MINERVA"]
     }
   },
 
@@ -162,123 +136,102 @@ const REGRAS_TORNEIO = {
     return (this.criteriosPaddock || []).filter(c => c.ativo !== false);
   },
 
-  getValorDestaqueMaximo() {
-    const dest = this.escalaNotas.find(n => n.destaqueMaximo);
-    if (dest) return Number(dest.valor);
-    return Math.max(...this.escalaNotas.map(n => Number(n.valor)));
+  extrairNotaDeRegistro(ev, criterioId) {
+    if (!ev) return 0;
+    const crit = (this.criteriosPaddock || []).find(c => c.id === criterioId);
+    const col = crit ? crit.colunaDb : null;
+    const raw = ev[criterioId] !== undefined
+      ? ev[criterioId]
+      : (col && ev[col] !== undefined ? ev[col] : 0);
+    return Number(raw || 0);
   },
 
-  validarNota(valorBruto) {
-    const num = Number(valorBruto);
-    if (Number.isNaN(num)) return null;
-    const valoresAceitos = this.escalaNotas.map(n => Number(n.valor));
-    if (valoresAceitos.includes(num)) return num;
-    return null;
+  validarNota(valor) {
+    const num = Number(valor);
+    if (!Number.isFinite(num)) return null;
+    const permitidos = (this.escalaNotas || []).map(n => Number(n.valor));
+    return permitidos.includes(num) ? num : null;
   },
 
-  extrairNotaDeRegistro(registro, criterioId) {
-    if (!registro) return 0;
-    const crit = this.criteriosPaddock.find(c => c.id === criterioId);
-    const valDireto = registro[criterioId] ?? (crit ? registro[crit.colunaLegadaDb] : undefined) ?? registro[`nota_${criterioId}`];
-    if (valDireto !== undefined && valDireto !== null) {
-      return Number(valDireto) || 0;
+  calcularEstatisticaCriterio(evalsEquipe, criterioId) {
+    if (!evalsEquipe || evalsEquipe.length === 0) {
+      return { avg: 0, weightedScore: 0, countMax: 0, count: 0 };
     }
-    if (registro[`voto_${criterioId}`] !== undefined) {
-      return registro[`voto_${criterioId}`] ? this.getValorDestaqueMaximo() : 2.0;
+    const crit = (this.criteriosPaddock || []).find(c => c.id === criterioId);
+    const peso = Number(crit?.peso ?? 1.0);
+    const valoresMax = (this.escalaNotas || []).filter(n => n.destaqueMaximo).map(n => Number(n.valor));
+    const maxVal = valoresMax.length > 0 ? Math.max(...valoresMax) : 3.0;
+
+    let sum = 0;
+    let validCount = 0;
+    let countMax = 0;
+
+    for (const ev of evalsEquipe) {
+      const val = this.extrairNotaDeRegistro(ev, criterioId);
+      if (val > 0) {
+        sum += val;
+        validCount++;
+        if (val >= maxVal) countMax++;
+      }
     }
-    return 0;
-  },
 
-  calcularEstatisticaCriterio(avaliacoesEquipe, criterioId) {
-    const crit = this.criteriosPaddock.find(c => c.id === criterioId);
-    const peso = crit ? Number(crit.peso || 1.0) : 1.0;
-    const valorMax = this.getValorDestaqueMaximo();
-
-    const scores = (avaliacoesEquipe || [])
-      .map(ev => this.extrairNotaDeRegistro(ev, criterioId))
-      .filter(s => s > 0);
-
-    const sum = scores.reduce((a, b) => a + b, 0);
-    const mediaSimples = scores.length > 0 ? sum / scores.length : 0;
-    const mediaPonderada = Number((mediaSimples * peso).toFixed(2));
-    const countMax = scores.filter(s => s === valorMax).length;
-
-    return {
-      avg: mediaPonderada,
-      rawAvg: Number(mediaSimples.toFixed(2)),
-      peso,
-      scores,
-      count3: countMax,
-      countMax
-    };
+    if (validCount === 0) {
+      return { avg: 0, weightedScore: 0, countMax: 0, count: 0 };
+    }
+    const avg = Number((sum / validCount).toFixed(2));
+    return { avg, weightedScore: Number((avg * peso).toFixed(2)), countMax, count: validCount };
   },
 
   compararCandidatosPista(a, b) {
-    const ordem = this.regrasDesempate.pista?.ordem || [
-      "MENOR_TEMPO_PISTA",
-      "MENOR_FALTAS_MELHOR_VOLTA",
-      "MENOR_SEGUNDO_TEMPO_PISTA"
-    ];
+    const aValid = !!a.track?.hasValidRun;
+    const bValid = !!b.track?.hasValidRun;
+    if (aValid !== bValid) return aValid ? -1 : 1;
+    if (!aValid && !bValid) return 0;
 
-    for (const regra of ordem) {
-      if (regra === "MENOR_TEMPO_PISTA") {
-        if (a.track.bestTimeMs !== b.track.bestTimeMs) {
-          return a.track.bestTimeMs - b.track.bestTimeMs;
-        }
-      } else if (regra === "MENOR_FALTAS_MELHOR_VOLTA") {
-        if (a.track.bestTimeFouls !== b.track.bestTimeFouls) {
-          return a.track.bestTimeFouls - b.track.bestTimeFouls;
-        }
-      } else if (regra === "MENOR_SEGUNDO_TEMPO_PISTA") {
-        if (a.track.secondTimeMs !== b.track.secondTimeMs) {
-          return a.track.secondTimeMs - b.track.secondTimeMs;
-        }
+    if (a.track.bestTimeMs !== b.track.bestTimeMs) {
+      return a.track.bestTimeMs - b.track.bestTimeMs;
+    }
+    if (a.track.bestTimeFouls !== b.track.bestTimeFouls) {
+      return a.track.bestTimeFouls - b.track.bestTimeFouls;
+    }
+    const aHasSecond = Number.isFinite(a.track.secondTimeMs);
+    const bHasSecond = Number.isFinite(b.track.secondTimeMs);
+    if (aHasSecond !== bHasSecond) return aHasSecond ? -1 : 1;
+    if (aHasSecond && bHasSecond) {
+      if (a.track.secondTimeMs !== b.track.secondTimeMs) {
+        return a.track.secondTimeMs - b.track.secondTimeMs;
+      }
+      if (a.track.secondTimeFouls !== b.track.secondTimeFouls) {
+        return a.track.secondTimeFouls - b.track.secondTimeFouls;
       }
     }
     return 0;
   },
 
   compararCandidatosRubrica(criterioId, a, b) {
-    const statA = a.rubrics?.[criterioId] || { avg: 0, count3: 0 };
-    const statB = b.rubrics?.[criterioId] || { avg: 0, count3: 0 };
+    const statA = a.rubrics?.[criterioId] || { avg: 0, countMax: 0 };
+    const statB = b.rubrics?.[criterioId] || { avg: 0, countMax: 0 };
 
     if (statB.avg !== statA.avg) {
       return statB.avg - statA.avg;
     }
 
-    const configDesempate = this.regrasDesempate[criterioId];
-    const ordem = configDesempate?.ordem || [];
-
+    const ordem = this.regrasDesempate[criterioId]?.ordem || ["MENOR_TEMPO_PISTA", "MENOR_FALTAS_MELHOR_VOLTA", "VOTO_MINERVA"];
     for (const regra of ordem) {
       if (regra === "MENOR_TEMPO_PISTA") {
-        if (a.track.bestTimeMs !== b.track.bestTimeMs) {
+        const aValid = !!a.track?.hasValidRun;
+        const bValid = !!b.track?.hasValidRun;
+        if (aValid !== bValid) return aValid ? -1 : 1;
+        if (aValid && bValid && a.track.bestTimeMs !== b.track.bestTimeMs) {
           return a.track.bestTimeMs - b.track.bestTimeMs;
         }
       } else if (regra === "MENOR_FALTAS_MELHOR_VOLTA") {
-        if (a.track.bestTimeFouls !== b.track.bestTimeFouls) {
+        if (a.track?.hasValidRun && b.track?.hasValidRun && a.track.bestTimeFouls !== b.track.bestTimeFouls) {
           return a.track.bestTimeFouls - b.track.bestTimeFouls;
         }
-      } else if (regra === "MENOR_SEGUNDO_TEMPO_PISTA") {
-        if (a.track.secondTimeMs !== b.track.secondTimeMs) {
-          return a.track.secondTimeMs - b.track.secondTimeMs;
-        }
-      } else if (regra === "MAIOR_DELTA_EVOLUCAO") {
-        if (b.track.deltaEvolucao !== a.track.deltaEvolucao) {
-          return b.track.deltaEvolucao - a.track.deltaEvolucao;
-        }
-      } else if (regra === "MENOR_FALTAS_R2") {
-        if (a.track.r2Fouls !== b.track.r2Fouls) {
-          return a.track.r2Fouls - b.track.r2Fouls;
-        }
       } else if (regra === "MAIOR_CONTAGEM_DESTAQUE") {
-        const cA = statA.countMax ?? statA.count3 ?? 0;
-        const cB = statB.countMax ?? statB.count3 ?? 0;
-        if (cB !== cA) {
-          return cB - cA;
-        }
-      } else if (regra === "MENOR_TOTAL_FALTAS") {
-        if (a.track.totalFaltas !== b.track.totalFaltas) {
-          return a.track.totalFaltas - b.track.totalFaltas;
+        if ((statB.countMax || 0) !== (statA.countMax || 0)) {
+          return (statB.countMax || 0) - (statA.countMax || 0);
         }
       } else if (regra === "VOTO_MINERVA") {
         return 0;
@@ -288,35 +241,34 @@ const REGRAS_TORNEIO = {
   }
 };
 
-// 2. CONFIGURAÇÃO DE HEADERS E UTILITÁRIOS HTTP
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
   'Content-Type': 'application/json; charset=utf-8'
 };
 
 function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: CORS_HEADERS
-  });
+  return new Response(JSON.stringify(data), { status, headers: CORS_HEADERS });
 }
 
 function calcularEstatisticaPistaEquipe(nomeEquipe, corridas) {
-  const pesoFaltaDelta = Number(REGRAS_TORNEIO?.regrasPista?.pesoFaltaDeltaEvolucao ?? 5.0);
+  const pesoFaltaDelta = Number(REGRAS_TORNEIO.regrasPista.pesoFaltaDeltaEvolucao ?? 5.0);
   const runs = (corridas || []).filter(
     c => (c.equipe || '').trim().toLowerCase() === (nomeEquipe || '').trim().toLowerCase()
   );
   const validRuns = runs
     .filter(c => c.status === 'VALID' && Number(c.tempo_ms) > 0)
-    .sort((a, b) => Number(a.tempo_ms) - Number(b.tempo_ms));
+    .sort((a, b) => {
+      const dt = Number(a.tempo_ms) - Number(b.tempo_ms);
+      return dt !== 0 ? dt : Number(a.infracoes || 0) - Number(b.infracoes || 0);
+    });
 
   const r1 = runs.find(c => Number(c.rodada) === 1);
   const r2 = runs.find(c => Number(c.rodada) === 2);
   const bestRun = validRuns[0] || null;
-  const otherRun = validRuns[1] || null;
+  const secondRun = validRuns[1] || null;
 
   let deltaEvolucao = 0;
   if (r1 && r2 && r1.status === 'VALID' && r2.status === 'VALID') {
@@ -329,9 +281,12 @@ function calcularEstatisticaPistaEquipe(nomeEquipe, corridas) {
 
   return {
     hasValidRun: validRuns.length > 0,
+    validCount: validRuns.length,
+    dnfCount: runs.filter(c => c.status === 'DNF' || c.status === 'TIME_UP').length,
     bestTimeMs: bestRun ? Number(bestRun.tempo_ms) : Infinity,
     bestTimeFouls: bestRun ? Number(bestRun.infracoes || 0) : 99,
-    secondTimeMs: otherRun ? Number(otherRun.tempo_ms) : Infinity,
+    secondTimeMs: secondRun ? Number(secondRun.tempo_ms) : Infinity,
+    secondTimeFouls: secondRun ? Number(secondRun.infracoes || 0) : 99,
     deltaEvolucao,
     r2Fouls: r2 ? Number(r2.infracoes || 0) : 99,
     totalFaltas
@@ -341,66 +296,118 @@ function calcularEstatisticaPistaEquipe(nomeEquipe, corridas) {
 function calcularRankingsOficiais(equipes, corridas, avaliacoes) {
   const candidatos = (equipes || []).map(eq => {
     const nome = eq.equipe || eq.name;
-    const eqId = eq.id ? `EQ-${String(eq.id).padStart(2, '0')}` : (eq.equipe_id || 'EQ-01');
+    const eqId = eq.id ? `EQ-${String(eq.id).padStart(2, '0')}` : 'EQ-01';
     const track = calcularEstatisticaPistaEquipe(nome, corridas);
 
     const evalsEquipe = (avaliacoes || []).filter(ev => {
       const evName = (ev.equipe || '').trim().toLowerCase();
-      const evId = (ev.equipe_id || '').trim().toLowerCase();
-      return (evName && evName === nome.trim().toLowerCase()) || (evId && evId === eqId.toLowerCase());
+      return evName && evName === nome.trim().toLowerCase();
     });
 
     const rubrics = {};
-    for (const crit of (REGRAS_TORNEIO.criteriosPaddock || []).filter(c => c.ativo !== false)) {
+    for (const crit of REGRAS_TORNEIO.getCriteriosAtivos()) {
       rubrics[crit.id] = REGRAS_TORNEIO.calcularEstatisticaCriterio(evalsEquipe, crit.id);
     }
 
     return {
-      team: { id: eqId, name: nome, school: eq.escola || '', category: eq.categoria || 'LEGO / Educacional' },
+      team: { id: eqId, name: nome, school: eq.escola || '', category: eq.categoria || 'Categoria Única' },
       track,
       rubrics
     };
   });
 
-  const rankingPista = [...candidatos]
-    .sort((a, b) => REGRAS_TORNEIO.compararCandidatosPista(a, b))
-    .map((item, idx) => ({
-      posicao: idx + 1,
-      equipe: item.team.name,
-      escola: item.team.school,
-      categoria: item.team.category,
-      melhorTempoMs: item.track.hasValidRun ? item.track.bestTimeMs : null,
-      faltasMelhorVolta: item.track.hasValidRun ? item.track.bestTimeFouls : null,
-      voltaValida: item.track.hasValidRun
-    }));
+  // Ranking completo de pista (equipes 2 DNF ficam ao final com voltaValida = false)
+  const ordenadosPista = [...candidatos].sort((a, b) => REGRAS_TORNEIO.compararCandidatosPista(a, b));
+  const rankingPista = ordenadosPista.map((item, idx) => ({
+    posicao: item.track.hasValidRun ? idx + 1 : null,
+    equipe: item.team.name,
+    escola: item.team.school,
+    categoria: item.team.category,
+    melhorTempoMs: item.track.hasValidRun ? item.track.bestTimeMs : null,
+    faltasMelhorVolta: item.track.hasValidRun ? item.track.bestTimeFouls : null,
+    segundaVoltaMs: Number.isFinite(item.track.secondTimeMs) ? item.track.secondTimeMs : null,
+    voltaValida: item.track.hasValidRun,
+    statusPista: item.track.hasValidRun ? 'VALID' : 'DNF'
+  }));
 
+  // Pódio Oficial da Pista (APENAS equipes com voltaValida = true; 2 DNF nunca entram no pódio)
+  const podioPista = ordenadosPista.filter(c => c.track.hasValidRun).slice(0, 3);
+  const premiosContagem = new Map();
+  for (const c of candidatos) premiosContagem.set(c.team.name.toLowerCase(), 0);
+  for (const p of podioPista) {
+    const key = p.team.name.toLowerCase();
+    premiosContagem.set(key, (premiosContagem.get(key) || 0) + 1);
+  }
+
+  // Detecta empate técnico residual no Top 3 da pista
+  let empateTecnicoPista = false;
+  for (let i = 0; i < podioPista.length - 1; i++) {
+    if (REGRAS_TORNEIO.compararCandidatosPista(podioPista[i], podioPista[i + 1]) === 0) {
+      empateTecnicoPista = true;
+      break;
+    }
+  }
+
+  // Rankings por Rubrica de Paddock (equipes 2 DNF continuam 100% elegíveis!)
+  // Inclui Fallback Automático de Exclusividade caso haja menos equipes do que prêmios
   const rankingsPaddock = {};
-  for (const crit of (REGRAS_TORNEIO.criteriosPaddock || []).filter(c => c.ativo !== false)) {
+  const criteriosCerimonia = [...REGRAS_TORNEIO.getCriteriosAtivos()]
+    .sort((a, b) => (a.ordemCerimonia || 99) - (b.ordemCerimonia || 99));
+
+  let fallbackExclusividadeAplicado = false;
+
+  for (const crit of criteriosCerimonia) {
     const ordenados = [...candidatos].sort((a, b) => REGRAS_TORNEIO.compararCandidatosRubrica(crit.id, a, b));
+
+    // Escolha do vencedor respeitando exclusividade quando possível;
+    // se todas as equipes avaliadas já tiverem ganhado prêmio (ex.: < 8 equipes), faz fallback para quem tem menos prêmios
+    const avaliados = ordenados.filter(c => (c.rubrics[crit.id]?.count || 0) > 0);
+    let vencedor = avaliados.find(c => (premiosContagem.get(c.team.name.toLowerCase()) || 0) === 0) || null;
+
+    if (!vencedor && avaliados.length > 0) {
+      fallbackExclusividadeAplicado = true;
+      vencedor = [...avaliados].sort((a, b) => {
+        const pA = premiosContagem.get(a.team.name.toLowerCase()) || 0;
+        const pB = premiosContagem.get(b.team.name.toLowerCase()) || 0;
+        if (pA !== pB) return pA - pB;
+        return REGRAS_TORNEIO.compararCandidatosRubrica(crit.id, a, b);
+      })[0];
+    }
+
+    if (vencedor) {
+      const k = vencedor.team.name.toLowerCase();
+      premiosContagem.set(k, (premiosContagem.get(k) || 0) + 1);
+    }
+
     rankingsPaddock[crit.id] = {
       criterioId: crit.id,
       premio: crit.premio,
       peso: crit.peso,
       regraDesempate: REGRAS_TORNEIO.regrasDesempate[crit.id]?.descricaoRotulo || '',
+      vencedorExclusivo: vencedor ? vencedor.team.name : null,
       classificacao: ordenados.map((item, idx) => ({
         posicao: idx + 1,
         equipe: item.team.name,
         escola: item.team.school,
-        mediaPonderada: item.rubrics[crit.id].avg,
-        mediaSimples: item.rubrics[crit.id].rawAvg,
-        votosDestaque: item.rubrics[crit.id].count3
+        categoria: item.team.category,
+        media: item.rubrics[crit.id]?.avg || 0,
+        notaPonderada: item.rubrics[crit.id]?.weightedScore || 0,
+        avaliacoesCount: item.rubrics[crit.id]?.count || 0,
+        destaquesCount: item.rubrics[crit.id]?.countMax || 0,
+        melhorTempoMs: item.track.hasValidRun ? item.track.bestTimeMs : null
       }))
     };
   }
 
   return {
-    edicao: REGRAS_TORNEIO.edicao,
     rankingPista,
+    podioPista: podioPista.map((p, i) => ({ posicao: i + 1, equipe: p.team.name, melhorTempoMs: p.track.bestTimeMs })),
+    empateTecnicoPista,
+    fallbackExclusividadeAplicado,
     rankingsPaddock
   };
 }
 
-// 3. HANDLER PRINCIPAL DO WORKER
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') {
@@ -414,16 +421,20 @@ export default {
       if (path === '/' && request.method === 'GET') {
         return jsonResponse({
           status: 'online',
+          service: 'torneio-api',
           edicao: REGRAS_TORNEIO.edicao,
-          subtitulo: REGRAS_TORNEIO.subtituloEdicao
+          subtitulo: REGRAS_TORNEIO.subtituloEdicao,
+          timestamp: new Date().toISOString()
         });
       }
 
       if (path === '/api/regras' && request.method === 'GET') {
-        return jsonResponse(REGRAS_TORNEIO);
+        return jsonResponse({ ok: true, regras: REGRAS_TORNEIO });
       }
 
-      // ROTAS DE EQUIPES (/api/equipes)
+      // ======================================================================
+      // EQUIPES (/api/equipes)
+      // ======================================================================
       if (path === '/api/equipes' && request.method === 'GET') {
         const { results } = await env.DB.prepare('SELECT * FROM equipes ORDER BY id ASC').all();
         return jsonResponse(results || []);
@@ -432,65 +443,60 @@ export default {
       if (path === '/api/equipes' && request.method === 'POST') {
         const body = await request.json();
         const lista = Array.isArray(body) ? body : [body];
+        let count = 0;
+
         for (const item of lista) {
           const nome = (item.equipe || item.name || '').trim();
           const escola = (item.escola || item.school || '').trim();
-          const categoria = (item.categoria || item.category || 'LEGO / Educacional').trim();
+          const categoria = (item.categoria || item.category || 'Categoria Única').trim();
           const professor = (item.professor || item.tecnico || '').trim();
-          const integrantes = (typeof item.integrantes === 'string' 
-            ? item.integrantes 
+          const integrantes = (typeof item.integrantes === 'string'
+            ? item.integrantes
             : (Array.isArray(item.integrantes) ? item.integrantes.join(', ') : '')).trim();
           const checkin = item.checkin ? 1 : 0;
           const inspecao = item.inspecao ? 1 : 0;
           if (!nome) continue;
 
-          try {
+          const existing = await env.DB.prepare(
+            'SELECT id FROM equipes WHERE LOWER(TRIM(equipe)) = LOWER(TRIM(?))'
+          ).bind(nome).first();
+
+          if (existing) {
+            await env.DB.prepare(
+              `UPDATE equipes SET
+                 escola = ?,
+                 categoria = ?,
+                 professor = CASE WHEN ? != '' THEN ? ELSE professor END,
+                 integrantes = CASE WHEN ? != '' THEN ? ELSE integrantes END,
+                 checkin = MAX(checkin, ?),
+                 inspecao = MAX(inspecao, ?)
+               WHERE id = ?`
+            ).bind(escola, categoria, professor, professor, integrantes, integrantes, checkin, inspecao, existing.id).run();
+          } else {
             await env.DB.prepare(
               `INSERT INTO equipes (equipe, escola, categoria, professor, integrantes, checkin, inspecao)
-               VALUES (?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT(equipe) DO UPDATE SET
-                 escola = excluded.escola,
-                 categoria = excluded.categoria,
-                 professor = CASE WHEN excluded.professor != '' THEN excluded.professor ELSE equipes.professor END,
-                 integrantes = CASE WHEN excluded.integrantes != '' THEN excluded.integrantes ELSE equipes.integrantes END,
-                 checkin = excluded.checkin,
-                 inspecao = excluded.inspecao`
+               VALUES (?, ?, ?, ?, ?, ?, ?)`
             ).bind(nome, escola, categoria, professor, integrantes, checkin, inspecao).run();
-          } catch (errDb) {
-            await env.DB.prepare(
-              'INSERT OR REPLACE INTO equipes (equipe, escola, categoria) VALUES (?, ?, ?)'
-            ).bind(nome, escola, categoria).run();
           }
+          count++;
         }
-        return jsonResponse({ ok: true, count: lista.length });
+        return jsonResponse({ ok: true, count });
       }
 
-      // Rota rápida para alternar Check-in e Inspeção Técnica (POST ou PATCH)
-      if ((path === '/api/equipes/status' || path.startsWith('/api/equipes/status/')) && (request.method === 'POST' || request.method === 'PATCH')) {
+      if ((path === '/api/equipes/status' || path.startsWith('/api/equipes/status/')) && (request.method === 'POST' || request.method === 'PATCH' || request.method === 'PUT')) {
         const body = await request.json();
-        const equipe = (body.equipe || body.name || '').trim();
-        const id = body.id || null;
-        const checkin = body.checkin !== undefined ? (body.checkin ? 1 : 0) : null;
-        const inspecao = body.inspecao !== undefined ? (body.inspecao ? 1 : 0) : null;
+        const nome = (body.equipe || body.name || '').trim();
+        if (!nome) return jsonResponse({ ok: false, error: 'Equipe não informada' }, 400);
 
-        try {
-          if (checkin !== null && inspecao !== null) {
-            await env.DB.prepare(
-              'UPDATE equipes SET checkin = ?, inspecao = ? WHERE id = ? OR equipe = ?'
-            ).bind(checkin, inspecao, id, equipe).run();
-          } else if (checkin !== null) {
-            await env.DB.prepare(
-              'UPDATE equipes SET checkin = ? WHERE id = ? OR equipe = ?'
-            ).bind(checkin, id, equipe).run();
-          } else if (inspecao !== null) {
-            await env.DB.prepare(
-              'UPDATE equipes SET inspecao = ? WHERE id = ? OR equipe = ?'
-            ).bind(inspecao, id, equipe).run();
-          }
-          return jsonResponse({ ok: true, checkin, inspecao });
-        } catch (errStatus) {
-          return jsonResponse({ ok: false, error: errStatus.message }, 500);
-        }
+        const updates = [];
+        const binds = [];
+        if (body.checkin !== undefined) { updates.push('checkin = ?'); binds.push(body.checkin ? 1 : 0); }
+        if (body.inspecao !== undefined) { updates.push('inspecao = ?'); binds.push(body.inspecao ? 1 : 0); }
+        if (updates.length === 0) return jsonResponse({ ok: false, error: 'Nenhum campo de status enviado' }, 400);
+
+        binds.push(nome);
+        await env.DB.prepare(`UPDATE equipes SET ${updates.join(', ')} WHERE LOWER(TRIM(equipe)) = LOWER(TRIM(?))`).bind(...binds).run();
+        return jsonResponse({ ok: true });
       }
 
       if (path === '/api/equipes/limpar' && request.method === 'POST') {
@@ -500,33 +506,26 @@ export default {
 
       if (path.startsWith('/api/equipes/') && request.method === 'DELETE') {
         const param = decodeURIComponent(path.replace('/api/equipes/', ''));
-        await env.DB.prepare('DELETE FROM equipes WHERE id = ? OR equipe = ?').bind(param, param).run();
+        if (/^\d+$/.test(param)) {
+          await env.DB.prepare('DELETE FROM equipes WHERE id = ?').bind(Number(param)).run();
+        } else {
+          await env.DB.prepare('DELETE FROM equipes WHERE LOWER(TRIM(equipe)) = LOWER(TRIM(?))').bind(param).run();
+        }
         return jsonResponse({ ok: true });
       }
 
       // ======================================================================
-      // ESTADO DA ARENA & TRAVA DE CONFLITO COM PISTA DE TESTE (/api/arena/status)
+      // ESTADO DA ARENA (/api/arena/status) -> coluna real: atualizado_em
       // ======================================================================
       if (path === '/api/arena/status' && request.method === 'GET') {
-        try {
-          const row = await env.DB.prepare('SELECT * FROM arena_status WHERE id = 1').first();
-          if (row) {
-            return jsonResponse({
-              ok: true,
-              equipe_atual: row.equipe_atual || '',
-              status_atual: row.status_atual || 'READY',
-              equipe_proxima: row.equipe_proxima || '',
-              rodada: row.rodada || 1,
-              updated_at: row.updated_at
-            });
-          }
-        } catch (_) {}
+        const row = await env.DB.prepare('SELECT * FROM arena_status WHERE id = 1').first();
         return jsonResponse({
           ok: true,
-          equipe_atual: '',
-          status_atual: 'READY',
-          equipe_proxima: '',
-          rodada: 1
+          equipe_atual: row?.equipe_atual || '',
+          status_atual: row?.status_atual || 'READY',
+          equipe_proxima: row?.equipe_proxima || '',
+          rodada: row?.rodada || 1,
+          atualizado_em: row?.atualizado_em || null
         });
       }
 
@@ -537,26 +536,25 @@ export default {
         const equipeProxima = (body.equipe_proxima || body.equipeProxima || '').trim();
         const rodada = Number(body.rodada || 1);
 
-        try {
-          await env.DB.prepare(
-            `INSERT INTO arena_status (id, equipe_atual, status_atual, equipe_proxima, rodada, updated_at)
-             VALUES (1, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-             ON CONFLICT(id) DO UPDATE SET
-               equipe_atual = excluded.equipe_atual,
-               status_atual = excluded.status_atual,
-               equipe_proxima = excluded.equipe_proxima,
-               rodada = excluded.rodada,
-               updated_at = CURRENT_TIMESTAMP`
-          ).bind(equipeAtual, statusAtual, equipeProxima, rodada).run();
-          return jsonResponse({ ok: true, equipe_atual: equipeAtual, status_atual: statusAtual, equipe_proxima: equipeProxima, rodada });
-        } catch (errDb) {
-          return jsonResponse({ ok: true, fallback: true, equipe_atual: equipeAtual, status_atual: statusAtual });
-        }
+        await env.DB.prepare(
+          `INSERT INTO arena_status (id, equipe_atual, status_atual, equipe_proxima, rodada, atualizado_em)
+           VALUES (1, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+           ON CONFLICT(id) DO UPDATE SET
+             equipe_atual = excluded.equipe_atual,
+             status_atual = excluded.status_atual,
+             equipe_proxima = excluded.equipe_proxima,
+             rodada = excluded.rodada,
+             atualizado_em = CURRENT_TIMESTAMP`
+        ).bind(equipeAtual, statusAtual, equipeProxima, rodada).run();
+
+        return jsonResponse({ ok: true, equipe_atual: equipeAtual, status_atual: statusAtual, equipe_proxima: equipeProxima, rodada });
       }
 
-      // ROTAS DE CORRIDAS DE PISTA (/api/corridas)
+      // ======================================================================
+      // CORRIDAS DE PISTA (/api/corridas) -> tabela real: corridas_pista
+      // ======================================================================
       if (path === '/api/corridas' && request.method === 'GET') {
-        const { results } = await env.DB.prepare('SELECT * FROM corridas ORDER BY timestamp DESC').all();
+        const { results } = await env.DB.prepare('SELECT * FROM corridas_pista ORDER BY timestamp DESC').all();
         return jsonResponse(results || []);
       }
 
@@ -565,13 +563,13 @@ export default {
         const lista = Array.isArray(body) ? body : [body];
         for (const c of lista) {
           await env.DB.prepare(
-            `INSERT OR REPLACE INTO corridas (uuid, equipe, escola, categoria, rodada, tempo_ms, infracoes, status, timestamp)
+            `INSERT OR REPLACE INTO corridas_pista (uuid, equipe, escola, categoria, rodada, tempo_ms, infracoes, status, timestamp)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
           ).bind(
             c.uuid || ('REC-' + Date.now()),
             c.equipe || 'Equipe',
             c.escola || '',
-            c.categoria || 'LEGO / Educacional',
+            c.categoria || 'Categoria Única',
             Number(c.rodada || 1),
             Number(c.tempo_ms || 0),
             Number(c.infracoes || 0),
@@ -584,13 +582,15 @@ export default {
 
       if (path.startsWith('/api/corridas/') && request.method === 'DELETE') {
         const uuid = decodeURIComponent(path.replace('/api/corridas/', ''));
-        await env.DB.prepare('DELETE FROM corridas WHERE uuid = ?').bind(uuid).run();
+        await env.DB.prepare('DELETE FROM corridas_pista WHERE uuid = ?').bind(uuid).run();
         return jsonResponse({ ok: true });
       }
 
-      // ROTAS DE AVALIAÇÕES DE PADDOCK (/api/avaliacoes)
+      // ======================================================================
+      // AVALIAÇÕES DE PADDOCK (/api/avaliacoes) -> tabela real: avaliacoes_juizes
+      // ======================================================================
       if (path === '/api/avaliacoes' && request.method === 'GET') {
-        const { results } = await env.DB.prepare('SELECT * FROM avaliacoes ORDER BY id DESC').all();
+        const { results } = await env.DB.prepare('SELECT * FROM avaliacoes_juizes ORDER BY id DESC').all();
         return jsonResponse(results || []);
       }
 
@@ -600,7 +600,7 @@ export default {
 
         for (const crit of REGRAS_TORNEIO.criteriosPaddock) {
           if (crit.ativo === false) {
-            notasValidadas[crit.id] = 2.0;
+            notasValidadas[crit.id] = 0;
             continue;
           }
           const bruto = REGRAS_TORNEIO.extrairNotaDeRegistro(body, crit.id);
@@ -608,43 +608,37 @@ export default {
           if (validada === null) {
             return jsonResponse({
               ok: false,
-              error: `Nota inválida (${bruto}) para o critério "${crit.premio}". Valores permitidos em REGRAS_TORNEIO: ${REGRAS_TORNEIO.escalaNotas.map(n => n.valor).join(', ')}`
+              error: `Nota inválida (${bruto}) para "${crit.premio}". Permitidos: ${REGRAS_TORNEIO.escalaNotas.map(n => n.valor).join(', ')}`
             }, 400);
           }
           notasValidadas[crit.id] = validada;
         }
 
-        const equipeNome = body.equipe || body.equipe_id || 'Equipe';
-        const juizNome = body.juiz_nome || body.juiz || 'Juiz Oficial';
-        const obs = body.observacoes || '';
+        const equipeNome = (body.equipe || body.equipe_id || 'Equipe').trim();
+        const juizNome = (body.juiz_nome || body.juiz || 'Juiz Oficial').trim();
+        const escola = (body.escola || '').trim();
+        const categoria = (body.categoria || 'Categoria Única').trim();
+        const obs = (body.observacoes || '').trim();
         const ts = body.timestamp || new Date().toISOString();
 
         await env.DB.prepare(
-          `INSERT INTO avaliacoes (
-            equipe_id, equipe, escola, categoria, juiz_nome, juiz,
-            caracterizacao, caracterizacao_equipe, mecanica, superacao, torcida, fair_play,
-            nota_caracterizacao, nota_caracterizacao_equipe, nota_mecanica, voto_superacao, nota_torcida, voto_fair_play,
-            observacoes, timestamp
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO avaliacoes_juizes (
+             juiz, equipe, escola, categoria,
+             nota_mecanica, nota_caracterizacao, nota_caracterizacao_equipe,
+             voto_superacao, voto_fair_play, nota_torcida,
+             observacoes, timestamp
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
-          body.equipe_id || 'EQ-01',
+          juizNome,
           equipeNome,
-          body.escola || '',
-          body.categoria || 'LEGO / Educacional',
-          juizNome,
-          juizNome,
-          notasValidadas.caracterizacao,
-          notasValidadas.caracterizacao_equipe || 2.0,
+          escola,
+          categoria,
           notasValidadas.mecanica,
-          notasValidadas.superacao,
-          notasValidadas.torcida,
-          notasValidadas.fair_play,
           notasValidadas.caracterizacao,
-          notasValidadas.caracterizacao_equipe || 2.0,
-          notasValidadas.mecanica,
+          notasValidadas.caracterizacao_equipe,
           notasValidadas.superacao,
-          notasValidadas.torcida,
           notasValidadas.fair_play,
+          notasValidadas.torcida,
           obs,
           ts
         ).run();
@@ -654,16 +648,55 @@ export default {
 
       if (path.startsWith('/api/avaliacoes/') && request.method === 'DELETE') {
         const id = decodeURIComponent(path.replace('/api/avaliacoes/', ''));
-        await env.DB.prepare('DELETE FROM avaliacoes WHERE id = ?').bind(id).run();
+        await env.DB.prepare('DELETE FROM avaliacoes_juizes WHERE id = ?').bind(Number(id)).run();
         return jsonResponse({ ok: true });
       }
 
-      // ROTA UNIFICADA DE APURAÇÃO (/api/apuracao)
+      // ======================================================================
+      // VOTAÇÃO DE NOME DO TORNEIO VIA QR CODE (/api/votos-nome)
+      // ======================================================================
+      if (path === '/api/votos-nome' && request.method === 'GET') {
+        try {
+          const { results } = await env.DB.prepare('SELECT * FROM votos_nome ORDER BY id DESC').all();
+          const votos = results || [];
+          const contagem = {};
+          const sugestoes = [];
+          for (const v of votos) {
+            if (v.nome_escolhido) {
+              contagem[v.nome_escolhido] = (contagem[v.nome_escolhido] || 0) + 1;
+            }
+            if (v.sugestao_nova && v.sugestao_nova.trim()) {
+              sugestoes.push({ sugestao: v.sugestao_nova.trim(), timestamp: v.timestamp });
+            }
+          }
+          return jsonResponse({ ok: true, total: votos.length, contagem, sugestoes });
+        } catch (err) {
+          return jsonResponse({ ok: false, error: 'Tabela votos_nome ainda não criada no D1' }, 500);
+        }
+      }
+
+      if (path === '/api/votos-nome' && request.method === 'POST') {
+        const body = await request.json();
+        const nomeEscolhido = (body.nome_escolhido || '').trim().slice(0, 120);
+        const sugestaoNova = (body.sugestao_nova || '').trim().slice(0, 120);
+        if (!nomeEscolhido && !sugestaoNova) {
+          return jsonResponse({ ok: false, error: 'Informe um nome candidato ou uma sugestão.' }, 400);
+        }
+        const ts = new Date().toISOString();
+        await env.DB.prepare(
+          'INSERT INTO votos_nome (nome_escolhido, sugestao_nova, timestamp) VALUES (?, ?, ?)'
+        ).bind(nomeEscolhido, sugestaoNova, ts).run();
+        return jsonResponse({ ok: true });
+      }
+
+      // ======================================================================
+      // APURAÇÃO GERAL UNIFICADA (/api/apuracao)
+      // ======================================================================
       if (path === '/api/apuracao' && request.method === 'GET') {
         const [eqRes, corRes, avRes] = await Promise.all([
           env.DB.prepare('SELECT * FROM equipes ORDER BY id ASC').all(),
-          env.DB.prepare('SELECT * FROM corridas ORDER BY timestamp DESC').all(),
-          env.DB.prepare('SELECT * FROM avaliacoes ORDER BY id DESC').all()
+          env.DB.prepare('SELECT * FROM corridas_pista ORDER BY timestamp DESC').all(),
+          env.DB.prepare('SELECT * FROM avaliacoes_juizes ORDER BY id DESC').all()
         ]);
 
         const equipes = eqRes.results || [];
@@ -673,6 +706,7 @@ export default {
 
         return jsonResponse({
           edicao: REGRAS_TORNEIO.edicao,
+          subtitulo: REGRAS_TORNEIO.subtituloEdicao,
           equipes,
           corridas,
           avaliacoes,

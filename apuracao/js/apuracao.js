@@ -1,6 +1,6 @@
 /**
  * Torneio de Robótica Anchieta - Motor de Apuração Geral & Mesa de Cerimônia do Pódio
- * Edital Geral nº 08/2026 - Algoritmo Determinístico de Desempate & Regra de Não-Cumulatividade
+ * Edital V7 - Algoritmo Determinístico de Desempate & Regra de Não-Cumulatividade
  * Projeção HDMI Limpa via BroadcastChannel('torneio_podio')
  */
 
@@ -265,20 +265,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       bestTimeMs: bestRun ? Number(bestRun.tempo_ms) : Infinity,
       bestTimeFouls: bestRun ? Number(bestRun.infracoes || 0) : 99,
       secondTimeMs: otherRun ? Number(otherRun.tempo_ms) : Infinity,
+      secondTimeFouls: otherRun ? Number(otherRun.infracoes || 0) : 99,
       totalFaltas,
       deltaEvolucao,
       r2Fouls: r2 ? Number(r2.infracoes || 0) : 99,
+      attempted: teamRuns.length > 0,
+      hasDNF: teamRuns.some(c => c.status === 'DNF'),
       hasValidRun: validRuns.length > 0
     };
   }
 
   function formatMs(ms) {
-    if (!ms || ms === Infinity) return '--:--.--';
-    const totalSec = Math.floor(ms / 1000);
+    if (ms === null || ms === undefined || ms === Infinity || !Number.isFinite(Number(ms)) || Number(ms) <= 0) {
+      return '--:--.---';
+    }
+    const safeMs = Math.floor(Number(ms));
+    const totalSec = Math.floor(safeMs / 1000);
     const min = Math.floor(totalSec / 60);
     const sec = totalSec % 60;
-    const hundredths = Math.floor((ms % 1000) / 10);
-    return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(hundredths).padStart(2, '0')}`;
+    const millis = safeMs % 1000;
+    return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
   }
 
   function getRubricStatsForTeam(teamName, teamId) {
@@ -342,7 +348,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       track: getTrackStatsForTeam(team.name)
     }));
 
-    list.sort((a, b) => REGRAS.compararCandidatosPista(a, b));
+    list.sort((a, b) => {
+      const cmp = REGRAS.compararCandidatosPista(a, b);
+      if (cmp !== 0) return cmp;
+      const minervaTrack = minervaVotes['PISTA'];
+      if (minervaTrack) {
+        if (a.team.name === minervaTrack) return -1;
+        if (b.team.name === minervaTrack) return 1;
+      }
+      return 0;
+    });
 
     return list;
   }
@@ -452,6 +467,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ==========================================================================
   // 3. TABELAS DE AUDITORIA E VOTO DE MINERVA
   // ==========================================================================
+  function formatRoundCell(run) {
+    if (!run) {
+      return '<span style="color: var(--text-muted)">--</span>';
+    }
+    if (run.status === 'DNF') {
+      return `<span style="color: var(--color-danger); font-weight: 800;">DNF</span> <small style="color: var(--text-muted)">(${run.infracoes || 5}F)</small>`;
+    }
+    if (run.status === 'TIME_UP') {
+      return `<span style="color: #D97706; font-weight: 800;">${formatMs(run.tempo_ms || 180000)} (ESG.)</span> <small style="color: var(--text-muted)">(${run.infracoes || 0}F)</small>`;
+    }
+    return `${formatMs(run.tempo_ms)} <small style="color: var(--text-muted)">(${run.infracoes || 0}F)</small>`;
+  }
+
   function renderTrackRanking() {
     if (!trackRankingBody) return;
     trackRankingBody.innerHTML = '';
@@ -466,51 +494,74 @@ document.addEventListener('DOMContentLoaded', async () => {
       track: getTrackStatsForTeam(team.name)
     }));
 
-    rankingList.sort((a, b) => REGRAS.compararCandidatosPista(a, b));
+    rankingList.sort((a, b) => {
+      const cmp = REGRAS.compararCandidatosPista(a, b);
+      if (cmp !== 0) return cmp;
+      const minervaTrack = minervaVotes['PISTA'];
+      if (minervaTrack) {
+        if (a.team.name === minervaTrack) return -1;
+        if (b.team.name === minervaTrack) return 1;
+      }
+      return 0;
+    });
 
     if (rankingList.length === 0) {
       trackRankingBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">Nenhuma equipe cadastrada nesta categoria.</td></tr>`;
       return;
     }
 
-    rankingList.forEach((item, index) => {
-      const rank = index + 1;
+    // Verifica empate técnico exato no Top 3 de Pista entre equipes com volta válida
+    const validRanking = rankingList.filter(item => item.track.hasValidRun);
+    for (let i = 0; i < Math.min(3, validRanking.length); i++) {
+      const candA = validRanking[i];
+      const candB = validRanking[i + 1];
+      if (candA && candB && REGRAS.compararCandidatosPista(candA, candB) === 0) {
+        if (minervaVotes['PISTA'] !== candA.team.name && minervaVotes['PISTA'] !== candB.team.name) {
+          renderTrackTieAlert(candA, candB, i + 1);
+        }
+      }
+    }
+
+    let validRankCounter = 0;
+    rankingList.forEach((item) => {
       let badgeClass = 'rank-other';
-      let trophy = rank;
+      let trophy = 'DNF';
+      let currentValidRank = 0;
+
       if (item.track.hasValidRun) {
-        if (rank === 1) { badgeClass = 'rank-1'; trophy = '🥇 1º'; }
-        else if (rank === 2) { badgeClass = 'rank-2'; trophy = '🥈 2º'; }
-        else if (rank === 3) { badgeClass = 'rank-3'; trophy = '🥉 3º'; }
+        validRankCounter++;
+        currentValidRank = validRankCounter;
+        trophy = `${currentValidRank}º`;
+        if (currentValidRank === 1) { badgeClass = 'rank-1'; trophy = '🥇 1º'; }
+        else if (currentValidRank === 2) { badgeClass = 'rank-2'; trophy = '🥈 2º'; }
+        else if (currentValidRank === 3) { badgeClass = 'rank-3'; trophy = '🥉 3º'; }
       } else {
-        trophy = '—';
+        trophy = 'DNF';
       }
 
-      const r1Str = item.track.r1
-        ? `${formatMs(item.track.r1.tempo_ms)} <small style="color: var(--text-muted)">(${item.track.r1.infracoes || 0}F)</small>`
-        : '<span style="color: var(--text-muted)">--</span>';
+      const r1Str = formatRoundCell(item.track.r1);
+      const r2Str = formatRoundCell(item.track.r2);
 
-      const r2Str = item.track.r2
-        ? `${formatMs(item.track.r2.tempo_ms)} <small style="color: var(--text-muted)">(${item.track.r2.infracoes || 0}F)</small>`
-        : '<span style="color: var(--text-muted)">--</span>';
-
-      const bestTimeStr = item.track.hasValidRun ? formatMs(item.track.bestTimeMs) : '<span style="color: var(--color-danger); font-weight: 800;">SEM TEMPO</span>';
-      const foulsStr = item.track.hasValidRun ? `${item.track.bestTimeFouls} falta(s)` : '--';
+      const bestTimeStr = item.track.hasValidRun
+        ? formatMs(item.track.bestTimeMs)
+        : '<span style="color: var(--color-danger); font-weight: 800;">DNF</span>';
+      const foulsStr = item.track.hasValidRun ? `${item.track.bestTimeFouls} falta(s)` : 'DNF';
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><span class="podium-rank-badge ${badgeClass}">${trophy}</span></td>
+        <td><span class="podium-rank-badge ${badgeClass}" style="${!item.track.hasValidRun ? 'background:#FEE2E2; color:#DC2626; border:1px solid #FCA5A5;' : ''}">${trophy}</span></td>
         <td>
           <strong style="color: var(--color-primary); font-size: 0.95rem;">${item.team.name}</strong>
           <div style="font-size: 0.78rem; color: var(--text-muted);">${item.team.school}</div>
         </td>
-        <td><span class="badge-pill-light" style="font-size: 0.75rem;">${item.team.category.includes('LEGO') ? 'LEGO' : 'MAKER'}</span></td>
+        <td><span class="badge-pill-light" style="font-size: 0.75rem;">${REGRAS?.categoriaUnica ? (REGRAS.nomeCategoriaUnica || 'Categoria Única') : (item.team.category.includes('LEGO') ? 'LEGO' : 'MAKER')}</span></td>
         <td style="font-family: var(--font-timer);">${r1Str}</td>
         <td style="font-family: var(--font-timer);">${r2Str}</td>
-        <td><span class="best-time-pill ${rank === 1 && item.track.hasValidRun ? 'first-place' : ''}">${bestTimeStr}</span></td>
+        <td><span class="best-time-pill ${currentValidRank === 1 && item.track.hasValidRun ? 'first-place' : ''}">${bestTimeStr}</span></td>
         <td style="color: var(--text-muted); font-size: 0.85rem;">${foulsStr}</td>
         <td>
           <span style="font-weight: 800; font-size: 0.75rem; color: ${item.track.hasValidRun ? '#16A34A' : '#DC2626'};">
-            ${item.track.hasValidRun ? '● VÁLIDO' : '○ PENDENTE'}
+            ${item.track.hasValidRun ? '● VÁLIDO' : '✕ DNF'}
           </span>
         </td>
       `;
@@ -518,10 +569,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function renderTrackTieAlert(teamA, teamB, pos) {
+    if (!tieAlertSection) return;
+    const box = document.createElement('div');
+    box.className = 'tie-alert-card';
+    box.style.borderColor = '#EF4444';
+    box.style.background = '#FEF2F2';
+    const secTimeA = Number.isFinite(teamA.track.secondTimeMs) ? `${formatMs(teamA.track.secondTimeMs)} (${teamA.track.secondTimeFouls}F)` : 'DNF / Sem 2ª volta';
+    const secTimeB = Number.isFinite(teamB.track.secondTimeMs) ? `${formatMs(teamB.track.secondTimeMs)} (${teamB.track.secondTimeFouls}F)` : 'DNF / Sem 2ª volta';
+
+    box.innerHTML = `
+      <div class="tie-alert-header">
+        <div class="tie-alert-title" style="color: #991B1B;">
+          <span>🚨</span>
+          <span>EMPATE TÉCNICO NA PISTA (${pos}º LUGAR DO PÓDIO DE VELOCIDADE)</span>
+        </div>
+        <span style="background: #DC2626; color: #fff; font-weight: 900; font-size: 0.72rem; padding: 3px 8px; border-radius: var(--radius-full); text-transform: uppercase;">
+          Deliberação Obrigatória
+        </span>
+      </div>
+      <p style="font-size: 0.88rem; color: #7F1D1D; line-height: 1.45;">
+        As equipes <strong>${teamA.team.name}</strong> e <strong>${teamB.team.name}</strong> empataram exatamente em todos os 4 critérios objetivos de pista do Edital V7 (Tempo da Melhor Volta: <strong>${formatMs(teamA.track.bestTimeMs)}</strong> ➔ Faltas da Melhor Volta: <strong>${teamA.track.bestTimeFouls}</strong> ➔ 2ª Volta: <strong>${secTimeA}</strong>). Delibere abaixo para definir a ordem do pódio sem depender da ordem de cadastro no banco:
+      </p>
+
+      <div class="tie-teams-comparison">
+        <div class="tie-team-box">
+          <strong style="font-size: 1.05rem; color: var(--color-primary);">${teamA.team.name}</strong>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">${teamA.team.school}</div>
+          <div class="tie-obs-box">
+            <strong>Melhor Volta:</strong> ${formatMs(teamA.track.bestTimeMs)} (${teamA.track.bestTimeFouls} falta(s))<br>
+            <strong>2ª Volta:</strong> ${secTimeA}
+          </div>
+          <button type="button" class="btn-minerva" onclick="window.castMinervaVote('PISTA', '${teamA.team.name}')">
+            Declarar ${teamA.team.name} à frente (${pos}º Lugar) ➔
+          </button>
+        </div>
+
+        <div class="tie-team-box">
+          <strong style="font-size: 1.05rem; color: var(--color-primary);">${teamB.team.name}</strong>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">${teamB.team.school}</div>
+          <div class="tie-obs-box">
+            <strong>Melhor Volta:</strong> ${formatMs(teamB.track.bestTimeMs)} (${teamB.track.bestTimeFouls} falta(s))<br>
+            <strong>2ª Volta:</strong> ${secTimeB}
+          </div>
+          <button type="button" class="btn-minerva" onclick="window.castMinervaVote('PISTA', '${teamB.team.name}')">
+            Declarar ${teamB.team.name} à frente (${pos}º Lugar) ➔
+          </button>
+        </div>
+      </div>
+    `;
+    tieAlertSection.appendChild(box);
+  }
+
   function renderSpecialAwards() {
     if (!awardsGrid) return;
     awardsGrid.innerHTML = '';
-    if (tieAlertSection) tieAlertSection.innerHTML = '';
 
     let filteredTeams = teams;
     if (activeCategory !== 'TODAS') {
@@ -695,7 +797,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         mode: 'STANDBY',
         stepKey: 'STANDBY',
         headerBadge: '🏆 Cerimônia Oficial',
-        subtitleTag: 'COLÉGIO ANCHIETA • EDITAL Nº 08/2026',
+        subtitleTag: REGRAS?.subtituloEdicao ? REGRAS.subtituloEdicao.toUpperCase() : 'COLÉGIO ANCHIETA • EDITAL V7',
         mainTitle: 'CERIMÔNIA DE PREMIAÇÃO',
         criteriaDesc: 'Premiações de Bancada (Paddock) & Pódio Oficial de Velocidade'
       };
@@ -713,34 +815,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         mode: 'SINGLE_AWARD',
         stepKey: routine.key,
         headerBadge: `${meta.icon} Troféu Oficial de Bancada`,
-        subtitleTag: `PRÊMIO OFICIAL #${routine.step} • EDITAL 08`,
+        subtitleTag: `PRÊMIO OFICIAL #${routine.step} • EDITAL V7`,
         mainTitle: `TROFÉU: ${meta.name.toUpperCase()}`,
         criteriaDesc: meta.desc,
         icon: meta.icon,
         singleRevealed: singleAwardRevealed,
         winner: {
           name: winner ? winner.team.name : 'Sem Equipe',
-          school: winner ? `${winner.team.school} • ${winner.team.category}` : '--',
+          school: winner ? `${winner.team.school} • ${REGRAS?.categoriaUnica ? (REGRAS.nomeCategoriaUnica || 'Categoria Única') : winner.team.category}` : '--',
           scoreText: hasScore ? `${winner.rubrics[routine.key].avg.toFixed(2)} ★` : 'Destaque Oficial ★',
           detailText: winner ? meta.getTiebreakExplain(winner) : '--'
         }
       };
     }
 
-    // MODO: PÓDIO TRIPLO DE VELOCIDADE
+    // MODO: PÓDIO TRIPLO DE VELOCIDADE (Somente equipes com volta válida entram no Top 3)
     const isCatUnica = !!REGRAS?.categoriaUnica;
     const isGeral = routine.key === 'VELOCIDADE_GERAL' || isCatUnica;
     const isMaker = routine.key === 'VELOCIDADE_MAKER';
-    const candidates = isGeral 
+    const allCandidates = isGeral 
       ? getSortedTrackCandidates('GERAL')
       : getSortedTrackCandidates(isMaker ? 'Maker' : 'LEGO');
+    const validCandidates = allCandidates.filter(c => c.track.hasValidRun);
 
     const formatCandidate = (cand) => {
-      if (!cand) {
-        return { name: '—', school: 'Sem equipe', time: '--:--.--', foulsText: '' };
-      }
-      if (!cand.track.hasValidRun) {
-        return { name: cand.team.name, school: cand.team.school, time: 'SEM TEMPO', foulsText: 'Volta pendente / DNF' };
+      if (!cand || !cand.track.hasValidRun) {
+        return { name: '—', school: 'Sem equipe classificada', time: '--:--.---', foulsText: '' };
       }
       const f = cand.track.bestTimeFouls;
       return {
@@ -760,9 +860,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       criteriaDesc: 'Classificação Oficial: Menor Tempo Líquido (Art. 7º e Art. 8º)',
       trackRevealed: { ...trackRevealedState },
       podium: {
-        pos1: formatCandidate(candidates[0]),
-        pos2: formatCandidate(candidates[1]),
-        pos3: formatCandidate(candidates[2])
+        pos1: formatCandidate(validCandidates[0]),
+        pos2: formatCandidate(validCandidates[1]),
+        pos3: formatCandidate(validCandidates[2])
       }
     };
   }
@@ -869,11 +969,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       }
     } else if (routine.type === 'TRACK_PODIUM') {
+      const isCatUnica = !!REGRAS?.categoriaUnica;
+      const isGeral = routine.key === 'VELOCIDADE_GERAL' || isCatUnica;
       const isMaker = routine.key === 'VELOCIDADE_MAKER';
-      const candidates = getSortedTrackCandidates(isMaker ? 'Maker' : 'LEGO');
-      const p1 = candidates[0];
-      const p2 = candidates[1];
-      const p3 = candidates[2];
+      const allCandidates = isGeral
+        ? getSortedTrackCandidates('GERAL')
+        : getSortedTrackCandidates(isMaker ? 'Maker' : 'LEGO');
+      const validCandidates = allCandidates.filter(c => c.track.hasValidRun);
+      const p1 = validCandidates[0] || null;
+      const p2 = validCandidates[1] || null;
+      const p3 = validCandidates[2] || null;
 
       const anyRev = trackRevealedState.pos1 || trackRevealedState.pos2 || trackRevealedState.pos3;
       const allRev = trackRevealedState.pos1 && trackRevealedState.pos2 && trackRevealedState.pos3;
@@ -1241,7 +1346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(updateTelaoBadgeStatus, 2500);
   }
 
-  // Filtros de Categoria da Tabela (com suporte a Categoria Única do Edital V5)
+  // Filtros de Categoria da Tabela (com suporte a Categoria Única do Edital V7)
   if (REGRAS?.categoriaUnica) {
     activeCategory = 'TODAS';
     const filterContainer = document.querySelector('.category-tabs');
@@ -1272,6 +1377,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderAll() {
+    if (tieAlertSection) tieAlertSection.innerHTML = '';
     renderTrackRanking();
     renderSpecialAwards();
   }

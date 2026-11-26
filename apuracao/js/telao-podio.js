@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mode: 'STANDBY', // 'STANDBY' | 'SINGLE_AWARD' | 'TRACK_PODIUM'
     stepKey: 'STANDBY',
     headerBadge: '🏆 Premiação Oficial',
-    subtitleTag: 'EDITAL GERAL Nº 08/2026',
+    subtitleTag: 'EDITAL V7 • 05/12/2026 (14h às 18h)',
     mainTitle: 'CERIMÔNIA DE PREMIAÇÃO',
     criteriaDesc: 'Colégio Anchieta • 05 de Dezembro de 2026',
     icon: '🏆',
@@ -59,9 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
       pos3: false
     },
     podium: {
-      pos1: { name: '--', school: '--', time: '--:--.--', foulsText: '--' },
-      pos2: { name: '--', school: '--', time: '--:--.--', foulsText: '--' },
-      pos3: { name: '--', school: '--', time: '--:--.--', foulsText: '--' }
+      pos1: { name: '--', school: '--', time: '--:--.---', foulsText: '--' },
+      pos2: { name: '--', school: '--', time: '--:--.---', foulsText: '--' },
+      pos3: { name: '--', school: '--', time: '--:--.---', foulsText: '--' }
     }
   };
 
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentState = { ...currentState, ...state };
 
     if (tpHeaderBadge) tpHeaderBadge.textContent = currentState.headerBadge || '🏆 Premiação Oficial';
-    if (tpSubtitleTag) tpSubtitleTag.textContent = currentState.subtitleTag || 'EDITAL GERAL Nº 08/2026';
+    if (tpSubtitleTag) tpSubtitleTag.textContent = currentState.subtitleTag || 'EDITAL V7 • 05/12/2026 (14h às 18h)';
     if (tpMainTitle) tpMainTitle.textContent = currentState.mainTitle || 'CERIMÔNIA DE PREMIAÇÃO';
     if (tpCriteriaDesc) tpCriteriaDesc.textContent = currentState.criteriaDesc || '';
 
@@ -126,6 +126,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function normalizePodioTimeStr(t) {
+    if (!t || t === '--:--.--') return '--:--.---';
+    if (/^\d{2}:\d{2}\.\d{2}$/.test(t)) return t + '0';
+    return t;
+  }
+
   function fillPillarData(pos, data = {}) {
     const nameEl = document.getElementById(`tpName${pos}`);
     const schoolEl = document.getElementById(`tpSchool${pos}`);
@@ -134,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (nameEl) nameEl.textContent = data.name || 'Aguardando...';
     if (schoolEl) schoolEl.textContent = data.school || '--';
-    if (timeEl) timeEl.textContent = data.time || '--:--.--';
+    if (timeEl) timeEl.textContent = normalizePodioTimeStr(data.time);
     if (foulsEl) foulsEl.textContent = data.foulsText || '';
   }
 

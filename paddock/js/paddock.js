@@ -52,12 +52,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentScores[k] = null;
   });
 
-  // 1. Renderiza Dinamicamente os Cards de Critérios e Botões de Escala
+  // 1. Renderiza Dinamicamente os Cards de Critérios e Botões de Escala (Numerados de 1 a N)
   function buildDynamicRubricCards() {
     if (!dynamicRubricsContainer) return;
     dynamicRubricsContainer.innerHTML = '';
 
-    CRITERIOS_CONFIG.forEach(crit => {
+    CRITERIOS_CONFIG.forEach((crit, idx) => {
       const section = document.createElement('section');
       section.className = 'mobile-card';
       section.id = `card-${crit.id}`;
@@ -65,6 +65,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const pesoTag = crit.peso && Number(crit.peso) !== 1.0
         ? `<small style="font-size: 0.7rem; color: var(--color-accent); font-weight: 800; margin-left: 6px;">(Peso ${crit.peso}x)</small>`
         : '';
+
+      // Remove qualquer ícone ou número fixo residual do título para numerar dinamicamente de 1 a N
+      const rawTitle = (crit.nomeExibicao || crit.premio || '')
+        .replace(crit.icone || '', '')
+        .replace(/^\s*\d+\.\s*/, '')
+        .trim();
+      const dynamicTitle = `${crit.icone || '⭐'} ${idx + 1}. ${rawTitle}`;
 
       const buttonsHtml = ESCALA_NOTAS.map(escala => `
         <button type="button" class="rubric-chip-btn" data-value="${escala.valor}">
@@ -76,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       section.innerHTML = `
         <div class="rubric-header">
           <div class="rubric-title">
-            <span>${crit.nomeExibicao || `${crit.icone} ${crit.premio}`}${pesoTag}</span>
+            <span>${dynamicTitle}${pesoTag}</span>
           </div>
           <span id="badgeStatus-${crit.id}" class="rubric-badge-status">⏳ Pendente</span>
         </div>

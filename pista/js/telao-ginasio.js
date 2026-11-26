@@ -24,14 +24,21 @@ document.addEventListener('DOMContentLoaded', () => {
     schoolName: 'Colégio Anchieta',
     category: isCatUnica ? nomeCatUnica : 'LEGO / Educacional',
     round: 'Round 1',
-    timeFormatted: '00:00.00',
+    timeFormatted: '00:00.000',
     timeMs: 0,
     status: 'READY', // 'READY' | 'RUNNING' | 'PAUSED' | 'FINISHED' | 'TIME_UP' | 'DNF'
     fouls: 0
   };
 
+  function normalizeMillisStr(str, fallback = '00:00.000') {
+    if (!str) return fallback;
+    if (/^\d{2}:\d{2}\.\d{2}$/.test(str)) return str + '0';
+    return str;
+  }
+
   // Atualização Visual Completa
   function render() {
+    state.timeFormatted = normalizeMillisStr(state.timeFormatted);
     elTeamName.textContent = state.teamName;
     elSchoolName.textContent = state.schoolName;
     elCategoryBadge.textContent = isCatUnica ? nomeCatUnica : state.category;
@@ -87,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.pistaBus.on('TIMER_TICK', (payload) => {
     state.timeMs = payload.timeMs;
-    state.timeFormatted = payload.timeFormatted;
+    state.timeFormatted = normalizeMillisStr(payload.timeFormatted);
     elTimerDisplay.textContent = state.timeFormatted;
   });
 
@@ -106,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.pistaBus.on('TIMER_RESET', (payload) => {
     state.status = 'READY';
     state.timeMs = 0;
-    state.timeFormatted = payload?.timeFormatted || '00:00.00';
+    state.timeFormatted = payload?.timeFormatted || '00:00.000';
     render();
   });
 
@@ -117,9 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
   });
 
-  window.pistaBus.on('TIMER_TIME_UP', () => {
+  window.pistaBus.on('TIMER_TIME_UP', (payload) => {
     state.status = 'TIME_UP';
-    state.timeFormatted = '03:00.00';
+    state.timeFormatted = payload?.timeFormatted || '03:00.000';
     window.audioCues.playFinishAlarm(false);
     render();
   });

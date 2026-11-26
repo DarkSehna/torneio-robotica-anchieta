@@ -224,11 +224,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 4. CRONÔMETRO REGRESSIVO DA PISTA DE TESTE
   // ==========================================================================
   function formatTime(ms) {
-    const totalSec = Math.floor(Math.max(0, ms) / 1000);
+    const safeMs = Math.max(0, Math.floor(Number(ms) || 0));
+    const totalSec = Math.floor(safeMs / 1000);
     const mins = Math.floor(totalSec / 60);
     const secs = totalSec % 60;
-    const centis = Math.floor((Math.max(0, ms) % 1000) / 10);
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(centis).padStart(2, '0')}`;
+    const millis = safeMs % 1000;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
   }
 
   function updateTimerDisplay() {
