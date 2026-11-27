@@ -241,16 +241,32 @@ const REGRAS_TORNEIO = {
   }
 };
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-  'Content-Type': 'application/json; charset=utf-8'
-};
+const ALLOWED_ORIGINS = [
+  'https://darksehna.github.io'
+];
 
-function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: CORS_HEADERS });
+function getCorsHeaders(request) {
+  const origin = request ? (request.headers.get('Origin') || '') : '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : 'null';
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Token',
+    'Vary': 'Origin',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+    'Content-Type': 'application/json; charset=utf-8'
+  };
+}
+
+function jsonResponse(data, status = 200, request = null) {
+  return new Response(JSON.stringify(data), { status, headers: getCorsHeaders(request) });
+}
+
+function checkAdminAuth(request, env) {
+  const secret = (env && env.ADMIN_SECRET_KEY) ? String(env.ADMIN_SECRET_KEY).trim() : '';
+  if (!secret) return false;
+  const token = (request.headers.get('X-Admin-Token') || '').trim();
+  return token === secret;
 }
 
 function calcularEstatisticaPistaEquipe(nomeEquipe, corridas) {
@@ -410,8 +426,16 @@ function calcularRankingsOficiais(equipes, corridas, avaliacoes) {
 
 export default {
   async fetch(request, env) {
+    const reqOrigin = request.headers.get('Origin') || '';
+    if (reqOrigin && !ALLOWED_ORIGINS.includes(reqOrigin)) {
+      return new Response(JSON.stringify({ error: 'Origem não autorizada (CORS).' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json; charset=utf-8' }
+      });
+    }
+
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
+      return new Response(null, { status: 204, headers: getCorsHeaders(request) });
     }
 
     const url = new URL(request.url);
@@ -436,11 +460,16 @@ export default {
       // EQUIPES (/api/equipes)
       // ======================================================================
       if (path === '/api/equipes' && request.method === 'GET') {
-        const { results } = await env.DB.prepare('SELECT * FROM equipes ORDER BY id ASC').all();
-        return jsonResponse(results || []);
+        const isAdmin = checkAdminAuth(request, env);
+        const sql = isAdmin
+          ? 'SELECT * FROM equipes ORDER BY id ASC'
+          : 'SELECT id, equipe, escola, categoria, professor, checkin, inspecao FROM equipes ORDER BY id ASC';
+        const { results } = await env.DB.prepare(sql).all();
+        return jsonResponse(results || [], 200, request);
       }
 
       if (path === '/api/equipes' && request.method === 'POST') {
+        if (!checkAdminAuth(request, env)) return jsonResponse({ ok: false, error: 'Acesso não autorizado (X-Admin-Token).' }, 401, request);
         const body = await request.json();
         const lista = Array.isArray(body) ? body : [body];
         let count = 0;
@@ -500,11 +529,13 @@ export default {
       }
 
       if (path === '/api/equipes/limpar' && request.method === 'POST') {
+        if (!checkAdminAuth(request, env)) return jsonResponse({ ok: false, error: 'Acesso não autorizado (X-Admin-Token).' }, 401, request);
         await env.DB.prepare('DELETE FROM equipes').run();
         return jsonResponse({ ok: true });
       }
 
       if (path.startsWith('/api/equipes/') && request.method === 'DELETE') {
+        if (!checkAdminAuth(request, env)) return jsonResponse({ ok: false, error: 'Acesso não autorizado (X-Admin-Token).' }, 401, request);
         const param = decodeURIComponent(path.replace('/api/equipes/', ''));
         if (/^\d+$/.test(param)) {
           await env.DB.prepare('DELETE FROM equipes WHERE id = ?').bind(Number(param)).run();
@@ -562,25 +593,44 @@ export default {
         const body = await request.json();
         const lista = Array.isArray(body) ? body : [body];
         for (const c of lista) {
+          const rodada = parseInt(c.rodada ?? 1, 10);
+          const status = String(c.status || 'VALID').toUpperCase();
+          const infracoes = parseInt(c.infracoes ?? 0, 10);
+          const tempoMs = parseInt(c.tempo_ms ?? 0, 10);
+
+          if (![1, 2].includes(rodada)) {
+            return jsonResponse({ ok: false, error: 'Rodada inválida (apenas 1 ou 2).' }, 400, request);
+          }
+          if (!['VALID', 'DNF', 'TIME_UP'].includes(status)) {
+            return jsonResponse({ ok: false, error: 'Status de corrida inválido.' }, 400, request);
+          }
+          if (!Number.isInteger(infracoes) || infracoes < 0 || infracoes > 5) {
+            return jsonResponse({ ok: false, error: 'Infrações devem estar entre 0 e 5.' }, 400, request);
+          }
+          if (status === 'VALID' && (!Number.isInteger(tempoMs) || tempoMs <= 0 || tempoMs > 180000)) {
+            return jsonResponse({ ok: false, error: 'Tempo inválido para volta válida (1 a 180000 ms).' }, 400, request);
+          }
+
           await env.DB.prepare(
             `INSERT OR REPLACE INTO corridas_pista (uuid, equipe, escola, categoria, rodada, tempo_ms, infracoes, status, timestamp)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
           ).bind(
-            c.uuid || ('REC-' + Date.now()),
-            c.equipe || 'Equipe',
-            c.escola || '',
-            c.categoria || 'Categoria Única',
-            Number(c.rodada || 1),
-            Number(c.tempo_ms || 0),
-            Number(c.infracoes || 0),
-            c.status || 'VALID',
-            c.timestamp || new Date().toISOString()
+            String(c.uuid || ('REC-' + Date.now())).slice(0, 64),
+            String(c.equipe || 'Equipe').trim().slice(0, 80),
+            String(c.escola || '').trim().slice(0, 80),
+            String(c.categoria || 'Categoria Única').trim().slice(0, 60),
+            rodada,
+            status === 'DNF' ? 0 : Math.min(Math.max(0, tempoMs), 180000),
+            infracoes,
+            status,
+            String(c.timestamp || new Date().toISOString()).slice(0, 40)
           ).run();
         }
-        return jsonResponse({ ok: true, count: lista.length });
+        return jsonResponse({ ok: true, count: lista.length }, 200, request);
       }
 
       if (path.startsWith('/api/corridas/') && request.method === 'DELETE') {
+        if (!checkAdminAuth(request, env)) return jsonResponse({ ok: false, error: 'Acesso não autorizado (X-Admin-Token).' }, 401, request);
         const uuid = decodeURIComponent(path.replace('/api/corridas/', ''));
         await env.DB.prepare('DELETE FROM corridas_pista WHERE uuid = ?').bind(uuid).run();
         return jsonResponse({ ok: true });
@@ -647,9 +697,13 @@ export default {
       }
 
       if (path.startsWith('/api/avaliacoes/') && request.method === 'DELETE') {
-        const id = decodeURIComponent(path.replace('/api/avaliacoes/', ''));
-        await env.DB.prepare('DELETE FROM avaliacoes_juizes WHERE id = ?').bind(Number(id)).run();
-        return jsonResponse({ ok: true });
+        if (!checkAdminAuth(request, env)) return jsonResponse({ ok: false, error: 'Acesso não autorizado (X-Admin-Token).' }, 401, request);
+        const idNum = parseInt(decodeURIComponent(path.replace('/api/avaliacoes/', '')), 10);
+        if (!Number.isInteger(idNum) || idNum <= 0) {
+          return jsonResponse({ ok: false, error: 'ID de avaliação inválido.' }, 400, request);
+        }
+        await env.DB.prepare('DELETE FROM avaliacoes_juizes WHERE id = ?').bind(idNum).run();
+        return jsonResponse({ ok: true }, 200, request);
       }
 
       // ======================================================================
@@ -677,8 +731,9 @@ export default {
 
       if (path === '/api/votos-nome' && request.method === 'POST') {
         const body = await request.json();
-        const nomeEscolhido = (body.nome_escolhido || '').trim().slice(0, 120);
-        const sugestaoNova = (body.sugestao_nova || '').trim().slice(0, 120);
+        const cleanStr = (s, maxLen) => String(s || '').trim().replace(/[<>&"']/g, '').slice(0, maxLen);
+        const nomeEscolhido = cleanStr(body.nome_escolhido, 80);
+        const sugestaoNova = cleanStr(body.sugestao_nova, 50);
         if (!nomeEscolhido && !sugestaoNova) {
           return jsonResponse({ ok: false, error: 'Informe um nome candidato ou uma sugestão.' }, 400);
         }
@@ -694,7 +749,7 @@ export default {
       // ======================================================================
       if (path === '/api/apuracao' && request.method === 'GET') {
         const [eqRes, corRes, avRes] = await Promise.all([
-          env.DB.prepare('SELECT * FROM equipes ORDER BY id ASC').all(),
+          env.DB.prepare('SELECT id, equipe, escola, categoria, professor, checkin, inspecao FROM equipes ORDER BY id ASC').all(),
           env.DB.prepare('SELECT * FROM corridas_pista ORDER BY timestamp DESC').all(),
           env.DB.prepare('SELECT * FROM avaliacoes_juizes ORDER BY id DESC').all()
         ]);

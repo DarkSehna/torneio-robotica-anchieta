@@ -6,8 +6,18 @@
 
 (function () {
   const STORAGE_KEY = 'torneio_anchieta_auth_token';
+  const ADMIN_TOKEN_KEY = 'torneio_anchieta_admin_token';
   // Hash SHA-256 oficial (Padrão: "anchieta2026")
   const OFFICIAL_HASH = 'bc5b51ee053c021a926725f7f8c3ed53e5b273889899cddc0f2e6659990e4d37';
+
+  // Expõe getter global para o token administrativo (usado no header X-Admin-Token do cloud-api.js)
+  window.getAdminToken = function () {
+    try {
+      return sessionStorage.getItem(ADMIN_TOKEN_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  };
 
   // Implementação compacta de SHA-256 puro em JS (garante funcionamento mesmo fora de HTTPS/localhost)
   function sha256Pure(ascii) {
@@ -98,7 +108,10 @@
 
   function isAuthenticated() {
     try {
-      return sessionStorage.getItem(STORAGE_KEY) === OFFICIAL_HASH;
+      return (
+        sessionStorage.getItem(STORAGE_KEY) === OFFICIAL_HASH &&
+        Boolean(sessionStorage.getItem(ADMIN_TOKEN_KEY))
+      );
     } catch (e) {
       return false;
     }
@@ -306,6 +319,7 @@
     btn.addEventListener('click', () => {
       try {
         sessionStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(ADMIN_TOKEN_KEY);
       } catch (e) {}
       window.location.reload();
     });
@@ -387,15 +401,18 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const typed = input.value;
-      const hash = await computeHash(typed);
+      const senhaNormalizada = (typed || '').trim().toLowerCase();
+      const hash = await computeHash(senhaNormalizada);
 
       if (hash === OFFICIAL_HASH) {
         try {
           sessionStorage.setItem(STORAGE_KEY, OFFICIAL_HASH);
+          sessionStorage.setItem(ADMIN_TOKEN_KEY, senhaNormalizada);
         } catch (err) {}
         document.body.classList.remove('auth-locked');
         overlay.remove();
         addLockButtonToHeader();
+        window.dispatchEvent(new CustomEvent('admin-auth-unlocked'));
       } else {
         input.classList.add('error');
         errorMsg.classList.add('visible');

@@ -5,7 +5,7 @@
     "school": "Colégio Exemplo Sul",
     "category": "LEGO / Educacional",
     "professor": "Prof. Carlos Eduardo",
-    "integrantes": "Lucas Souza, Pedro Henrique, Mariana Silva",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -15,7 +15,7 @@
     "school": "Instituto Norte",
     "category": "LEGO / Educacional",
     "professor": "Profª. Vanessa Lima",
-    "integrantes": "Gabriel Mendes, Beatriz Alves, Arthur Santos",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -25,7 +25,7 @@
     "school": "Colégio Horizonte",
     "category": "LEGO / Educacional",
     "professor": "Prof. Rodrigo Santos",
-    "integrantes": "Enzo Pereira, Rafael Costa, Matheus Duarte",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -35,7 +35,7 @@
     "school": "Escola Modelo",
     "category": "LEGO / Educacional",
     "professor": "Profª. Juliana Silva",
-    "integrantes": "Sofia Ramos, Laura Becker, Alice Vieira",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -45,7 +45,7 @@
     "school": "Colégio Anchieta (Teste)",
     "category": "LEGO / Educacional",
     "professor": "Prof. Fernando Rocha",
-    "integrantes": "Davi Lucca, Luiza Farias, Henrique Luz",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -55,7 +55,7 @@
     "school": "Colégio Anchieta",
     "category": "LEGO / Educacional",
     "professor": "Prof. Marcos Silva",
-    "integrantes": "Lucas Pereira, Sofia Ramos, Pedro Henrique",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -65,7 +65,7 @@
     "school": "Colégio Anchieta",
     "category": "LEGO / Educacional",
     "professor": "Prof. Marcos Silva",
-    "integrantes": "Gabriel Souza, Beatriz Lima, Enzo Alves",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -75,7 +75,7 @@
     "school": "Colégio Anchieta",
     "category": "LEGO / Educacional",
     "professor": "Profª. Carla Mendes",
-    "integrantes": "Mariana Costa, Felipe Duarte, Laura Santos",
+    "integrantes": "",
     "checkin": true,
     "inspecao": false
   },
@@ -85,7 +85,7 @@
     "school": "Colégio Anchieta",
     "category": "LEGO / Educacional",
     "professor": "Profª. Carla Mendes",
-    "integrantes": "Thiago Martins, Rafaela Nunes",
+    "integrantes": "",
     "checkin": false,
     "inspecao": false
   },
@@ -95,7 +95,7 @@
     "school": "Colégio Anchieta",
     "category": "LEGO / Educacional",
     "professor": "Prof. Roberto Dias",
-    "integrantes": "Gustavo Pires, Alice Vieira, Matheus Rocha",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -105,7 +105,7 @@
     "school": "Colégio Anchieta",
     "category": "LEGO / Educacional",
     "professor": "Prof. Roberto Dias",
-    "integrantes": "Isabela Ramos, Davi Lucca, Luiza Farias",
+    "integrantes": "",
     "checkin": false,
     "inspecao": false
   },
@@ -115,7 +115,7 @@
     "school": "Colégio Farroupilha",
     "category": "LEGO / Educacional",
     "professor": "Profª. Fernanda Prado",
-    "integrantes": "Bernardo Silva, Carolina Becker, Henrique Luz",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -125,7 +125,7 @@
     "school": "Colégio Farroupilha",
     "category": "LEGO / Educacional",
     "professor": "Profª. Fernanda Prado",
-    "integrantes": "Rodrigo Paz, Manuela Fontes, Bruno Campos",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -135,7 +135,7 @@
     "school": "Colégio Província",
     "category": "LEGO / Educacional",
     "professor": "Prof. Eduardo Schmidt",
-    "integrantes": "Arthur Silveira, Julia Dornelles, Clara Neves",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   },
@@ -145,7 +145,7 @@
     "school": "Colégio Província",
     "category": "LEGO / Educacional",
     "professor": "Prof. Eduardo Schmidt",
-    "integrantes": "Vinicius Leal, Helena Borges",
+    "integrantes": "",
     "checkin": false,
     "inspecao": false
   },
@@ -155,7 +155,7 @@
     "school": "Colégio Província",
     "category": "LEGO / Educacional",
     "professor": "Prof. Eduardo Schmidt",
-    "integrantes": "Daniel Vargas, Samuel Ortiz, Cecília Maia",
+    "integrantes": "",
     "checkin": true,
     "inspecao": true
   }

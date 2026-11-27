@@ -17,6 +17,36 @@ class CloudflareTorneioAPI {
     return `${this.baseUrl}${endpoint}${sep}_t=${Date.now()}`;
   }
 
+  // Obtém o token administrativo da sessão (auth-guard.js) para o header X-Admin-Token
+  _getAdminToken() {
+    try {
+      if (typeof window !== 'undefined' && typeof window.getAdminToken === 'function') {
+        return window.getAdminToken() || '';
+      }
+      if (typeof sessionStorage !== 'undefined') {
+        return sessionStorage.getItem('torneio_anchieta_admin_token') || '';
+      }
+    } catch (e) {}
+    return '';
+  }
+
+  // Trata resposta 401 do Worker avisando o operador para refazer o login no painel Admin/Apuração
+  _handleAdminUnauthorized(resp) {
+    if (resp && resp.status === 401) {
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem('torneio_anchieta_auth_token');
+          sessionStorage.removeItem('torneio_anchieta_admin_token');
+        }
+      } catch (e) {}
+      if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+        window.alert('🔒 Acesso não autorizado pelo servidor (Erro 401 - X-Admin-Token). Por favor, refaça o login com a senha oficial no painel Admin/Apuração.');
+      }
+      return true;
+    }
+    return false;
+  }
+
   async checkHealth() {
     try {
       const resp = await fetch(this._getNoCacheUrl('/'), {
@@ -34,11 +64,16 @@ class CloudflareTorneioAPI {
   }
 
   // Obter Equipes do Cloudflare D1 (GET /api/equipes)
+  // Envia X-Admin-Token quando o token existir na sessão
   async getEquipes() {
     try {
-      const resp = await fetch(this._getNoCacheUrl('/api/equipes'), {
-        method: 'GET'
-      });
+      const adminToken = this._getAdminToken();
+      const fetchOptions = { method: 'GET' };
+      if (adminToken) {
+        fetchOptions.headers = { 'X-Admin-Token': adminToken };
+      }
+      const resp = await fetch(this._getNoCacheUrl('/api/equipes'), fetchOptions);
+      if (this._handleAdminUnauthorized(resp)) return null;
       if (resp.ok) {
         return await resp.json();
       }
@@ -48,7 +83,7 @@ class CloudflareTorneioAPI {
     return null;
   }
 
-  // Cadastrar Equipes no Cloudflare D1 (POST /api/equipes)
+  // Cadastrar Equipes no Cloudflare D1 (POST /api/equipes) — Requer X-Admin-Token
   async salvarEquipes(equipes) {
     try {
       const lista = Array.isArray(equipes) ? equipes : [equipes];
@@ -64,9 +99,13 @@ class CloudflareTorneioAPI {
 
       const resp = await fetch(`${this.baseUrl}/api/equipes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': this._getAdminToken()
+        },
         body: JSON.stringify(payload)
       });
+      this._handleAdminUnauthorized(resp);
       return { ok: resp.ok, status: resp.status, data: await resp.json().catch(() => ({})) };
     } catch (e) {
       return { ok: false, error: e.message };
@@ -74,6 +113,7 @@ class CloudflareTorneioAPI {
   }
 
   // Atualizar Status de Credenciamento / Inspeção Técnica no D1 (POST /api/equipes/status)
+  // Rota aberta para a equipe da portaria (não exige X-Admin-Token)
   async atualizarStatusEquipe(equipeOuId, { checkin, inspecao }) {
     try {
       const payload = {
@@ -94,25 +134,33 @@ class CloudflareTorneioAPI {
     }
   }
 
-  // Excluir Equipe Individual por ID ou Nome (DELETE /api/equipes/:param)
+  // Excluir Equipe Individual por ID ou Nome (DELETE /api/equipes/:param) — Requer X-Admin-Token
   async excluirEquipe(idOuNome) {
     try {
       const param = encodeURIComponent(idOuNome);
       const resp = await fetch(`${this.baseUrl}/api/equipes/${param}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'X-Admin-Token': this._getAdminToken()
+        }
       });
+      this._handleAdminUnauthorized(resp);
       return { ok: resp.ok, status: resp.status, data: await resp.json().catch(() => ({})) };
     } catch (e) {
       return { ok: false, error: e.message };
     }
   }
 
-  // Limpar Todas as Equipes do Cloudflare D1 (POST /api/equipes/limpar)
+  // Limpar Todas as Equipes do Cloudflare D1 (POST /api/equipes/limpar) — Requer X-Admin-Token
   async limparTodasEquipes() {
     try {
       const resp = await fetch(`${this.baseUrl}/api/equipes/limpar`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'X-Admin-Token': this._getAdminToken()
+        }
       });
+      this._handleAdminUnauthorized(resp);
       return { ok: resp.ok, status: resp.status, data: await resp.json().catch(() => ({})) };
     } catch (e) {
       return { ok: false, error: e.message };
@@ -172,12 +220,16 @@ class CloudflareTorneioAPI {
     }
   }
 
-  // Excluir Corrida Individual por UUID (DELETE /api/corridas/:uuid)
+  // Excluir Corrida Individual por UUID (DELETE /api/corridas/:uuid) — Requer X-Admin-Token
   async excluirCorrida(uuid) {
     try {
       const resp = await fetch(`${this.baseUrl}/api/corridas/${encodeURIComponent(uuid)}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'X-Admin-Token': this._getAdminToken()
+        }
       });
+      this._handleAdminUnauthorized(resp);
       return { ok: resp.ok, status: resp.status, data: await resp.json().catch(() => ({})) };
     } catch (e) {
       return { ok: false, error: e.message };
@@ -267,11 +319,16 @@ class CloudflareTorneioAPI {
     }
   }
 
+  // Excluir Avaliação Individual por ID (DELETE /api/avaliacoes/:id) — Requer X-Admin-Token
   async excluirAvaliacao(id) {
     try {
       const resp = await fetch(`${this.baseUrl}/api/avaliacoes/${encodeURIComponent(id)}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'X-Admin-Token': this._getAdminToken()
+        }
       });
+      this._handleAdminUnauthorized(resp);
       return { ok: resp.ok, status: resp.status, data: await resp.json().catch(() => ({})) };
     } catch (e) {
       return { ok: false, error: e.message };

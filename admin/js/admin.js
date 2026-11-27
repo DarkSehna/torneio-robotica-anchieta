@@ -206,19 +206,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const headers = rows[0].map(h => h.trim());
 
-    // 3. Identifica e descarta colunas de dados sensíveis (LGPD / Proteção de Menores)
-    const SENSITIVE_REGEX = /(cpf|rg|documento|doc|nascimento|certid|celular|telefone|email|contato|whatsapp|endere[cç]o|bairro|cidade|cep)/i;
+    // 3. Identifica e descarta colunas de dados sensíveis e de menores (LGPD / Minimização de Dados)
+    const SENSITIVE_REGEX = /(cpf|rg|documento|doc|nascimento|certid|celular|telefone|email|contato|whatsapp|endere[cç]o|bairro|cidade|cep|aluno|integrante|estudante|membro|menor|crian[cç]a)/i;
 
     const columnMap = {
       name: -1,
       school: -1,
       category: -1,
-      professor: -1,
-      memberCols: []
+      professor: -1
     };
 
     headers.forEach((header, idx) => {
-      // REGRA DE OURO LGPD: Coluna sensível é sumariamente ignorada
+      // REGRA DE OURO LGPD: Coluna sensível ou de menores é sumariamente ignorada
       if (SENSITIVE_REGEX.test(header)) {
         return;
       }
@@ -231,8 +230,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         columnMap.category = idx;
       } else if (columnMap.professor === -1 && /(professor|t[eé]cnico|orientador|respons[aá]vel|tutor)/i.test(header)) {
         columnMap.professor = idx;
-      } else if (/(aluno|integrante|estudante|membro)/i.test(header)) {
-        columnMap.memberCols.push(idx);
       }
     });
 
@@ -266,28 +263,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const professor = (columnMap.professor !== -1 && row[columnMap.professor] ? row[columnMap.professor] : '').trim();
 
-      // Integrantes: agrupa valores das colunas de alunos, expurgando números de documento
-      const membersList = [];
-      columnMap.memberCols.forEach(cIdx => {
-        const val = (row[cIdx] || '').trim();
-        if (val && !CPF_PATTERN.test(val)) {
-          // Se o valor já for uma lista com vírgulas
-          val.split(/,|\n/).forEach(p => {
-            const trimmed = p.trim();
-            if (trimmed && !CPF_PATTERN.test(trimmed)) {
-              membersList.push(trimmed);
-            }
-          });
-        }
-      });
-
+      // Minimização LGPD: Nomes de menores/alunos são ignorados e não expostos publicamente
       parsedTeams.push({
         id: `EQ-${String(parsedTeams.length + 1).padStart(2, '0')}`,
         name: teamName,
         school: school || 'Colégio Anchieta',
         category,
         professor: CPF_PATTERN.test(professor) ? '' : professor,
-        integrantes: membersList.slice(0, 4).join(', '),
+        integrantes: '',
         checkin: false,
         inspecao: false
       });
@@ -376,7 +359,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <td>${escapeHtml(t.school)}</td>
               <td><span style="font-weight: 700; color: ${t.category.includes('LEGO') ? 'var(--color-accent)' : 'var(--color-primary)'};">${escapeHtml(t.category)}</span></td>
               <td>${escapeHtml(t.professor || '--')}</td>
-              <td>${escapeHtml(t.integrantes || '--')}</td>
+              <td><span style="color: #059669; font-weight: 700; font-size: 0.78rem;">🛡️ Ocultado (LGPD Menores)</span></td>
             `;
             csvPreviewTableBody.appendChild(tr);
           });
@@ -868,5 +851,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderTeamsTable();
   updateStats();
   checkCloud();
+
+  // Recarrega equipes com X-Admin-Token assim que o painel Admin é desbloqueado
+  window.addEventListener('admin-auth-unlocked', async () => {
+    try {
+      await window.teamsManager.load(true);
+      renderTeamsTable();
+      updateStats();
+    } catch (e) {}
+  });
   setInterval(checkCloud, 15000);
 });
